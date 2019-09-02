@@ -1,0 +1,18 @@
+{
+  "exclude": [
+    "node_modules",
+    "test"
+  ],
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "dom",
+      "es2015",
+      "es2015.promise" // Or "es2015" or "es6" should work as well
+    ],
+    "declaration": false,  
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "sourceMap": false
+  }
+}

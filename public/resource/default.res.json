@@ -1,0 +1,65 @@
+{
+	"groups": [
+		{
+			"keys": "img_obsbody_jpg,img_obshead_jpg,img_tips_png,img_btn_3_png,img_btn_1_png,img_btn_2_png,img_bg_01_jpg,img_bg_02_jpg,img_bg_03_jpg,mc_player_data,mc_player_tex",
+			"name": "preload"
+		}
+	],
+	"resources": [
+		{
+			"name": "img_obsbody_jpg",
+			"type": "image",
+			"url": "assets/Game/img_obsbody.jpg"
+		},
+		{
+			"name": "img_obshead_jpg",
+			"type": "image",
+			"url": "assets/Game/img_obshead.jpg"
+		},
+		{
+			"name": "img_tips_png",
+			"type": "image",
+			"url": "assets/Game/img_tips.png"
+		},
+		{
+			"name": "img_btn_3_png",
+			"type": "image",
+			"url": "assets/Game/img_btn_3.png"
+		},
+		{
+			"name": "img_btn_1_png",
+			"type": "image",
+			"url": "assets/Game/img_btn_1.png"
+		},
+		{
+			"name": "img_btn_2_png",
+			"type": "image",
+			"url": "assets/Game/img_btn_2.png"
+		},
+		{
+			"name": "img_bg_01_jpg",
+			"type": "image",
+			"url": "assets/Game/img_bg_01.jpg"
+		},
+		{
+			"name": "img_bg_02_jpg",
+			"type": "image",
+			"url": "assets/Game/img_bg_02.jpg"
+		},
+		{
+			"name": "img_bg_03_jpg",
+			"type": "image",
+			"url": "assets/Game/img_bg_03.jpg"
+		},
+		{
+			"name": "mc_player_data",
+			"type": "json",
+			"url": "assets/MovieClip/mc_player.json"
+		},
+		{
+			"name": "mc_player_tex",
+			"type": "image",
+			"url": "assets/MovieClip/mc_player.png"
+		}
+	]
+}
