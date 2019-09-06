@@ -44,7 +44,6 @@ const view = parseString(template, {
     explicitChildren: true,
     preserveChildrenOrder: true,
 }, (err, xml) => {
-    debugger;
     console.log(xml.children)
     //console.log(root)
     //Object.keys(xml.Root).forEach(key => this._render(key, this))

@@ -14,11 +14,22 @@ const configFactory = function(webpackEnv) {
       library:'VueEgret',
       libraryTarget:'umd',
       libraryExport: "default",
-    },
+		},
+		resolve: {
+			alias: {
+				src: path.join(__dirname, '../src')
+			},
+			extensions: ['.ts', '.js', '.json']
+		},
 		module: {
 	    rules: [
 				{
-          test: /\.(js|jsx|ts|tsx)$/,
+          test: /\.(ts|tsx)$/,
+          exclude: /node_modules/,
+          loader: 'ts-loader',
+				},
+				{
+          test: /\.(js|jsx)$/,
           exclude: /node_modules/,
           loader: 'babel-loader',
 				},

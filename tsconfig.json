@@ -1,18 +1,29 @@
 {
-  "exclude": [
-    "node_modules",
-    "test"
-  ],
-  "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "es2015",
-      "es2015.promise" // Or "es2015" or "es6" should work as well
-    ],
-    "declaration": false,  
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "sourceMap": false
-  }
+	"compilerOptions": {
+		"allowJs": false,
+		"sourceMap": true,
+		"target": "es5",
+		"jsx": "react",
+		"moduleResolution": "node",
+		"emitDecoratorMetadata": false,
+		"experimentalDecorators": true,
+		"declaration": true,
+		"noImplicitAny": false,
+		"noImplicitReturns": false,
+		"removeComments": true,
+		"strictNullChecks": false,
+		"baseUrl": ".",
+		"paths": {
+			"src/*": ["./src/*"]
+		}
+	},
+	"exclude": [
+		"dist",
+		"build",
+		"config",
+		"scripts",
+		"public",
+		"node_modules",
+		"lib"
+	]
 }

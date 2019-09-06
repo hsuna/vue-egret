@@ -72,21 +72,30 @@ var Main = class extends Glb {
     }
 } */
 
-
-var Main = new VueEgret({
+VueEgret.component('MyLabel', {
     data(){
         return {
-            scenes: 'loading'
+            text: 'loading'
         }
     },
     methods: {
         
     },
-    components: {
-        Sprite: egret.Sprite,
-        TextField: egret.TextField,
+    template: `<TextField textColor="#00FFFF" x="11" y="12">{{text}}</TextField>`
+})
+
+var Main = new VueEgret({
+    data(){
+        return {
+            text: 'loading'
+        }
+    },
+    methods: {
+        onLabelClick(){
+            this.text += '1'
+        }
     },
     template: `<Sprite x="11" y="12">
-        <TextField x="11" y="12">{{scenes}}</TextField>
+        <MyLabel x="11" y="12" :text="text" @click="onLabelClick"></MyLabel>
     </Sprite>`
 })
