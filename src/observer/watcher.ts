@@ -1,79 +1,159 @@
-import { VueEgretVM } from '../index'
-import Dep from './dep'
+import { noop, isObject, parsePath } from '../util/index'
+
+import { Component } from '../index'
+import Dep, { pushTarget, popTarget } from './dep'
 
 // watcher实例的ID 每个watcher实现的ID都是唯一的
 let uid = 0
 
 export default class Watcher {
+    active: boolean;
+    
     id: number;
-    vm: VueEgretVM;
+    vm: Component;
+    expression: string;
     deps: Array<Dep>;
+    newDeps: Array<Dep>;
     depIds: Set<number>;
+    newDepIds: Set<number>;
     cb: Function;
     getter: Function;
     setter: Function;
     value: any;
 
     constructor(
-        vm: VueEgretVM,
-        expOrFn: string,
-        cb: Function,
+        vm: Component,
+        expOrFn?: string | Function,
+        cb?: Function,
     ) {
-        vm.watchers.push(this) 
+        vm._watchers.push(this)
         this.id = uid++
+        this.active = true;
         this.vm = vm   
         // 存放dep实例
         this.deps = []
+        this.newDeps = []
         // 存放dep的ID
         this.depIds = new Set()
+        this.newDepIds = new Set()
         // 更新触发回调函数
         this.cb = cb
-        
-        this.getter = () => vm[expOrFn]
-        this.setter = (val) => {
-            vm[expOrFn] = val
+        this.expression = expOrFn.toString()
+        if ('function' === typeof expOrFn) {
+            this.getter = expOrFn
+        } else {
+            this.getter = parsePath(expOrFn)
+            if (!this.getter) {
+                this.getter = noop
+            }
         }
         // 在创建watcher实例时先取一次值
         this.value = this.get()
     }
 
-    get() {
-        // 在读取值时先将观察者对象赋值给Dep.target 否则Dep.target为空 不会触发收集依赖
-        Dep.target = this
-        const value = this.getter()
-        // 触发依赖后置为空
-        Dep.target = null
+    /**
+     * Evaluate the getter, and re-collect dependencies.
+     */
+    get () {
+        pushTarget(this)
+        const value = this.getter.call(this.vm, this.vm)
+        // "touch" every property so they are all tracked as
+        // dependencies for deep watching
+        popTarget()
+        this.cleanupDeps()
         return value
     }
 
-    set(val:any) {
-        this.setter(val)
+    /**
+     * Add a dependency to this directive.
+     */
+    addDep (dep: Dep) {
+        const id = dep.id
+        if (!this.newDepIds.has(id)) {
+            this.newDepIds.add(id)
+            this.newDeps.push(dep)
+            if (!this.depIds.has(id)) {
+                dep.addSub(this)
+            }
+        }
     }
 
-    update() {
+    /**
+     * Clean up for dependency collection.
+     */
+    cleanupDeps () {
+        let i = this.deps.length
+        while (i--) {
+            const dep = this.deps[i]
+            if (!this.newDepIds.has(dep.id)) {
+                dep.removeSub(this)
+            }
+        }
+        let tmp:Set<number> = this.depIds
+        this.depIds = this.newDepIds
+        this.newDepIds = tmp
+        this.newDepIds.clear()
+        let tmp2:Array<Dep> = this.deps
+        this.deps = this.newDeps
+        this.newDeps = tmp2
+        this.newDeps.length = 0
+    }
+
+     /**
+     * Subscriber interface.
+     * Will be called when a dependency changes.
+     */
+    update () {
+        /* istanbul ignore else */
         this.run()
     }
 
-    run() {
-        // 触发更新后执行回调函数
-        const value = this.get()
-        const oldValue = this.value
+    /**
+     * Scheduler job interface.
+     * Will be called by the scheduler.
+     */
+    run () {
+        if (!this.active) return;
 
-        if (value !== oldValue) {
+        const value = this.get()
+        if (
+            value !== this.value ||
+            // Deep watchers and watchers on Object/Arrays should fire even
+            // when the value is the same, because the value may
+            // have mutated.
+            isObject(value) 
+        ) {
+            // set new value
+            const oldValue = this.value
+            this.value = value
             this.cb.call(this.vm, value, oldValue)
         }
-        this.value = value
     }
 
-    addDep(dep:Dep) {
-        // 触发依赖 dep添加观察者对象 同时观察者对象也会将dep实例添加到自己的deps里
-        // 如果dep已经存在deps里 则不添加
-        // dep中存放着对应的watcher watcher中也会存放着对应的dep
-        // 一个dep可能有多个watcher 一个watcher也可能对应着多个dep
-        if (!this.depIds.has(dep.id)) {
-            this.deps.push(dep)
-            this.depIds.add(dep.id)
-            dep.addSub(this)
+    /**
+     * Depend on all deps collected by this watcher.
+     */
+    depend () {
+        let i = this.deps.length
+        while (i--) {
+            this.deps[i].depend()
         }
+    }
+
+    
+    /**
+     * Remove self from all dependencies' subscriber list.
+     */
+    teardown () {
+        if (!this.active) return;
+
+        // remove self from vm's watcher list
+        // this is a somewhat expensive operation so we skip it
+        // if the vm is being destroyed.
+        let i = this.deps.length
+        while (i--) {
+        this.deps[i].removeSub(this)
+        }
+        this.active = false
     }
 }

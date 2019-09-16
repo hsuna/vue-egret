@@ -37,5 +37,18 @@ export default class Dep {
     }
 }
 
-// Dep.target为watcher实例
+// The current target watcher being evaluated.
+// This is globally unique because only one watcher
+// can be evaluated at a time.
 Dep.target = null
+const targetStack = []
+
+export function pushTarget (target?: Watcher) {
+  targetStack.push(target)
+  Dep.target = target
+}
+
+export function popTarget () {
+  targetStack.pop()
+  Dep.target = targetStack[targetStack.length - 1]
+}
