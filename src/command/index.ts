@@ -10,27 +10,19 @@ export interface ICommand{
 export abstract class CommandBase implements ICommand {
     protected vm:Component
     protected sp:egret.DisplayObject
-    protected name:string
     protected expOrFn:string
+    protected name:string
 
     constructor(
         vm:Component, 
         sp:egret.DisplayObject, 
-        name:string, 
-        expOrFn:string
+        expOrFn:string,
+        name?:string
     ){
         this.vm = vm
         this.sp = sp
-        this.name = name
         this.expOrFn = expOrFn
-
-        this.implement()
-        this._addWatcher()
-    }
-
-    protected _addWatcher() {
-        // 在这里开始创建观察者实例 将监听的值变化时 触发update回调函数
-        // new Watcher(this.vm, this.name, this.update.bind(this))
+        this.name = name
     }
 
     implement(){
@@ -61,8 +53,8 @@ export default class CommandFactory {
     constructor(){}
 
     static create(Command:{
-        new(vm:Component, sp:egret.DisplayObject, name:string, expOrFn:string):ICommand
-    }, vm:Component, sp:egret.DisplayObject, name:string, expOrFn:string):ICommand {
-        return new Command(vm, sp, name, expOrFn)
+        new(vm:Component, sp:egret.DisplayObject, expOrFn:string, name?:string):ICommand
+    }, vm:Component, sp:egret.DisplayObject, expOrFn:string, name?:string):ICommand {
+        return new Command(vm, sp, expOrFn, name)
     }
 }

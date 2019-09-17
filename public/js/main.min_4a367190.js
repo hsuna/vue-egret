@@ -1296,7 +1296,6 @@ var Main = function (t) {
         return e._init(), e
     }
     return __extends(e, t), e.prototype._init = function () {
-        debugger
         this.stage ? this._addedStageHandler(null) : this.addEventListener(egret.Event.ADDED_TO_STAGE, this._addedStageHandler, this), this.addEventListener(egret.Event.REMOVED_FROM_STAGE, this._removedStageHandler, this)
     }, e.prototype._addedStageHandler = function (t) {
         this.removeEventListener(egret.Event.ADDED_TO_STAGE, this._addedStageHandler, this), egret.lifecycle.addLifecycleListener(function (t) {}), egret.lifecycle.onPause = function () {

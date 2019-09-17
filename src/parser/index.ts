@@ -1,4 +1,4 @@
-import ParseHtml, { ParseHtmlAttr, ParseHtmlOptions } from './parser/html-parser'
+import ParseHtml, { ParseHtmlAttr, ParseHtmlOptions } from './html-parser'
 import VueEgret, { Component } from '../index'
 import CommandFactory, {
     ICommand,
@@ -12,21 +12,46 @@ import CommandFactory, {
     CommandFor,
 } from '../command/index'
 
-export interface Node {
+export interface ASTAttr {
+    name: string
+    value: any
+}
+
+export interface ASTNode {
+    tag: string,
     text: string,
-    attrs: any,
-    children: Array<Node>
+    attrsList: Array<ASTAttr>,
+    attrsMap: Object,
+    children: Array<ASTNode>,
+    parent: ASTNode,
+}
+
+export function createVNode (
+    tag: string,
+    attrs: Array<ASTAttr>,
+    parent: ASTNode
+): ASTNode {
+    return {
+      tag,
+      text: '',
+      attrsList: attrs,
+      attrsMap: attrs.reduce((m, i) => { m[i.name] = i.value; return m; }, {}),
+      parent,
+      children: []
+    }
 }
 
 // 指令解析器
 export default class Compile implements ParseHtmlOptions {
     vm: Component
-    target: egret.DisplayObject
+    target: ASTNode
+    parent: ASTNode
+    stack: Array<ASTNode>
     _command: Array<ICommand>
     
     constructor(vm:Component){
         this.vm = vm
-        this.target = this.vm.sp
+        this.stack = []
         this._command = []
 
         this._init()
@@ -41,8 +66,18 @@ export default class Compile implements ParseHtmlOptions {
         this._command.forEach((c:ICommand) => c.update())
     }
 
-    startElement(tagName:string, attrs:Array<ParseHtmlAttr>){
-        let sp:egret.DisplayObject;
+    startElement(tagName:string, attrs:Array<ParseHtmlAttr>, unary:boolean){
+        this.target = createVNode(tagName, attrs, this.parent);
+
+        //processIf
+
+        if (!unary) {
+            this.parent = this.target
+            this.stack.push(this.target)
+        } else {
+            this.closeElement();
+        }
+        /* let sp:egret.DisplayObject;
         if(VueEgret._components[tagName]){
             sp = new (VueEgret._components[tagName])
         }else if(egret[tagName]){
@@ -73,15 +108,19 @@ export default class Compile implements ParseHtmlOptions {
                     else this.target[attr.name] = attr.value
                 }
             })
-        }
+        } */
     }
     endElement(tagName:string){
-        this.target = this.target.parent;
+        this.target = this.parent;
+        this.closeElement();
     }
     comment(text:string){
     }
     characters(text:string){
-        text = text.replace(/^\s+|\s+$/g, '')
-        this._command.push(new CommandText(this.vm, this.target, text))
+        this.target.text = text.replace(/^\s+|\s+$/g, '')
+        //this._command.push(new CommandText(this.vm, this.target, text))
+    }
+    closeElement(){
+
     }
 }

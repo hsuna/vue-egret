@@ -1,3 +1,21 @@
+/* var Main = class extends egret.Sprite {
+    constructor() {
+        super()
+        this.init()
+    }
+
+    init(){
+        var sp = new egret.Sprite;
+        this.addChild(sp);
+        sp.graphics.beginFill(0xff0000)
+        sp.graphics.drawRect(0,0,100,30)
+        sp.addEventListener(egret.TouchEvent.TOUCH_TAP, function(){
+            console.log('-=-==-=')
+        },sp)
+    }
+} 
+ */
+
 /* class Glb {
     constructor() {
         this.__created();
@@ -37,7 +55,7 @@
     destroyed() {}
 }
 
-var Main = class extends Glb {
+var Main = class extends egret.Sprite {
     testX = 10
     testY = 10
     constructor() {
@@ -70,32 +88,40 @@ var Main = class extends Glb {
             }]
         }]
     }
-} */
+}  */
 
 VueEgret.component('MyLabel', {
     data(){
         return {
-            text: 'loading'
-        }
-    },
-    methods: {
-        
-    },
-    template: `<TextField textColor="#00FFFF" x="11" y="12">{{text}}</TextField>`
-})
-
-var Main = new VueEgret({
-    data(){
-        return {
-            text: 'loading'
+            text1: 'loading'
         }
     },
     methods: {
         onLabelClick(){
-            this.text += '1'
+            this.text1 += '1'
+        }
+    },
+    template: `<TextField touchEnabled="true" textColor="#00FFFF" x="11" y="12" @touchTap="onLabelClick">{{text1+text1}}</TextField>`
+})
+
+var Main = VueEgret.classFactory({
+    data(){
+        return {
+            count: 0            
+        }
+    },
+    methods: {
+        onLabelClick(){
+            this.count += 1
         }
     },
     template: `<Sprite x="11" y="12">
-        <MyLabel x="11" y="12" :text="text" @click="onLabelClick"></MyLabel>
+        <Sprite x="11" y="40">
+            <TextField textColor="#FF00FF" x="0" y="0">{{count}}</TextField>
+        </Sprite>
+        <TextField textColor="#FF00FF" x="0" y="0" touchEnabled="true" @touchTap="onLabelClick">{{count+count}}</TextField>
+        <MyLabel v-if="count<3" x="11" y="90"></MyLabel>
+        <MyLabel v-else-if="count<10" x="11" y="180"></MyLabel>
+        <MyLabel v-else x="11" y="270"></MyLabel>
     </Sprite>`
 })
