@@ -1,6 +1,6 @@
 import { observe } from './observer/index'
 import Watcher from './observer/watcher'
-import Compile from './helpers/compile'
+import Compile from './parser/index'
 import { pushTarget, popTarget } from './observer/dep'
 import { noop, isPlainObject } from './util/index'
 
