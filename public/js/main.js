@@ -108,17 +108,18 @@ var Main = VueEgret.classFactory({
     data(){
         return {
             count: 0,
-            list: ['1111', '2222', '3333', '4444']
+            list: []
         }
     },
     methods: {
         onLabelClick(){
             this.count += 1
+            this.list.push(this.count)
         }
     },
     template: `<Sprite x="11" y="12">
         <Sprite v-for="(value, key) in list" x="11" y="40">
-            <TextField textColor="#FF00FF" x="0" y="0">{{value}}</TextField>
+            <TextField textColor="#FF00FF" :x="key*75" y="75">{{value}}</TextField>
         </Sprite>
         <TextField textColor="#FF00FF" x="0" y="0" touchEnabled="true" @touchTap="onLabelClick">{{count+count}}</TextField>
         <MyLabel v-if="count<3" x="11" y="90"></MyLabel>

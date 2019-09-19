@@ -1,4 +1,4 @@
-import { ASTAttr, ASTNode } from '../parser/index'
+import { ASTAttr, ASTNode } from '../parser/ast-node'
 
 const FOR_ALIAS_RE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/
 const FOR_ITERATOR_RE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/
@@ -33,13 +33,11 @@ export function parseFor (exp: string): ForParseResult {
 
 export function getAndRemoveAttr(node: ASTNode, name:string):any {
     let val = node.attrsMap[name];
-    if(val != null){
-        const list = node.attrsList
-        for (let i = 0, l = list.length; i < l; i++) {
-            if (list[i].name === name) {
-              list.splice(i, 1)
-              break
-            }
+    const list = node.attrsList
+    for (let i = 0, l = list.length; i < l; i++) {
+        if (list[i].name === name) {
+          list.splice(i, 1)
+          break
         }
     }
     return val
