@@ -32,6 +32,13 @@ export default class Observer {
             this.defineReactive(obj, key)
         })
     }
+
+    /**
+     * Observe a list of Array items.
+     */
+    observeArray (items: Array<any>) {
+        items.forEach(item => observe(item))
+    }
     
     defineReactive(obj:Object, key:string, val?:any) {
         const dep = new Dep()

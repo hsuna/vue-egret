@@ -1,14 +1,28 @@
+import Render from './render';
 import { observe } from './observer/index'
 import Watcher from './observer/watcher'
-import Compile from './parser/index'
 import { pushTarget, popTarget } from './observer/dep'
 import { noop, isPlainObject } from './util/index'
 
+export interface ComponentOptions {
+    template: string;
+    data: Function | Object;
+    methods: {
+        [propName:string]: Function;
+    };
+    beforeCreate?: Function;
+    created?: Function;
+    beforeDestroyed?: Function;
+    destroyed?: Function;
+    components?: {
+        [propName:string]: Function;
+    }
+}
 export class Component {
     private _data: any;
-    options: any;
+    options: ComponentOptions;
     sp: egret.DisplayObject;
-    _compile: Compile;
+    _render: Render;
     _watcher: Watcher;
     _watchers: Array<Watcher> = [];
 
@@ -18,17 +32,12 @@ export class Component {
 
         this._init()
     }
-    /* _callhook(name){
-        if('function' === typeof this._options[name]){
-            this._options[name]()
-        }
-    } */
     private _init() {
         this._initData()
         this._initMethods()
         this._initWatch()
-        this._compile = new Compile(this)
-        this._watcher = new Watcher(this, this._compile.render.bind(this._compile), noop)
+        this._render = new Render(this)
+        this._watcher = new Watcher(this, this._render.update.bind(this._render), noop)
     }
     private _initData() {
         const { data } = this.options
@@ -42,7 +51,9 @@ export class Component {
             }
         }))
         // 监听数据
+        this.$callHook('beforeCreate');
         observe(this._data)
+        this.$callHook('created');
     }
     private _initMethods() {
         const { methods={} } = this.options
@@ -59,6 +70,7 @@ export class Component {
             }
         })
     }
+
     private _getData (data: Function): any {
         pushTarget()
         try {
@@ -69,6 +81,7 @@ export class Component {
             popTarget()
         }
     }
+
     private _createWatcher (expOrFn: string | Function, handler: any, options?: Object) {
         if (isPlainObject(handler)) {
           options = handler
@@ -90,6 +103,13 @@ export class Component {
             watcher.teardown()
         }
     }
+
+    
+    public $callHook(name:string, ...rest) {
+        if('function' === typeof this.options[name]){
+            this.options[name].call(this, ...rest)
+        }
+    }
 }
 
 export default class VueEgret extends egret.Sprite {
@@ -98,14 +118,10 @@ export default class VueEgret extends egret.Sprite {
         VueEgret._components[name] = VueEgret.classFactory(options)
     }
     static classFactory = (options):any => class extends VueEgret { constructor(){ super(options) } }
-    constructor(options){
+
+    public vm:Component;
+    constructor(options:ComponentOptions){
         super()
-        new Component(this, options)
-    }
-    public created() {
-        
-    }
-    public destroyed() {
-        
+        this.vm = new Component(this, options)
     }
 }

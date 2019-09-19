@@ -1,7 +1,6 @@
 /** 虚拟树 */
 import { ASTNode, ASTAttr } from './ast-node'
 import { ForParseResult } from '../helpers';
-import VueEgret from '../index';
 
 const BIND_REG:RegExp = /^(v-bind:|:)/
 const ON_REG:RegExp = /^(v-on:|@)/

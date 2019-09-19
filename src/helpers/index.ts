@@ -1,4 +1,4 @@
-import { ASTAttr, ASTNode } from '../parser/ast-node'
+import { ASTAttr, ASTNode } from '../render/ast-node'
 
 const FOR_ALIAS_RE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/
 const FOR_ITERATOR_RE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/
