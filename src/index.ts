@@ -1,7 +1,7 @@
 /*!
- * vue-egret 1.0.0
- * @author Hsuna
- */
+* vue-egret 1.0.0
+* @author Hsuna
+*/
 
 import Render from './render';
 import { observe } from './observer/index'

@@ -2,7 +2,8 @@
   "name": "vue-egret",
   "version": "1.0.1",
   "description": "Egret MVVM",
-  "main": "./dist/vue.egret.js",
+  "main": "dist/vue.egret.js",
+  "typings": "src/index.d.ts",
   "scripts": {
     "start": "npm run dev",
     "dev": "webpack-dev-server --config ./build/webpack.config.js --mode=development",
