@@ -1,8 +1,8 @@
 {
-  "name": "sdk-20180202",
+  "name": "vue-egret",
   "version": "1.0.0",
-  "description": "H5SDK",
-  "main": "./dist/h5sdk/index.js",
+  "description": "Egret MVVM",
+  "main": "./dist/vue.egret.js",
   "scripts": {
     "start": "npm run dev",
     "dev": "webpack-dev-server --config ./build/webpack.config.js --mode=development",
@@ -28,14 +28,10 @@
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.4.1"
   },
-  "dependencies": {
-    "md5": "^2.2.1",
-    "pubsub-js": "^1.6.0",
-    "xml2js": "^0.4.20"
-  },
+  "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "http://git.3k.com/web/PM/sdk-20180202.git"
+    "url": "http://git.3k.com/web/Tech/vue-egret.git"
   },
   "author": "",
   "license": "ISC",

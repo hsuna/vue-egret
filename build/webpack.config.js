@@ -10,7 +10,7 @@ const configFactory = function(webpackEnv) {
 	return {
     mode: webpackEnv,
 		output: {
-      filename: "js/vue.egret.js",
+      filename: isEnvProduction ? "vue.egret.js" : 'js/vue.egret.js',
       library:'VueEgret',
       libraryTarget:'umd',
       libraryExport: "default",
@@ -60,7 +60,7 @@ const configFactory = function(webpackEnv) {
         parallel: true
       }),
       // copy custom static assets
-      new CopyWebpackPlugin([
+      isEnvDevelopment && new CopyWebpackPlugin([
         {
           from: path.resolve(__dirname, '../public'),
 					to: './',

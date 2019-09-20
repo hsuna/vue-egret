@@ -2,7 +2,7 @@
  * Not type-checking this file because it's mostly vendor code.
  */
 
-/*!
+/*
  * HTML Parser By John Resig (ejohn.org)
  * Modified by Juriy "kangax" Zaytsev
  * Original code by Erik Arvidsson (MPL-1.1 OR Apache-2.0 OR GPL-2.0-or-later)
