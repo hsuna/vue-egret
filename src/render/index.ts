@@ -80,7 +80,7 @@ export default class Render {
     try{
         return Function.prototype.constructor(`with(this){ return ${code};}`).call(this.vm)
     }catch(e){
-        console.error(e, code)
+        throw new Error(e)
     }
   }
   

@@ -34,7 +34,7 @@ export class Component {
     _watchers: Array<Watcher> = [];
     _components: ComponentMap<Function> = {};
 
-    constructor(sp:egret.DisplayObject, options:any) {
+    constructor(sp:egret.DisplayObject, options:ComponentOptions={}) {
         this.sp = sp;
         this.options = options;
 
