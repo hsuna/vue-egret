@@ -9,6 +9,9 @@ import Watcher from './observer/watcher'
 import { pushTarget, popTarget } from './observer/dep'
 import { noop, isPlainObject } from './util/index'
 
+export interface ComponentMap<T> {
+    [propName:string]: T;
+}
 export interface ComponentOptions {
     template: string;
     data: Function | Object;
@@ -19,10 +22,9 @@ export interface ComponentOptions {
     created?: Function;
     beforeDestroyed?: Function;
     destroyed?: Function;
-    components?: {
-        [propName:string]: Function;
-    }
+    components?: ComponentMap<ComponentOptions>;
 }
+
 export class Component {
     private _data: any;
     options: ComponentOptions;
@@ -30,6 +32,7 @@ export class Component {
     _render: Render;
     _watcher: Watcher;
     _watchers: Array<Watcher> = [];
+    _components: ComponentMap<Function> = {};
 
     constructor(sp:egret.DisplayObject, options:any) {
         this.sp = sp;
@@ -41,6 +44,7 @@ export class Component {
         this._initData()
         this._initMethods()
         this._initWatch()
+        this._initComponents()
         this._render = new Render(this)
         this._watcher = new Watcher(this, this._render.update.bind(this._render), noop)
     }
@@ -75,7 +79,12 @@ export class Component {
             }
         })
     }
-
+    private _initComponents(){
+        const components:ComponentMap<ComponentOptions> = this.options.components || {}
+        Object.keys(components).forEach((name:string) => {
+            this._components[name] = VueEgret.classFactory(components[name])
+        })
+    }
     private _getData (data: Function): any {
         pushTarget()
         try {
@@ -118,11 +127,11 @@ export class Component {
 }
 
 export default class VueEgret extends egret.Sprite {
-    static _components = {}
-    static component = (name:string, options:any) => {
+    static _components:ComponentMap<Function> = {}
+    static component = (name:string, options:ComponentOptions) => {
         VueEgret._components[name] = VueEgret.classFactory(options)
     }
-    static classFactory = (options):any => class extends VueEgret { constructor(){ super(options) } }
+    static classFactory = (options:ComponentOptions):Function => class extends VueEgret { constructor(){ super(options) } }
 
     public vm:Component;
     constructor(options:ComponentOptions){

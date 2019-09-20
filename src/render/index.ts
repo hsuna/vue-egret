@@ -85,12 +85,10 @@ export default class Render {
   }
   
   private _createDisObj(vnode:VNode):egret.DisplayObject {
-    if(VueEgret._components[vnode.tag]){
-        vnode.sp = new (VueEgret._components[vnode.tag])
-    }else if(egret[vnode.tag]){
-        vnode.sp = new (egret[vnode.tag])
-    }
-
+    const VClass: Function = this.vm._components[vnode.tag] || VueEgret._components[vnode.tag] || egret[vnode.tag]
+    if(!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`)
+    
+    vnode.sp = new (<any>VClass)
     Object.keys(vnode.attrs).forEach(name => {
         vnode.sp[name] = vnode.attrs[name]
     })
