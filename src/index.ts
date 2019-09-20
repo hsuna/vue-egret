@@ -13,16 +13,16 @@ export interface ComponentMap<T> {
     [propName:string]: T;
 }
 export interface ComponentOptions {
-    template: string;
-    data: Function | Object;
-    methods: {
+    template?: string;
+    data?: Function | Object;
+    components?: ComponentMap<ComponentOptions>;
+    methods?: {
         [propName:string]: Function;
     };
     beforeCreate?: Function;
     created?: Function;
     beforeDestroyed?: Function;
     destroyed?: Function;
-    components?: ComponentMap<ComponentOptions>;
 }
 
 export class Component {
