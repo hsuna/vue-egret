@@ -41,10 +41,12 @@ export class Component {
         this._init()
     }
     private _init() {
+        this.$callHook('beforeCreate');
         this._initData()
         this._initMethods()
         this._initWatch()
         this._initComponents()
+        this.$callHook('created');
         this._render = new Render(this)
         this._watcher = new Watcher(this, this._render.update.bind(this._render), noop)
     }
@@ -60,9 +62,7 @@ export class Component {
             }
         }))
         // 监听数据
-        this.$callHook('beforeCreate');
         observe(this._data)
-        this.$callHook('created');
     }
     private _initMethods() {
         const { methods={} } = this.options
