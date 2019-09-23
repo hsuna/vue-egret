@@ -102,8 +102,18 @@ export default class Render {
         newStartVNode = newCh[++newStartIdx]
       }
     }
-    for(let i=oldStartIdx; i<=oldEndIdx; i++){
-      this._destroyDisObj(oldCh[i])
+    if(oldStartIdx > oldEndIdx){
+      let sp:egret.DisplayObject
+      while(newStartIdx<=newEndIdx){
+        sp = this._createDisObj(newStartVNode);
+        parent.addChild(sp);
+        newStartVNode = newCh[++newStartIdx]
+      }
+    }else if(newStartIdx > newEndIdx){
+      while(oldStartIdx<=oldStartIdx){
+        this._destroyDisObj(oldStartVNode)
+        oldStartVNode = oldCh[++oldStartIdx]
+      }
     }
   }
 
@@ -173,7 +183,7 @@ export default class Render {
       if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).vm.$callHook('beforeDestroyed');
       vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
       for(const type in vnode.on){
-        vnode.sp.removeEventListener(type, vnode.on[type], this)
+        vnode.sp.removeEventListener(type, vnode.on[type], this.vm)
       }
       if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).vm.$callHook('destroyed');
     }

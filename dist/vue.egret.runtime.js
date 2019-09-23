@@ -556,8 +556,19 @@ var Render = (function () {
                 newStartVNode = newCh[++newStartIdx];
             }
         }
-        for (var i = oldStartIdx; i <= oldEndIdx; i++) {
-            this._destroyDisObj(oldCh[i]);
+        if (oldStartIdx > oldEndIdx) {
+            var sp = void 0;
+            while (newStartIdx <= newEndIdx) {
+                sp = this._createDisObj(newStartVNode);
+                parent.addChild(sp);
+                newStartVNode = newCh[++newStartIdx];
+            }
+        }
+        else if (newStartIdx > newEndIdx) {
+            while (oldStartIdx <= oldStartIdx) {
+                this._destroyDisObj(oldStartVNode);
+                oldStartVNode = oldCh[++oldStartIdx];
+            }
         }
     };
     Render.prototype._sameVNode = function (oldVNode, newVNode) {
@@ -628,7 +639,7 @@ var Render = (function () {
                 vnode.sp.vm.$callHook('beforeDestroyed');
             vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
             for (var type in vnode.on) {
-                vnode.sp.removeEventListener(type, vnode.on[type], this);
+                vnode.sp.removeEventListener(type, vnode.on[type], this.vm);
             }
             if (vnode.sp instanceof index_1.default)
                 vnode.sp.vm.$callHook('destroyed');
@@ -1012,15 +1023,16 @@ function genVNode(ast, isCheck) {
         }).join('') + '"")';
     }
     else {
-        return "_c(\"" + ast.tag + "\", \"" + ast.key + "\", " + genAttr(ast) + ", [].concat(" + ast.children.map(function (ast) { return genVNode(ast); }).join(',') + "))";
+        return "_c(\"" + ast.tag + "\", \"" + ast.key + "\", " + genAttr(ast) + ", " + (ast.children.length > 0 ? "[].concat(" + ast.children.map(function (ast) { return genVNode(ast); }) + ")" : '') + ")";
     }
 }
 exports.genVNode = genVNode;
 function createVNode(tag, key, data, children) {
+    if (children === void 0) { children = []; }
     var vnode = {
         tag: tag,
         key: key,
-        children: children,
+        children: children.filter(Boolean),
         attrs: data.attrs,
         props: {},
         on: data.on,

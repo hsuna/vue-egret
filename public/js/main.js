@@ -59,7 +59,7 @@ var Main = VueEgret.classFactory({
     data(){
         return {
             count: 0,
-            list: []
+            list: [1,2]
         }
     },
     methods: {
@@ -75,11 +75,15 @@ var Main = VueEgret.classFactory({
         
     },
     template: `<Sprite x="11" y="12">
+        <TextField textColor="#FF00FF" x="0" y="0" touchEnabled="true" @touchTap="onLabelClick">{{count+count}}</TextField>
         <MyButton @test="onTest" skin="xxxxxxxxx"></MyButton>
+        <Sprite v-for="(value, key) in list" x="11" y="40">
+            <TextField textColor="#FF00FF" :x="key*75" y="75">{{value}}</TextField>
+        </Sprite> 
     </Sprite>`
 })
 
-/* <Sprite v-for="(value, key) in list" x="11" y="40">
+/*      <Sprite v-for="(value, key) in list" x="11" y="40">
             <TextField textColor="#FF00FF" :x="key*75" y="75">{{value}}</TextField>
         </Sprite> 
           <TextField textColor="#FF00FF" x="0" y="0" touchEnabled="true" @touchTap="onLabelClick">{{count+count}}</TextField>
