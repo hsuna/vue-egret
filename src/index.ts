@@ -138,6 +138,11 @@ export class Component {
         }
         return this.$watch(expOrFn, handler, options)
     }
+    public $emit (event: string): Component {
+        let sub:egret.Event = new egret.Event(event);
+        this.sp.dispatchEvent(sub);
+        return this;
+    }
     public $watch (expOrFn: string | Function, cb: any, options?: Object): Function {
         if (isPlainObject(cb)) {
           return this._createWatcher(expOrFn, cb, options)

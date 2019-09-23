@@ -126,18 +126,19 @@ export default class Render {
     const VClass: Function = this.vm._components[vnode.tag] || VueEgret._components[vnode.tag] || egret[vnode.tag]
     if(!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`)
     vnode.sp = new (<any>VClass)
+    for(const name in vnode.attrs){
+      vnode.sp[name] = vnode.attrs[name]
+    }
+    for(const type in vnode.on){
+      vnode.sp.addEventListener(type, vnode.on[type], this.vm)
+    }
     if(vnode.sp instanceof VueEgret){
       const vm:Component = (vnode.sp as VueEgret).vm;
       for(const key in vm._props){
         if(key in vnode.attrs) vm._props[key] = vnode.attrs[key]
         if(key in this.vm._props) this.vm._props[key]
       }
-    }
-    for(const name in vnode.attrs){
-      vnode.sp[name] = vnode.attrs[name]
-    }
-    for(const type in vnode.on){
-      vnode.sp.addEventListener(type, vnode.on[type], this.vm)
+      vm.$callHook('mounted');
     }
     vnode.children.forEach((child:VNode) => (vnode.sp as egret.DisplayObjectContainer).addChild(this._createDisObj(child)))
     return vnode.sp;
