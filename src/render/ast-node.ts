@@ -12,6 +12,7 @@ export interface ASTNode {
     key: string | number,
     tag: string,
     text: string,
+    ref: string,
     attrsList: Array<ASTAttr>,
     attrsMap: Object,
     processMap: {
@@ -34,6 +35,7 @@ export default function createASTNode (
     return {
       key: `${tag}_${++uuid}`,
       tag,
+      ref: '',
       text: '',
       attrsList: attrs,
       attrsMap: attrs.reduce((m, i) => Object.assign(m, {[i.name]:i.value}), {}),

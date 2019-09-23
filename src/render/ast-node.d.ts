@@ -8,6 +8,7 @@ export interface ASTNode {
     key: string | number;
     tag: string;
     text: string;
+    ref: string;
     attrsList: Array<ASTAttr>;
     attrsMap: Object;
     processMap: {

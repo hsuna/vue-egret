@@ -48,6 +48,8 @@ export class Component {
     private __watchers: Array<Watcher> = [];
     private __components: ComponentMap<Function> = {};
 
+    public __refs: Array<egret.DisplayObject> = [];
+
     constructor(sp:egret.DisplayObject, options:ComponentOptions={}) {
         this.sp = sp;
         this.options = options;
@@ -165,7 +167,9 @@ export class Component {
             this.options[name].call(this, ...rest)
         }
     }
-
+    public get $refs():Array<egret.DisplayObject>{
+        return this.__refs;
+    }
     public get _data():any{
         return this.__data;
     }

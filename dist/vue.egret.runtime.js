@@ -241,6 +241,7 @@ var Component = (function () {
         this.__props = {};
         this.__watchers = [];
         this.__components = {};
+        this.__refs = [];
         this.sp = sp;
         this.options = options;
         this._init();
@@ -382,6 +383,13 @@ var Component = (function () {
             (_a = this.options[name]).call.apply(_a, __spreadArrays([this], rest));
         }
     };
+    Object.defineProperty(Component.prototype, "$refs", {
+        get: function () {
+            return this.__refs;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(Component.prototype, "_data", {
         get: function () {
             return this.__data;
@@ -482,6 +490,7 @@ var Render = (function () {
         this.astCode = v_node_1.genVNode(parser_1.default.created(this.vm.options.template).root);
     };
     Render.prototype.update = function () {
+        this.vm.__refs = [];
         var vnode = this._createVNode(this.astCode);
         this.vnode = this._patch(this.vnode, vnode);
     };
@@ -594,6 +603,9 @@ var Render = (function () {
         }
         for (var type in vnode.on) {
             vnode.sp.addEventListener(type, vnode.on[type], this.vm);
+        }
+        if (vnode.ref) {
+            this.vm.__refs[vnode.ref] = vnode.sp;
         }
         if (vnode.sp instanceof index_1.default) {
             var vm = vnode.sp.vm;
@@ -726,7 +738,7 @@ var ParserFactory = (function () {
     ParserFactory.prototype.endElement = function (tagName) {
         var exp;
         if (exp = index_1.getAndRemoveAttr(this.target, 'ref'))
-            this.target.processMap.ref = exp;
+            this.target.ref = exp;
         if (exp = index_1.getAndRemoveAttr(this.target, 'v-for'))
             this.target.processMap.for = index_1.parseFor(exp);
         if (exp = index_1.getAndRemoveAttr(this.target, 'v-if'))
@@ -957,6 +969,7 @@ function createASTNode(tag, attrs, parent) {
     return {
         key: tag + "_" + ++uuid,
         tag: tag,
+        ref: '',
         text: '',
         attrsList: attrs,
         attrsMap: attrs.reduce(function (m, i) {
@@ -999,7 +1012,7 @@ function genAttr(ast) {
     if (ast.text) {
         attrs += "text:" + genText(ast) + ",";
     }
-    return "{attrs:{" + attrs + "},on:{" + on + "}}";
+    return "{attrs:{" + attrs + "},on:{" + on + "}," + (ast.ref ? "ref:\"" + ast.ref + "\"" : '') + "}";
 }
 exports.genAttr = genAttr;
 function genText(ast) {
@@ -1026,15 +1039,16 @@ function genVNode(ast, isCheck) {
         }).join('') + '"")';
     }
     else {
-        return "_c(\"" + ast.tag + "\", \"" + ast.key + "\", " + genAttr(ast) + ", " + (ast.children.length > 0 ? "[].concat(" + ast.children.map(function (ast) { return genVNode(ast); }) + ")" : '') + ")";
+        return "_c(\"" + ast.tag + "\", " + genAttr(ast) + ", " + (ast.children.length > 0 ? "[].concat(" + ast.children.map(function (ast) { return genVNode(ast); }) + ")" : '') + ")";
     }
 }
 exports.genVNode = genVNode;
-function createVNode(tag, key, data, children) {
+function createVNode(tag, key, ref, data, children) {
     if (children === void 0) { children = []; }
     var vnode = {
-        tag: tag,
         key: key,
+        tag: tag,
+        ref: data.ref || '',
         children: children.filter(Boolean),
         attrs: data.attrs,
         props: {},

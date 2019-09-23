@@ -6,6 +6,7 @@ export interface VNode {
     sp?: egret.DisplayObject;
     key?: string | number;
     tag: string;
+    ref: string;
     children: Array<VNode>;
     attrs: {
         [propsName: string]: any;
@@ -21,4 +22,4 @@ export declare function genAttr(ast: ASTNode): string;
 export declare function genText(ast: ASTNode): string;
 export declare function genHandler(exp: string): string;
 export declare function genVNode(ast: ASTNode, isCheck?: boolean): string;
-export declare function createVNode(tag: string, key: string | number, data: any, children?: Array<VNode>): VNode;
+export declare function createVNode(tag: string, key: string | number, ref: string, data: any, children?: Array<VNode>): VNode;

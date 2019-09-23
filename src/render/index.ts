@@ -26,6 +26,7 @@ export default class Render {
   }
 
   public update(){
+    this.vm.__refs = [];//清空节点
     let vnode:VNode = this._createVNode(this.astCode);
     this.vnode = this._patch(this.vnode, vnode);
   }
@@ -141,6 +142,10 @@ export default class Render {
     }
     for(const type in vnode.on){
       vnode.sp.addEventListener(type, vnode.on[type], this.vm)
+    }
+    // 实例节点
+    if(vnode.ref){
+      this.vm.__refs[vnode.ref] = vnode.sp
     }
     if(vnode.sp instanceof VueEgret){
       const vm:Component = (vnode.sp as VueEgret).vm;

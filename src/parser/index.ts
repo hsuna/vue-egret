@@ -31,7 +31,7 @@ export default class ParserFactory implements ParseHtmlOptions {
 
     endElement(tagName:string){
         let exp
-        if(exp = getAndRemoveAttr(this.target, 'ref')) this.target.processMap.ref = exp
+        if(exp = getAndRemoveAttr(this.target, 'ref')) this.target.ref = exp
         if(exp = getAndRemoveAttr(this.target, 'v-for')) this.target.processMap.for = parseFor(exp)
         if(exp = getAndRemoveAttr(this.target, 'v-if')) this.target.processMap.if = this.addIfConditions(exp)
         else if(exp = getAndRemoveAttr(this.target, 'v-else-if')) this.target.processMap.elseif = this.addIfConditions(exp, true)

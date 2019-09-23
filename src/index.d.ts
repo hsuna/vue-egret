@@ -35,6 +35,7 @@ export declare class Component {
     private __watcher;
     private __watchers;
     private __components;
+    __refs: Array<egret.DisplayObject>;
     constructor(sp: egret.DisplayObject, options?: ComponentOptions);
     private _init;
     private _initProps;
@@ -48,6 +49,7 @@ export declare class Component {
     $emit(event: string, data: any): Component;
     $watch(expOrFn: string | Function, cb: any, options?: Object): Function;
     $callHook(name: string, ...rest: any[]): void;
+    readonly $refs: Array<egret.DisplayObject>;
     readonly _data: any;
     _props: any;
     readonly _render: Render;
