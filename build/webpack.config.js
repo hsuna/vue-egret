@@ -5,12 +5,16 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 
 const configFactory = function(webpackEnv) {
 	const isEnvDevelopment = webpackEnv === 'development';
-  const isEnvProduction = webpackEnv === 'production';
+	const isEnvProduction = webpackEnv === 'production';
 
 	return {
-    mode: webpackEnv,
+    mode: isEnvProduction ? 'production' : 'development',
 		output: {
-      filename: isEnvProduction ? "vue.egret.js" : 'js/vue.egret.js',
+			filename: {
+				development: 'js/vue.egret.js',
+				runtime: 'vue.egret.runtime.js',
+				production: 'vue.egret.js',
+			}[webpackEnv],
       library:'VueEgret',
       libraryTarget:'umd',
       libraryExport: "default",
@@ -45,6 +49,9 @@ const configFactory = function(webpackEnv) {
 					}
 				}
 			]
+		},
+		optimization: {
+			minimize: isEnvProduction,
 		},
 		plugins: [
       new FriendlyErrorsPlugin(),
@@ -93,4 +100,10 @@ const env = process.argv.slice(2).includes('--mode=production')
 : process.argv.slice(2).includes('--mode=development') 
 ? 'development'
 : ''
-module.exports = configFactory(env)
+module.exports = 
+	'development' === env
+	? configFactory(env)
+	:[
+		configFactory('runtime'),
+		configFactory(env),
+	]

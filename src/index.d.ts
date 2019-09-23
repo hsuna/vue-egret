@@ -2,6 +2,8 @@
 * vue-egret 1.0.0
 * @author Hsuna
 */
+/// <reference path="./egret.d.ts" />
+
 import Render from './render';
 import Watcher from './observer/watcher';
 export interface ComponentMap<T> {
@@ -27,7 +29,7 @@ export declare class Component {
     _watcher: Watcher;
     _watchers: Array<Watcher>;
     _components: ComponentMap<Function>;
-    constructor(sp: egret.DisplayObject, options: any);
+    constructor(sp: egret.DisplayObject, options?: ComponentOptions);
     private _init;
     private _initData;
     private _initMethods;

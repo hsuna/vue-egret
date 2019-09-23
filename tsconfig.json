@@ -1,4 +1,6 @@
 {
+	"name": "vue-egret",
+	"author": "Hsuna",
 	"compilerOptions": {
 		"allowJs": false,
 		"sourceMap": true,

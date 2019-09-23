@@ -2,6 +2,7 @@
 * vue-egret 1.0.0
 * @author Hsuna
 */
+/// <reference path="./egret.d.ts" />
 
 import Render from './render';
 import { observe } from './observer/index'
@@ -136,6 +137,6 @@ export default class VueEgret extends egret.Sprite {
     public vm:Component;
     constructor(options:ComponentOptions){
         super()
-        this.vm = new Component(this, options)
+        this.vm = new Component(this as egret.DisplayObject, options)
     }
 }
