@@ -1012,7 +1012,7 @@ function genAttr(ast) {
     if (ast.text) {
         attrs += "text:" + genText(ast) + ",";
     }
-    return "{attrs:{" + attrs + "},on:{" + on + "}" + (ast.ref ? ",ref:\"" + ast.ref + "\"" : '');
+    return "{attrs:{" + attrs + "},on:{" + on + "}" + (ast.ref ? ",ref:\"" + ast.ref + "\"" : '') + "}";
 }
 exports.genAttr = genAttr;
 function genText(ast) {
@@ -1039,11 +1039,11 @@ function genVNode(ast, isCheck) {
         }).join('') + '"")';
     }
     else {
-        return "_c(\"" + ast.tag + "\", " + genAttr(ast) + ", " + (ast.children.length > 0 ? "[].concat(" + ast.children.map(function (ast) { return genVNode(ast); }) + ")" : '') + ")";
+        return "_c(\"" + ast.tag + "\",\"" + ast.key + "\"," + genAttr(ast) + (ast.children.length > 0 ? ",[].concat(" + ast.children.map(function (ast) { return genVNode(ast); }) + ")" : '') + ")";
     }
 }
 exports.genVNode = genVNode;
-function createVNode(tag, key, ref, data, children) {
+function createVNode(tag, key, data, children) {
     if (children === void 0) { children = []; }
     var vnode = {
         key: key,
