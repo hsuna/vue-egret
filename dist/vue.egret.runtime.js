@@ -222,6 +222,18 @@ var watcher_1 = __webpack_require__(13);
 var dep_1 = __webpack_require__(1);
 var index_2 = __webpack_require__(0);
 var props_1 = __webpack_require__(14);
+var ComponentEvent = (function (_super) {
+    __extends(ComponentEvent, _super);
+    function ComponentEvent(type, data, bubbles, cancelable) {
+        if (bubbles === void 0) { bubbles = false; }
+        if (cancelable === void 0) { cancelable = false; }
+        var _this = _super.call(this, type, bubbles, cancelable) || this;
+        _this.data = data;
+        return _this;
+    }
+    return ComponentEvent;
+}(egret.Event));
+exports.ComponentEvent = ComponentEvent;
 var Component = (function () {
     function Component(sp, options) {
         if (options === void 0) { options = {}; }
@@ -346,9 +358,8 @@ var Component = (function () {
         }
         return this.$watch(expOrFn, handler, options);
     };
-    Component.prototype.$emit = function (event) {
-        var sub = new egret.Event(event);
-        this.sp.dispatchEvent(sub);
+    Component.prototype.$emit = function (event, data) {
+        this.sp.dispatchEvent(new ComponentEvent(event, data));
         return this;
     };
     Component.prototype.$watch = function (expOrFn, cb, options) {

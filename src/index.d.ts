@@ -22,6 +22,10 @@ export interface ComponentOptions {
     beforeDestroyed?: Function;
     destroyed?: Function;
 }
+export declare class ComponentEvent extends egret.Event {
+    data: any;
+    constructor(type: string, data: any, bubbles?: boolean, cancelable?: boolean);
+}
 export declare class Component {
     sp: egret.DisplayObject;
     options: ComponentOptions;
@@ -41,7 +45,7 @@ export declare class Component {
     private _initComponents;
     private _getData;
     private _createWatcher;
-    $emit(event: string): Component;
+    $emit(event: string, data: any): Component;
     $watch(expOrFn: string | Function, cb: any, options?: Object): Function;
     $callHook(name: string, ...rest: any[]): void;
     readonly _data: any;

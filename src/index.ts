@@ -29,6 +29,14 @@ export interface ComponentOptions {
     destroyed?: Function;
 }
 
+export class ComponentEvent extends egret.Event {
+    public data:any;
+    constructor(type:string, data:any, bubbles:boolean=false, cancelable:boolean = false) {
+        super(type, bubbles, cancelable);
+        this.data = data;
+    }
+}
+
 export class Component {
     sp: egret.DisplayObject;
     options: ComponentOptions;
@@ -138,9 +146,8 @@ export class Component {
         }
         return this.$watch(expOrFn, handler, options)
     }
-    public $emit (event: string): Component {
-        let sub:egret.Event = new egret.Event(event);
-        this.sp.dispatchEvent(sub);
+    public $emit (event: string, data:any): Component {
+        this.sp.dispatchEvent(new ComponentEvent(event, data));
         return this;
     }
     public $watch (expOrFn: string | Function, cb: any, options?: Object): Function {

@@ -48,7 +48,7 @@ VueEgret.component('MyButton', {
         }
     },
     mounted () {
-        this.$emit('test');
+        this.$emit('test', '1111');
     },
     methods: {
     },
@@ -67,8 +67,8 @@ var Main = VueEgret.classFactory({
             this.count += 1
             this.list.push(this.count)
         },
-        onTest(){
-            console.log('emit test')
+        onTest(val){
+            console.log(val)
         }
     },
     mounted () {
