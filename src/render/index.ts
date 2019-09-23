@@ -10,7 +10,6 @@ export function installRender (target: any) {
   target._s = toString
   target._l = renderList
 }
-  
 export default class Render {
   vm: Component;
   vnode:VNode;
@@ -32,6 +31,7 @@ export default class Render {
   }
 
   private _patch(oldVNode:VNode, newVNode:VNode): VNode{
+    console.log(oldVNode, newVNode)
     if(!oldVNode){//如果不存在旧节点的情况下，说明还未初始化，则初始化页面
         // 创建新节点
         let sp:egret.DisplayObject = this._createDisObj(newVNode);
@@ -52,26 +52,65 @@ export default class Render {
 
   private _patchVNode(oldVNode:VNode, newVNode:VNode){
     newVNode.sp = oldVNode.sp;
-    if(oldVNode === newVNode) return;
     this._updateDisObj(oldVNode, newVNode);
-    let oldCh:Array<VNode> = oldVNode.children, newCh:Array<VNode> = newVNode.children;       
+    this._updateChildren(oldVNode.children, newVNode.children, newVNode.sp as egret.DisplayObjectContainer)
+  }
+
+  private _updateChildren(oldCh:Array<VNode>, newCh:Array<VNode>, parent:egret.DisplayObjectContainer){
     if(oldCh === newCh) return;
-    let len:number = Math.max(oldCh.length, newCh.length);
-    for(let i=0; i<len; i++){
-        if(newCh[i] && oldCh[i]){//子节点均存在时，进行比较
-            oldCh[i] = this._patch(oldCh[i], newCh[i])
-        }else if(newCh[i]){//需要添加新子节点
-            let sp:egret.DisplayObject = this._createDisObj(newCh[i]);
-            (newVNode.sp as egret.DisplayObjectContainer).addChild(sp);
-        }else if(oldCh[i]){//删除多余的旧子节点
-            this._destroyDisObj(oldCh[i]);
+    let oldStartIdx:number = 0
+    let newStartIdx:number = 0
+    let oldEndIdx:number = oldCh.length - 1
+    let newEndIdx:number = newCh.length - 1
+    let oldStartVNode:VNode = oldCh[0]
+    let oldEndVNode:VNode = oldCh[oldEndIdx]
+    let newStartVNode:VNode = newCh[0]
+    let newEndVNode:VNode = newCh[newEndIdx]
+
+    while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+      if (!oldStartVNode) {
+        oldStartVNode = oldCh[++oldStartIdx]
+      } else if (!oldEndVNode) {
+        oldEndVNode = oldCh[--oldEndIdx]
+      } else if (this._sameVNode(oldStartVNode, newStartVNode)) {
+        this._patchVNode(oldStartVNode, newStartVNode)
+        oldStartVNode = oldCh[++oldStartIdx]
+        newStartVNode = newCh[++newStartIdx]
+      } else if (this._sameVNode(oldEndVNode, newEndVNode)) {
+        this._patchVNode(oldEndVNode, newEndVNode)
+        oldEndVNode = oldCh[--oldEndIdx]
+        newEndVNode = newCh[--newEndIdx]
+      } else {
+        let sp:egret.DisplayObject
+        for(let i=oldStartIdx; i<=oldEndIdx; i++){
+          if(this._sameVNode(newStartVNode, oldCh[i])){
+            this._patchVNode(oldCh[i], newStartVNode);
+            //修改位置
+            sp = newStartVNode.sp;
+            parent.setChildIndex(sp, newStartIdx);
+            
+            let oldVNode:VNode = oldCh.splice(i, 1)[0];
+            oldCh.splice(newStartIdx, 0, oldVNode);
+            oldStartVNode = oldCh[++oldStartIdx]
+            break;
+          }
         }
+        if(!sp){
+          sp = this._createDisObj(newStartVNode);
+          parent.addChildAt(sp, newStartIdx);
+        }
+
+        newStartVNode = newCh[++newStartIdx]
+      }
+    }
+    for(let i=oldStartIdx; i<=oldEndIdx; i++){
+      this._destroyDisObj(oldCh[i])
     }
   }
 
   private _sameVNode(oldVNode:VNode, newVNode:VNode):boolean {
     return (
-        //newVNode.key === oldVNode.key && //key值
+        newVNode.key === oldVNode.key && //key值
         oldVNode.tag === newVNode.tag // 类名
     )
   }
@@ -87,39 +126,55 @@ export default class Render {
   private _createDisObj(vnode:VNode):egret.DisplayObject {
     const VClass: Function = this.vm._components[vnode.tag] || VueEgret._components[vnode.tag] || egret[vnode.tag]
     if(!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`)
-    
     vnode.sp = new (<any>VClass)
-    Object.keys(vnode.attrs).forEach(name => {
-        vnode.sp[name] = vnode.attrs[name]
-    })
-    Object.keys(vnode.on).forEach(type => {
-        vnode.sp.addEventListener(type, vnode.on[type], this.vm)
-    })
+    if(vnode.sp instanceof VueEgret){
+      const vm:Component = (vnode.sp as VueEgret).vm;
+      for(const key in vm._props){
+        if(key in vnode.attrs) vm._props[key] = vnode.attrs[key]
+        if(key in this.vm._props) this.vm._props[key]
+      }
+    }
+    for(const name in vnode.attrs){
+      vnode.sp[name] = vnode.attrs[name]
+    }
+    for(const type in vnode.on){
+      vnode.sp.addEventListener(type, vnode.on[type], this.vm)
+    }
     vnode.children.forEach((child:VNode) => (vnode.sp as egret.DisplayObjectContainer).addChild(this._createDisObj(child)))
     return vnode.sp;
   }
 
   private _updateDisObj(oldVNode:VNode, newVNode:VNode) {
-    Object.keys(newVNode.attrs).forEach(name => {
-      if(oldVNode.attrs[name] !== newVNode.attrs[name]){
-        oldVNode.sp[name] = newVNode.attrs[name]
+    if(oldVNode.sp instanceof VueEgret){
+      const vm:Component = (oldVNode.sp as VueEgret).vm;
+      for(const key in vm._props){
+        if(key in newVNode.attrs) vm._props[key] = newVNode.attrs[key]
+        if(key in this.vm._props) vm._props[key] = this.vm._props[key]
       }
-    })
-    Object.keys(newVNode.on).forEach(type => {
+    }else{
+      for(const name in newVNode.attrs){
+        if(oldVNode.attrs[name] !== newVNode.attrs[name]){
+          oldVNode.sp[name] = newVNode.attrs[name]
+          // oldVNode.attrs[name] = newVNode.attrs[name]
+        }
+      }
+      for(const type in newVNode.on){
         if(oldVNode.on[type] !== newVNode.on[type]){//事件不一样的，先销毁再重新注册
             oldVNode.sp.removeEventListener(type, oldVNode.on[type], this.vm)
             oldVNode.sp.addEventListener(type, newVNode.on[type], this.vm)
+            // oldVNode.on[type] = newVNode.on[type]
         }
-    })
+      }
+    }
   }
 
   private _destroyDisObj(vnode:VNode):VNode {
     if(vnode.sp){
       if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).vm.$callHook('beforeDestroyed');
-      vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp)
-      Object.keys(vnode.on).forEach(type => {
-          vnode.sp.removeEventListener(type, vnode.on[type], this)
-      })
+      vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
+      for(const type in vnode.on){
+        vnode.sp.removeEventListener(type, vnode.on[type], this)
+      }
       if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).vm.$callHook('destroyed');
     }
     vnode.children.forEach((vnode:VNode) => this._destroyDisObj(vnode))

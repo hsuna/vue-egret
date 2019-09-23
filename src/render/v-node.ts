@@ -15,9 +15,13 @@ export interface Variate {
 
 export interface VNode {
     sp?: egret.DisplayObject;
+    key?: string | number,
     tag: string;
     children: Array<VNode>;
     attrs: {
+        [propsName:string]: any
+    };
+    props: {
         [propsName:string]: any
     };
     on: {
@@ -60,15 +64,17 @@ export function genVNode(ast: ASTNode, isCheck:boolean=true):string {
     }else if(isCheck && ast.processMap.ifConditions){
         return '(' + ast.processMap.ifConditions.map(({exp, target}:{exp:string, target:ASTNode}) => `${exp}?${genVNode(target, false)}:`).join('') + '"")';
     }else{
-        return `_c("${ast.tag}", ${genAttr(ast)}, [].concat(${ast.children.map((ast:ASTNode) => genVNode(ast)).join(',')}))`;
+        return `_c("${ast.tag}", "${ast.key}", ${genAttr(ast)}, [].concat(${ast.children.map((ast:ASTNode) => genVNode(ast)).join(',')}))`;
     }
 }
 
-export function createVNode(tag:string, data:any, children:Array<VNode>):VNode {
+export function createVNode(tag:string, key:string|number, data:any, children:Array<VNode>):VNode {
     let vnode:VNode = {
         tag,
+        key,
         children,
         attrs: data.attrs,
+        props: {},
         on: data.on,
     }
     return vnode;

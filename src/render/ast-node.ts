@@ -1,6 +1,7 @@
 import { ForParseResult } from "../helpers";
 
 /** 语法树 */
+let uuid = 1234;
 
 export interface ASTAttr {
     name: string;
@@ -8,6 +9,7 @@ export interface ASTAttr {
     dynamic?: boolean;
 }
 export interface ASTNode {
+    key: string | number,
     tag: string,
     text: string,
     attrsList: Array<ASTAttr>,
@@ -30,6 +32,7 @@ export default function createASTNode (
     parent: ASTNode
 ): ASTNode {
     return {
+      key: `${tag}_${++uuid}`,
       tag,
       text: '',
       attrsList: attrs,

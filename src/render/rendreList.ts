@@ -6,7 +6,7 @@ export function renderList<T>(val:any, render:Function):Array<T> {
     } else if('number' === typeof val){
         return Array.from({length:val}).map((v, i) => render(i+1, i))
     } else if(isObject(val)){
-        return Object.keys(val).map((k, i) => render(val[k], k, i))
+        return [].map.call(val, (k, i) => render(val[k], k, i))
     }
     return []
 }

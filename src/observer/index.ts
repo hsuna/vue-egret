@@ -28,9 +28,9 @@ export default class Observer {
      * value type is Object.
      */
     walk (obj: Object) {
-        Object.keys(obj).forEach(key => {
+        for(const key in obj){
             this.defineReactive(obj, key)
-        })
+        }
     }
 
     /**

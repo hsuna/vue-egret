@@ -9,6 +9,7 @@ import { observe } from './observer/index'
 import Watcher from './observer/watcher'
 import { pushTarget, popTarget } from './observer/dep'
 import { noop, isPlainObject } from './util/index'
+import { validateProp } from './util/props'
 
 export interface ComponentMap<T> {
     [propName:string]: T;
@@ -16,6 +17,8 @@ export interface ComponentMap<T> {
 export interface ComponentOptions {
     template?: string;
     data?: Function | Object;
+    props?: Object;
+    computed?: Object;
     components?: ComponentMap<ComponentOptions>;
     methods?: {
         [propName:string]: Function;
@@ -27,13 +30,15 @@ export interface ComponentOptions {
 }
 
 export class Component {
-    private _data: any;
-    options: ComponentOptions;
     sp: egret.DisplayObject;
-    _render: Render;
-    _watcher: Watcher;
-    _watchers: Array<Watcher> = [];
-    _components: ComponentMap<Function> = {};
+    options: ComponentOptions;
+
+    private __data: any={};
+    private __props: any={};
+    private __render: Render;
+    private __watcher: Watcher;
+    private __watchers: Array<Watcher> = [];
+    private __components: ComponentMap<Function> = {};
 
     constructor(sp:egret.DisplayObject, options:ComponentOptions={}) {
         this.sp = sp;
@@ -42,49 +47,76 @@ export class Component {
         this._init()
     }
     private _init() {
+        this._initProps(this.options.props)
+        this._initMethods(this.options.methods)
+        this._initData(this.options.data)
+        this._initComputed(this.options.computed);
         this.$callHook('beforeCreate');
-        this._initData()
-        this._initMethods()
         this._initWatch()
-        this._initComponents()
+        this._initComponents(this.options.components)
         this.$callHook('created');
-        this._render = new Render(this)
-        this._watcher = new Watcher(this, this._render.update.bind(this._render), noop)
+        this.__render = new Render(this)
+        this.__watcher = new Watcher(this, this.__render.update.bind(this.__render), noop)
     }
-    private _initData() {
-        const { data } = this.options
-        this._data = typeof data === 'function'? this._getData(data) : data || {};
-        Object.keys(this._data).forEach(key => Object.defineProperty(this, key, {
-            get(){
-                return this['_data'][key]
-            },
-            set(val){
-                this['_data'][key] = val
-            }
-        }))
+    private _initProps(propsOptions: any={}) {
+        for(const key in propsOptions){
+
+            this.__props[key] = validateProp(propsOptions[key])
+            Object.defineProperty(this, key, {
+                get(){
+                    return this.__props[key]
+                }
+            })
+        }
         // 监听数据
-        observe(this._data)
+        observe(this.__props)
     }
-    private _initMethods() {
-        const { methods={} } = this.options
+    private _initData(data: any) {
+        this.__data = typeof data === 'function'? this._getData(data) : data || {};
+        for(const key in this.__data){
+            Object.defineProperty(this, key, {
+                get(){
+                    return this.__data[key]
+                },
+                set(val){
+                    this.__data[key] = val
+                }
+            })
+        }
+        // 监听数据
+        observe(this.__data)
+    }
+    private _initMethods(methods:any = {}) {
         // 将methods上的方法赋值到vm实例上
-        Object.keys(methods).forEach(e => this[e] = methods[e])
+        for(const e in methods){
+            this[e] = methods[e]
+        }
+    }
+    private _initComputed(computed:any={}) {
+        for(const key in computed){
+            const userDef:any = computed[key] || noop
+            const getter:Function = typeof userDef === 'function' ? userDef : userDef.get
+            Object.defineProperty(this, key, {
+                get(){
+                    return getter.call(this);
+                }
+            })
+        }
     }
     private _initWatch (watch: Object={}) {
-        Object.keys(watch).forEach(key => {
+        for(const key in watch){
             const handler = watch[key]
             if (Array.isArray(handler)) {
                 handler.forEach(h => this._createWatcher(key, h))
             } else {
                 this._createWatcher(key, handler)
             }
-        })
+        }
     }
-    private _initComponents(){
-        const components:ComponentMap<ComponentOptions> = this.options.components || {}
-        Object.keys(components).forEach((name:string) => {
-            this._components[name] = VueEgret.classFactory(components[name])
-        })
+    private _initComponents(components:ComponentMap<ComponentOptions> = {}){
+        for(const name in components){
+            this.__components[name] = VueEgret.classFactory(components[name])
+        }
     }
     private _getData (data: Function): any {
         pushTarget()
@@ -96,7 +128,6 @@ export class Component {
             popTarget()
         }
     }
-
     private _createWatcher (expOrFn: string | Function, handler: any, options?: Object) {
         if (isPlainObject(handler)) {
           options = handler
@@ -107,7 +138,6 @@ export class Component {
         }
         return this.$watch(expOrFn, handler, options)
     }
-
     public $watch (expOrFn: string | Function, cb: any, options?: Object): Function {
         if (isPlainObject(cb)) {
           return this._createWatcher(expOrFn, cb, options)
@@ -118,12 +148,32 @@ export class Component {
             watcher.teardown()
         }
     }
-
-    
     public $callHook(name:string, ...rest) {
         if('function' === typeof this.options[name]){
             this.options[name].call(this, ...rest)
         }
+    }
+
+    public get _data():any{
+        return this.__data;
+    }
+    public set _props(val:any){
+        this.__props = val;
+    }
+    public get _props():any{
+        return this.__props;
+    }
+    public get _render():Render{
+        return this.__render;
+    }
+    public get _watcher():Watcher{
+        return this.__watcher;
+    }
+    public get _watchers():Array<Watcher>{
+        return this.__watchers;
+    }
+    public get _components():ComponentMap<Function>{
+        return this.__components;
     }
 }
 
