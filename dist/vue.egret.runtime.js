@@ -558,14 +558,14 @@ var Render = (function () {
         }
         if (oldStartIdx > oldEndIdx) {
             var sp = void 0;
-            while (newStartIdx <= newEndIdx) {
+            while (newStartVNode) {
                 sp = this._createDisObj(newStartVNode);
                 parent.addChild(sp);
                 newStartVNode = newCh[++newStartIdx];
             }
         }
         else if (newStartIdx > newEndIdx) {
-            while (oldStartIdx <= oldStartIdx) {
+            while (oldStartVNode) {
                 this._destroyDisObj(oldStartVNode);
                 oldStartVNode = oldCh[++oldStartIdx];
             }
@@ -857,16 +857,19 @@ var ParseHtml = (function () {
         this.options.endElement(sTagName);
         return '';
     };
-    ParseHtml.prototype.parseAttributes = function (sTagName, s) {
+    ParseHtml.prototype.parseAttributes = function (sTagName, sRest) {
         var _this = this;
         var attrs = [];
-        s.replace(ATTR_RE, function () {
+        sRest.replace(ATTR_RE, function () {
             var _a;
             var arg = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 arg[_i] = arguments[_i];
             }
-            attrs.push((_a = _this.parseAttribute).call.apply(_a, __spreadArrays([_this, sTagName], arg)));
+            var attr = (_a = _this.parseAttribute).call.apply(_a, __spreadArrays([_this, sTagName], arg));
+            if (attr.name && '/' !== attr.name)
+                attrs.push(attr);
+            return '';
         });
         return attrs;
     };

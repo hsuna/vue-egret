@@ -104,13 +104,13 @@ export default class Render {
     }
     if(oldStartIdx > oldEndIdx){
       let sp:egret.DisplayObject
-      while(newStartIdx<=newEndIdx){
+      while(newStartVNode){
         sp = this._createDisObj(newStartVNode);
         parent.addChild(sp);
         newStartVNode = newCh[++newStartIdx]
       }
     }else if(newStartIdx > newEndIdx){
-      while(oldStartIdx<=oldStartIdx){
+      while(oldStartVNode){
         this._destroyDisObj(oldStartVNode)
         oldStartVNode = oldCh[++oldStartIdx]
       }

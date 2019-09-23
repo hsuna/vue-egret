@@ -101,7 +101,7 @@ export default class ParseHtml {
     }
   }
   
-  parseStartTag(sTag:string, sTagName:string, sRest):string {
+  parseStartTag(sTag:string, sTagName:string, sRest:string):string {
     const attrs = this.parseAttributes(sTagName, sRest);
     const unary:boolean = START_TAG_CLOSE.test(sTag);
     this.options.startElement(sTagName, attrs, unary);
@@ -113,10 +113,12 @@ export default class ParseHtml {
     return ''
 	}
 
-	parseAttributes (sTagName:string, s):Array<ParseHtmlAttr> {
+	parseAttributes (sTagName:string, sRest:string):Array<ParseHtmlAttr> {
 		const attrs:Array<ParseHtmlAttr> = [];
-		s.replace(ATTR_RE, (...arg) => {
-			attrs.push(this.parseAttribute.call(this, sTagName, ...arg));
+		sRest.replace(ATTR_RE, (...arg):string => {
+      let attr:ParseHtmlAttr = this.parseAttribute.call(this, sTagName, ...arg)
+      if(attr.name && '/' !== attr.name) attrs.push(attr);
+      return ''
 		});
 		return attrs;
 	}

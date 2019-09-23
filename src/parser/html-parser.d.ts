@@ -12,8 +12,8 @@ export default class ParseHtml {
     options: ParseHtmlOptions;
     constructor(s: string, options: ParseHtmlOptions);
     private _parse;
-    parseStartTag(sTag: string, sTagName: string, sRest: any): string;
+    parseStartTag(sTag: string, sTagName: string, sRest: string): string;
     parseEndTag(sTag: string, sTagName: string): string;
-    parseAttributes(sTagName: string, s: any): Array<ParseHtmlAttr>;
+    parseAttributes(sTagName: string, sRest: string): Array<ParseHtmlAttr>;
     parseAttribute(sTagName: string, sAttribute: any, sName: any): ParseHtmlAttr;
 }
