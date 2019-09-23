@@ -10,6 +10,7 @@ export default class Render {
     update(): void;
     private _patch;
     private _patchVNode;
+    private _updateChildren;
     private _sameVNode;
     private _createVNode;
     private _createDisObj;

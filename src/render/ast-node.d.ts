@@ -5,6 +5,7 @@ export interface ASTAttr {
     dynamic?: boolean;
 }
 export interface ASTNode {
+    key: string | number;
     tag: string;
     text: string;
     attrsList: Array<ASTAttr>;

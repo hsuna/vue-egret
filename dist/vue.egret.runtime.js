@@ -221,63 +221,108 @@ var index_1 = __webpack_require__(11);
 var watcher_1 = __webpack_require__(13);
 var dep_1 = __webpack_require__(1);
 var index_2 = __webpack_require__(0);
+var props_1 = __webpack_require__(14);
 var Component = (function () {
     function Component(sp, options) {
         if (options === void 0) { options = {}; }
-        this._watchers = [];
-        this._components = {};
+        this.__data = {};
+        this.__props = {};
+        this.__watchers = [];
+        this.__components = {};
         this.sp = sp;
         this.options = options;
         this._init();
     }
     Component.prototype._init = function () {
+        this._initProps(this.options.props);
+        this._initMethods(this.options.methods);
+        this._initData(this.options.data);
+        this._initComputed(this.options.computed);
         this.$callHook('beforeCreate');
-        this._initData();
-        this._initMethods();
         this._initWatch();
-        this._initComponents();
+        this._initComponents(this.options.components);
         this.$callHook('created');
-        this._render = new render_1.default(this);
-        this._watcher = new watcher_1.default(this, this._render.update.bind(this._render), index_2.noop);
+        this.__render = new render_1.default(this);
+        this.__watcher = new watcher_1.default(this, this.__render.update.bind(this.__render), index_2.noop);
     };
-    Component.prototype._initData = function () {
-        var _this = this;
-        var data = this.options.data;
-        this._data = typeof data === 'function' ? this._getData(data) : data || {};
-        Object.keys(this._data).forEach(function (key) { return Object.defineProperty(_this, key, {
-            get: function () {
-                return this['_data'][key];
-            },
-            set: function (val) {
-                this['_data'][key] = val;
-            }
-        }); });
-        index_1.observe(this._data);
+    Component.prototype._initProps = function (propsOptions) {
+        if (propsOptions === void 0) { propsOptions = {}; }
+        var _loop_1 = function (key) {
+            this_1.__props[key] = props_1.validateProp(propsOptions[key]);
+            Object.defineProperty(this_1, key, {
+                get: function () {
+                    return this.__props[key];
+                }
+            });
+        };
+        var this_1 = this;
+        for (var key in propsOptions) {
+            _loop_1(key);
+        }
+        index_1.observe(this.__props);
     };
-    Component.prototype._initMethods = function () {
-        var _this = this;
-        var _a = this.options.methods, methods = _a === void 0 ? {} : _a;
-        Object.keys(methods).forEach(function (e) { return _this[e] = methods[e]; });
+    Component.prototype._initData = function (data) {
+        this.__data = typeof data === 'function' ? this._getData(data) : data || {};
+        var _loop_2 = function (key) {
+            Object.defineProperty(this_2, key, {
+                get: function () {
+                    return this.__data[key];
+                },
+                set: function (val) {
+                    this.__data[key] = val;
+                }
+            });
+        };
+        var this_2 = this;
+        for (var key in this.__data) {
+            _loop_2(key);
+        }
+        index_1.observe(this.__data);
+    };
+    Component.prototype._initMethods = function (methods) {
+        if (methods === void 0) { methods = {}; }
+        for (var e in methods) {
+            this[e] = methods[e];
+        }
+    };
+    Component.prototype._initComputed = function (computed) {
+        if (computed === void 0) { computed = {}; }
+        var _loop_3 = function (key) {
+            var userDef = computed[key] || index_2.noop;
+            var getter = typeof userDef === 'function' ? userDef : userDef.get;
+            Object.defineProperty(this_3, key, {
+                get: function () {
+                    return getter.call(this);
+                }
+            });
+        };
+        var this_3 = this;
+        for (var key in computed) {
+            _loop_3(key);
+        }
     };
     Component.prototype._initWatch = function (watch) {
         var _this = this;
         if (watch === void 0) { watch = {}; }
-        Object.keys(watch).forEach(function (key) {
+        var _loop_4 = function (key) {
             var handler = watch[key];
             if (Array.isArray(handler)) {
                 handler.forEach(function (h) { return _this._createWatcher(key, h); });
             }
             else {
-                _this._createWatcher(key, handler);
+                this_4._createWatcher(key, handler);
             }
-        });
+        };
+        var this_4 = this;
+        for (var key in watch) {
+            _loop_4(key);
+        }
     };
-    Component.prototype._initComponents = function () {
-        var _this = this;
-        var components = this.options.components || {};
-        Object.keys(components).forEach(function (name) {
-            _this._components[name] = VueEgret.classFactory(components[name]);
-        });
+    Component.prototype._initComponents = function (components) {
+        if (components === void 0) { components = {}; }
+        for (var name_1 in components) {
+            this.__components[name_1] = VueEgret.classFactory(components[name_1]);
+        }
     };
     Component.prototype._getData = function (data) {
         dep_1.pushTarget();
@@ -321,6 +366,51 @@ var Component = (function () {
             (_a = this.options[name]).call.apply(_a, __spreadArrays([this], rest));
         }
     };
+    Object.defineProperty(Component.prototype, "_data", {
+        get: function () {
+            return this.__data;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Component.prototype, "_props", {
+        get: function () {
+            return this.__props;
+        },
+        set: function (val) {
+            this.__props = val;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Component.prototype, "_render", {
+        get: function () {
+            return this.__render;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Component.prototype, "_watcher", {
+        get: function () {
+            return this.__watcher;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Component.prototype, "_watchers", {
+        get: function () {
+            return this.__watchers;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Component.prototype, "_components", {
+        get: function () {
+            return this.__components;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return Component;
 }());
 exports.Component = Component;
@@ -380,6 +470,7 @@ var Render = (function () {
         this.vnode = this._patch(this.vnode, vnode);
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
+        console.log(oldVNode, newVNode);
         if (!oldVNode) {
             var sp = this._createDisObj(newVNode);
             this.vm.sp.addChild(sp);
@@ -399,28 +490,64 @@ var Render = (function () {
     };
     Render.prototype._patchVNode = function (oldVNode, newVNode) {
         newVNode.sp = oldVNode.sp;
-        if (oldVNode === newVNode)
-            return;
         this._updateDisObj(oldVNode, newVNode);
-        var oldCh = oldVNode.children, newCh = newVNode.children;
+        this._updateChildren(oldVNode.children, newVNode.children, newVNode.sp);
+    };
+    Render.prototype._updateChildren = function (oldCh, newCh, parent) {
         if (oldCh === newCh)
             return;
-        var len = Math.max(oldCh.length, newCh.length);
-        for (var i = 0; i < len; i++) {
-            if (newCh[i] && oldCh[i]) {
-                oldCh[i] = this._patch(oldCh[i], newCh[i]);
+        var oldStartIdx = 0;
+        var newStartIdx = 0;
+        var oldEndIdx = oldCh.length - 1;
+        var newEndIdx = newCh.length - 1;
+        var oldStartVNode = oldCh[0];
+        var oldEndVNode = oldCh[oldEndIdx];
+        var newStartVNode = newCh[0];
+        var newEndVNode = newCh[newEndIdx];
+        while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+            if (!oldStartVNode) {
+                oldStartVNode = oldCh[++oldStartIdx];
             }
-            else if (newCh[i]) {
-                var sp = this._createDisObj(newCh[i]);
-                newVNode.sp.addChild(sp);
+            else if (!oldEndVNode) {
+                oldEndVNode = oldCh[--oldEndIdx];
             }
-            else if (oldCh[i]) {
-                this._destroyDisObj(oldCh[i]);
+            else if (this._sameVNode(oldStartVNode, newStartVNode)) {
+                this._patchVNode(oldStartVNode, newStartVNode);
+                oldStartVNode = oldCh[++oldStartIdx];
+                newStartVNode = newCh[++newStartIdx];
             }
+            else if (this._sameVNode(oldEndVNode, newEndVNode)) {
+                this._patchVNode(oldEndVNode, newEndVNode);
+                oldEndVNode = oldCh[--oldEndIdx];
+                newEndVNode = newCh[--newEndIdx];
+            }
+            else {
+                var sp = void 0;
+                for (var i = oldStartIdx; i <= oldEndIdx; i++) {
+                    if (this._sameVNode(newStartVNode, oldCh[i])) {
+                        this._patchVNode(oldCh[i], newStartVNode);
+                        sp = newStartVNode.sp;
+                        parent.setChildIndex(sp, newStartIdx);
+                        var oldVNode = oldCh.splice(i, 1)[0];
+                        oldCh.splice(newStartIdx, 0, oldVNode);
+                        oldStartVNode = oldCh[++oldStartIdx];
+                        break;
+                    }
+                }
+                if (!sp) {
+                    sp = this._createDisObj(newStartVNode);
+                    parent.addChildAt(sp, newStartIdx);
+                }
+                newStartVNode = newCh[++newStartIdx];
+            }
+        }
+        for (var i = oldStartIdx; i <= oldEndIdx; i++) {
+            this._destroyDisObj(oldCh[i]);
         }
     };
     Render.prototype._sameVNode = function (oldVNode, newVNode) {
-        return (oldVNode.tag === newVNode.tag);
+        return (newVNode.key === oldVNode.key &&
+            oldVNode.tag === newVNode.tag);
     };
     Render.prototype._createVNode = function (code) {
         try {
@@ -436,28 +563,47 @@ var Render = (function () {
         if (!VClass)
             throw new Error("Then [" + vnode.tag + "] Node is undefined!!!");
         vnode.sp = new VClass;
-        Object.keys(vnode.attrs).forEach(function (name) {
-            vnode.sp[name] = vnode.attrs[name];
-        });
-        Object.keys(vnode.on).forEach(function (type) {
-            vnode.sp.addEventListener(type, vnode.on[type], _this.vm);
-        });
+        if (vnode.sp instanceof index_1.default) {
+            var vm = vnode.sp.vm;
+            for (var key in vm._props) {
+                if (key in vnode.attrs)
+                    vm._props[key] = vnode.attrs[key];
+                if (key in this.vm._props)
+                    this.vm._props[key];
+            }
+        }
+        for (var name_1 in vnode.attrs) {
+            vnode.sp[name_1] = vnode.attrs[name_1];
+        }
+        for (var type in vnode.on) {
+            vnode.sp.addEventListener(type, vnode.on[type], this.vm);
+        }
         vnode.children.forEach(function (child) { return vnode.sp.addChild(_this._createDisObj(child)); });
         return vnode.sp;
     };
     Render.prototype._updateDisObj = function (oldVNode, newVNode) {
-        var _this = this;
-        Object.keys(newVNode.attrs).forEach(function (name) {
-            if (oldVNode.attrs[name] !== newVNode.attrs[name]) {
-                oldVNode.sp[name] = newVNode.attrs[name];
+        if (oldVNode.sp instanceof index_1.default) {
+            var vm = oldVNode.sp.vm;
+            for (var key in vm._props) {
+                if (key in newVNode.attrs)
+                    vm._props[key] = newVNode.attrs[key];
+                if (key in this.vm._props)
+                    vm._props[key] = this.vm._props[key];
             }
-        });
-        Object.keys(newVNode.on).forEach(function (type) {
-            if (oldVNode.on[type] !== newVNode.on[type]) {
-                oldVNode.sp.removeEventListener(type, oldVNode.on[type], _this.vm);
-                oldVNode.sp.addEventListener(type, newVNode.on[type], _this.vm);
+        }
+        else {
+            for (var name_2 in newVNode.attrs) {
+                if (oldVNode.attrs[name_2] !== newVNode.attrs[name_2]) {
+                    oldVNode.sp[name_2] = newVNode.attrs[name_2];
+                }
             }
-        });
+            for (var type in newVNode.on) {
+                if (oldVNode.on[type] !== newVNode.on[type]) {
+                    oldVNode.sp.removeEventListener(type, oldVNode.on[type], this.vm);
+                    oldVNode.sp.addEventListener(type, newVNode.on[type], this.vm);
+                }
+            }
+        }
     };
     Render.prototype._destroyDisObj = function (vnode) {
         var _this = this;
@@ -465,9 +611,9 @@ var Render = (function () {
             if (vnode.sp instanceof index_1.default)
                 vnode.sp.vm.$callHook('beforeDestroyed');
             vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
-            Object.keys(vnode.on).forEach(function (type) {
-                vnode.sp.removeEventListener(type, vnode.on[type], _this);
-            });
+            for (var type in vnode.on) {
+                vnode.sp.removeEventListener(type, vnode.on[type], this);
+            }
             if (vnode.sp instanceof index_1.default)
                 vnode.sp.vm.$callHook('destroyed');
         }
@@ -776,8 +922,10 @@ exports.getAndRemoveAttrByRegex = getAndRemoveAttrByRegex;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var uuid = 1234;
 function createASTNode(tag, attrs, parent) {
     return {
+        key: tag + "_" + ++uuid,
         tag: tag,
         text: '',
         attrsList: attrs,
@@ -848,15 +996,17 @@ function genVNode(ast, isCheck) {
         }).join('') + '"")';
     }
     else {
-        return "_c(\"" + ast.tag + "\", " + genAttr(ast) + ", [].concat(" + ast.children.map(function (ast) { return genVNode(ast); }).join(',') + "))";
+        return "_c(\"" + ast.tag + "\", \"" + ast.key + "\", " + genAttr(ast) + ", [].concat(" + ast.children.map(function (ast) { return genVNode(ast); }).join(',') + "))";
     }
 }
 exports.genVNode = genVNode;
-function createVNode(tag, data, children) {
+function createVNode(tag, key, data, children) {
     var vnode = {
         tag: tag,
+        key: key,
         children: children,
         attrs: data.attrs,
+        props: {},
         on: data.on,
     };
     return vnode;
@@ -880,7 +1030,7 @@ function renderList(val, render) {
         return Array.from({ length: val }).map(function (v, i) { return render(i + 1, i); });
     }
     else if (util_1.isObject(val)) {
-        return Object.keys(val).map(function (k, i) { return render(val[k], k, i); });
+        return [].map.call(val, function (k, i) { return render(val[k], k, i); });
     }
     return [];
 }
@@ -916,10 +1066,9 @@ var Observer = (function () {
         }
     }
     Observer.prototype.walk = function (obj) {
-        var _this = this;
-        Object.keys(obj).forEach(function (key) {
-            _this.defineReactive(obj, key);
-        });
+        for (var key in obj) {
+            this.defineReactive(obj, key);
+        }
     };
     Observer.prototype.observeArray = function (items) {
         items.forEach(function (item) { return observe(item); });
@@ -1151,6 +1300,35 @@ var Watcher = (function () {
     return Watcher;
 }());
 exports.default = Watcher;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function getType(fn) {
+    var match = fn && fn.toString().match(/^\s*function (\w+)/);
+    return match ? match[1] : '';
+}
+function isSameType(a, b) {
+    return getType(a) === getType(b);
+}
+exports.isSameType = isSameType;
+function checkType(type, expectedTypes) {
+    var eTypes = Array.isArray(expectedTypes) ? expectedTypes : [expectedTypes];
+    return eTypes.some(function (eType) { return isSameType(eType, type); });
+}
+exports.checkType = checkType;
+function validateProp(options) {
+    if ('object' === options && options.type) {
+        return options.default;
+    }
+    return options;
+}
+exports.validateProp = validateProp;
 
 
 /***/ })
