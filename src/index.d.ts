@@ -41,6 +41,7 @@ export declare class Component {
     private _initComponents;
     private _getData;
     private _createWatcher;
+    $emit(event: string): Component;
     $watch(expOrFn: string | Function, cb: any, options?: Object): Function;
     $callHook(name: string, ...rest: any[]): void;
     readonly _data: any;

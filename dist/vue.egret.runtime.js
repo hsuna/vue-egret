@@ -346,6 +346,11 @@ var Component = (function () {
         }
         return this.$watch(expOrFn, handler, options);
     };
+    Component.prototype.$emit = function (event) {
+        var sub = new egret.Event(event);
+        this.sp.dispatchEvent(sub);
+        return this;
+    };
     Component.prototype.$watch = function (expOrFn, cb, options) {
         if (index_2.isPlainObject(cb)) {
             return this._createWatcher(expOrFn, cb, options);
@@ -562,6 +567,12 @@ var Render = (function () {
         if (!VClass)
             throw new Error("Then [" + vnode.tag + "] Node is undefined!!!");
         vnode.sp = new VClass;
+        for (var name_1 in vnode.attrs) {
+            vnode.sp[name_1] = vnode.attrs[name_1];
+        }
+        for (var type in vnode.on) {
+            vnode.sp.addEventListener(type, vnode.on[type], this.vm);
+        }
         if (vnode.sp instanceof index_1.default) {
             var vm = vnode.sp.vm;
             for (var key in vm._props) {
@@ -570,12 +581,7 @@ var Render = (function () {
                 if (key in this.vm._props)
                     this.vm._props[key];
             }
-        }
-        for (var name_1 in vnode.attrs) {
-            vnode.sp[name_1] = vnode.attrs[name_1];
-        }
-        for (var type in vnode.on) {
-            vnode.sp.addEventListener(type, vnode.on[type], this.vm);
+            vm.$callHook('mounted');
         }
         vnode.children.forEach(function (child) { return vnode.sp.addChild(_this._createDisObj(child)); });
         return vnode.sp;
