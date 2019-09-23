@@ -20,7 +20,7 @@ export function checkType(type:any, expectedTypes:Array<any>|any): boolean {
 }
 
 export function validateProp(options:any){
-    if('object' === options && options.type){
+    if('object' === typeof options && options.type){
         return options.default;
     }
     return options;

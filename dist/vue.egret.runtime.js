@@ -470,7 +470,6 @@ var Render = (function () {
         this.vnode = this._patch(this.vnode, vnode);
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
-        console.log(oldVNode, newVNode);
         if (!oldVNode) {
             var sp = this._createDisObj(newVNode);
             this.vm.sp.addChild(sp);
@@ -1323,7 +1322,7 @@ function checkType(type, expectedTypes) {
 }
 exports.checkType = checkType;
 function validateProp(options) {
-    if ('object' === options && options.type) {
+    if ('object' === typeof options && options.type) {
         return options.default;
     }
     return options;

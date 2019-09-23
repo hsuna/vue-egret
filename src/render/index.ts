@@ -31,7 +31,6 @@ export default class Render {
   }
 
   private _patch(oldVNode:VNode, newVNode:VNode): VNode{
-    console.log(oldVNode, newVNode)
     if(!oldVNode){//如果不存在旧节点的情况下，说明还未初始化，则初始化页面
         // 创建新节点
         let sp:egret.DisplayObject = this._createDisObj(newVNode);
