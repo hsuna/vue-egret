@@ -1012,7 +1012,7 @@ function genAttr(ast) {
     if (ast.text) {
         attrs += "text:" + genText(ast) + ",";
     }
-    return "{attrs:{" + attrs + "},on:{" + on + "}," + (ast.ref ? "ref:\"" + ast.ref + "\"" : '') + "}";
+    return "{attrs:{" + attrs + "},on:{" + on + "}" + (ast.ref ? ",ref:\"" + ast.ref + "\"" : '');
 }
 exports.genAttr = genAttr;
 function genText(ast) {
