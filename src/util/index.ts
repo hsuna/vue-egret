@@ -32,7 +32,7 @@ export function toString (val: any): string {
  * If the conversion fails, return original string.
  */
 export function toNumber (val: string): number | string {
-    const n = parseFloat(val)
+    const n = Number(val)
     return isNaN(n) ? val : n
 }
   

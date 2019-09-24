@@ -3,6 +3,7 @@ import ParserFactory from "../parser";
 import { createVNode, VNode, genVNode } from "./v-node";
 import { renderList } from "./rendreList";
 import VueEgret, { Component } from "../index";
+import { pushTarget, popTarget } from "../observer/dep";
 
 export function installRender (target: any) {
   target._c = createVNode
@@ -30,13 +31,12 @@ export default class Render {
     let vnode:VNode = this._createVNode(this._ast);
     this._vnode = this._patch(this._vnode, vnode);
   }
-
+  
   private _patch(oldVNode:VNode, newVNode:VNode): VNode{
     if(!oldVNode){//如果不存在旧节点的情况下，说明还未初始化，则初始化页面
         // 创建新节点
         let sp:egret.DisplayObject = this._createDisObj(newVNode);
         (this._vm.sp as egret.DisplayObjectContainer).addChild(sp);
-        this._vm.$callHook('mounted');
     }else if(this._sameVNode(oldVNode, newVNode)){//相似节点采用更新的方式
         this._patchVNode(oldVNode, newVNode);
     }else{//非相似节点直接替换
@@ -138,6 +138,7 @@ export default class Render {
     const VClass: Function = this._vm._components[vnode.tag] || VueEgret._components[vnode.tag] || egret[vnode.tag]
     if(!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`)
     vnode.sp = new (<any>VClass)
+    pushTarget();//阻断所有更新监听
     for(const name in vnode.attrs){
       vnode.sp[name] = vnode.attrs[name]
     }
@@ -148,14 +149,18 @@ export default class Render {
     if(vnode.ref){
       this._vm.__refs[vnode.ref] = vnode.sp
     }
-    if(vnode.sp instanceof VueEgret){
-      const vm:Component = (vnode.sp as VueEgret).vm;
+    const vm:Component = (vnode.sp as VueEgret).vm;
+    if(vm instanceof Component){
       for(const key in vm._props){
         if(key in vnode.attrs) vm._props[key] = vnode.attrs[key]
         if(key in this._vm._props) this._vm._props[key]
       }
     }
     vnode.children.forEach((child:VNode) => (vnode.sp as egret.DisplayObjectContainer).addChild(this._createDisObj(child)))
+    popTarget();
+    if(vm instanceof Component){
+      vm.$callHook('mounted');
+    }
     return vnode.sp;
   }
 

@@ -17,7 +17,9 @@ VueEgret.component('MyLabel', {
             this.text1 += '1'
         }
     },
-    template: `<TextField touchEnabled="true" textColor="#00FFFF" x="11" y="12" @touchTap="onLabelClick">{{test3}}</TextField>`
+    template: `<Sprite>
+        <TextField touchEnabled="true" textColor="#00FFFF" x="11" y="12" @touchTap="onLabelClick">{{test3}}</TextField>
+    </Sprite>`
 })
 
 VueEgret.component('MyImage', {
@@ -31,9 +33,19 @@ VueEgret.component('MyImage', {
         return {
         }
     },
+    mounted(){
+        console.log('MyImage', this.skin)
+    },
     methods: {
     },
-    template: `<TextField>{{skin}}</TextField>`
+    computed: {
+        texture(){
+            return this.skin;
+        }
+    },
+    template: `<Sprite>
+        <TextField>{{texture}}</TextField>
+    </Sprite>`
 })
 
 VueEgret.component('MyButton', {
@@ -48,6 +60,7 @@ VueEgret.component('MyButton', {
         }
     },
     mounted () {
+        console.log('MyButton', this.skin)
         this.$emit('test', '1111');
     },
     methods: {
@@ -67,20 +80,14 @@ var Main = VueEgret.classFactory({
             this.count += 1
             this.list.push(this.count)
         },
-        onTest(val){
-            console.log(val)
+        onTest(evt){
+            console.log(evt.data)
         }
     },
     mounted () {
-        
+        console.log(this);
     },
-    template: `<Sprite x="11" y="12">
-        <TextField textColor="#FF00FF" x="0" y="0" touchEnabled="true" @touchTap="onLabelClick">{{count+count}}</TextField>
-        <MyButton @test="onTest" skin="xxxxxxxxx"></MyButton>
-        <Sprite v-for="(value, key) in list" x="11" y="40">
-            <TextField textColor="#FF00FF" :x="key*75" y="75">{{value}}</TextField>
-        </Sprite> 
-    </Sprite>`
+    template: `<MyButton @test="onTest" skin="1112xxxxxxx"></MyButton>`
 })
 
 /*      <Sprite v-for="(value, key) in list" x="11" y="40">

@@ -120,7 +120,7 @@ function toString(val) {
 }
 exports.toString = toString;
 function toNumber(val) {
-    var n = parseFloat(val);
+    var n = Number(val);
     return isNaN(n) ? val : n;
 }
 exports.toNumber = toNumber;
@@ -473,6 +473,7 @@ var parser_1 = __webpack_require__(5);
 var v_node_1 = __webpack_require__(9);
 var rendreList_1 = __webpack_require__(10);
 var index_1 = __webpack_require__(2);
+var dep_1 = __webpack_require__(1);
 function installRender(target) {
     target._c = v_node_1.createVNode;
     target._n = util_1.toNumber;
@@ -498,7 +499,6 @@ var Render = (function () {
         if (!oldVNode) {
             var sp = this._createDisObj(newVNode);
             this._vm.sp.addChild(sp);
-            this._vm.$callHook('mounted');
         }
         else if (this._sameVNode(oldVNode, newVNode)) {
             this._patchVNode(oldVNode, newVNode);
@@ -599,6 +599,7 @@ var Render = (function () {
         if (!VClass)
             throw new Error("Then [" + vnode.tag + "] Node is undefined!!!");
         vnode.sp = new VClass;
+        dep_1.pushTarget();
         for (var name_1 in vnode.attrs) {
             vnode.sp[name_1] = vnode.attrs[name_1];
         }
@@ -608,8 +609,8 @@ var Render = (function () {
         if (vnode.ref) {
             this._vm.__refs[vnode.ref] = vnode.sp;
         }
-        if (vnode.sp instanceof index_1.default) {
-            var vm = vnode.sp.vm;
+        var vm = vnode.sp.vm;
+        if (vm instanceof index_1.Component) {
             for (var key in vm._props) {
                 if (key in vnode.attrs)
                     vm._props[key] = vnode.attrs[key];
@@ -618,6 +619,10 @@ var Render = (function () {
             }
         }
         vnode.children.forEach(function (child) { return vnode.sp.addChild(_this._createDisObj(child)); });
+        dep_1.popTarget();
+        if (vm instanceof index_1.Component) {
+            vm.$callHook('mounted');
+        }
         return vnode.sp;
     };
     Render.prototype._updateDisObj = function (oldVNode, newVNode) {
