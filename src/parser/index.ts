@@ -4,9 +4,9 @@ import createASTNode, { ASTNode } from '../render/ast-node'
 
 // 指令解析器
 export default class ParserFactory implements ParseHtmlOptions {
-    root: ASTNode;
-    target: ASTNode;
-    parent: ASTNode;
+    private _root: ASTNode;
+    private _target: ASTNode;
+    private _parent: ASTNode;
     
     static created (template:string):ParserFactory {
         let parser:ParserFactory = new ParserFactory()
@@ -15,12 +15,12 @@ export default class ParserFactory implements ParseHtmlOptions {
     }
 
     startElement(tagName:string, attrs:Array<ParseHtmlAttr>, unary:boolean){
-        this.parent = this.target;
-        this.target = createASTNode(tagName, attrs, this.parent);
+        this._parent = this._target;
+        this._target = createASTNode(tagName, attrs, this._parent);
 
-        if(!this.root){
-            this.root = this.target
-        }else if(!this.parent){
+        if(!this._root){
+            this._root = this._target
+        }else if(!this._parent){
             throw new Error('tow root')
         }
 
@@ -31,23 +31,23 @@ export default class ParserFactory implements ParseHtmlOptions {
 
     endElement(tagName:string){
         let exp
-        if(exp = getAndRemoveAttr(this.target, 'ref')) this.target.ref = exp
-        if(exp = getAndRemoveAttr(this.target, 'v-for')) this.target.processMap.for = parseFor(exp)
-        if(exp = getAndRemoveAttr(this.target, 'v-if')) this.target.processMap.if = this.addIfConditions(exp)
-        else if(exp = getAndRemoveAttr(this.target, 'v-else-if')) this.target.processMap.elseif = this.addIfConditions(exp, true)
-        else if('undefined' !== typeof (exp = getAndRemoveAttr(this.target, 'v-else'))) this.target.processMap.else = this.addIfConditions(true, true)
+        if(exp = getAndRemoveAttr(this._target, 'ref')) this._target.ref = exp
+        if(exp = getAndRemoveAttr(this._target, 'v-for')) this._target.processMap.for = parseFor(exp)
+        if(exp = getAndRemoveAttr(this._target, 'v-if')) this._target.processMap.if = this.addIfConditions(exp)
+        else if(exp = getAndRemoveAttr(this._target, 'v-else-if')) this._target.processMap.elseif = this.addIfConditions(exp, true)
+        else if('undefined' !== typeof (exp = getAndRemoveAttr(this._target, 'v-else'))) this._target.processMap.else = this.addIfConditions(true, true)
 
         if(
-            this.parent 
-            && this.target !== this.root
-            && !this.target.processMap.elseif
-            && !this.target.processMap.else
+            this._parent 
+            && this._target !== this._root
+            && !this._target.processMap.elseif
+            && !this._target.processMap.else
         ){
-            this.parent.children.push(this.target)
+            this._parent.children.push(this._target)
         }
-        this.target = this.parent;
-        if(this.parent){
-            this.parent = this.parent.parent;
+        this._target = this._parent;
+        if(this._parent){
+            this._parent = this._parent.parent;
         }
     }
 
@@ -55,26 +55,30 @@ export default class ParserFactory implements ParseHtmlOptions {
     }
 
     characters(text:string){
-        this.target.text = text.replace(/^\s+|\s+$/g, '')
-        //this._command.push(new CommandText(this.vm, this.target, text))
+        this._target.text = text.replace(/^\s+|\s+$/g, '')
+        //this._command.push(new CommandText(this.vm, this._target, text))
     }
 
     addIfConditions(exp:any, prev:boolean=false):any {
         let processMap;
         if(prev){
-            const parent:ASTNode = this.target.parent;
+            const parent:ASTNode = this._target.parent;
             if(parent){
                 const curTarget:ASTNode = parent.children[parent.children.length-1]
                 if(curTarget){
                     processMap = curTarget.processMap;
-                    processMap.ifConditions.push({exp, target: this.target});
+                    processMap.ifConditions.push({exp, target: this._target});
                 }
             }
         }else{
-            processMap = this.target.processMap;
+            processMap = this._target.processMap;
             if(!processMap.ifConditions) processMap.ifConditions = [];
-            processMap.ifConditions.push({exp, target: this.target});
+            processMap.ifConditions.push({exp, target: this._target});
         }
         return exp
+    }
+
+    public get root():ASTNode {
+        return this._root;
     }
 }

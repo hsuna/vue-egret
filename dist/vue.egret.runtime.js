@@ -482,22 +482,23 @@ function installRender(target) {
 exports.installRender = installRender;
 var Render = (function () {
     function Render(vm) {
-        this.vm = vm;
+        this._vm = vm;
         this._init();
     }
     Render.prototype._init = function () {
-        installRender(this.vm);
-        this.astCode = v_node_1.genVNode(parser_1.default.created(this.vm.options.template).root);
+        installRender(this._vm);
+        this._ast = v_node_1.genVNode(parser_1.default.created(this._vm.options.template).root);
     };
     Render.prototype.update = function () {
-        this.vm.__refs = [];
-        var vnode = this._createVNode(this.astCode);
-        this.vnode = this._patch(this.vnode, vnode);
+        this._vm.__refs = [];
+        var vnode = this._createVNode(this._ast);
+        this._vnode = this._patch(this._vnode, vnode);
+        this._vm.$callHook('mounted');
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
         if (!oldVNode) {
             var sp = this._createDisObj(newVNode);
-            this.vm.sp.addChild(sp);
+            this._vm.sp.addChild(sp);
         }
         else if (this._sameVNode(oldVNode, newVNode)) {
             this._patchVNode(oldVNode, newVNode);
@@ -586,7 +587,7 @@ var Render = (function () {
     };
     Render.prototype._createVNode = function (code) {
         try {
-            return Function.prototype.constructor("with(this){ return " + code + ";}").call(this.vm);
+            return Function.prototype.constructor("with(this){ return " + code + ";}").call(this._vm);
         }
         catch (e) {
             throw new Error(e);
@@ -594,7 +595,7 @@ var Render = (function () {
     };
     Render.prototype._createDisObj = function (vnode) {
         var _this = this;
-        var VClass = this.vm._components[vnode.tag] || index_1.default._components[vnode.tag] || egret[vnode.tag];
+        var VClass = this._vm._components[vnode.tag] || index_1.default._components[vnode.tag] || egret[vnode.tag];
         if (!VClass)
             throw new Error("Then [" + vnode.tag + "] Node is undefined!!!");
         vnode.sp = new VClass;
@@ -602,20 +603,19 @@ var Render = (function () {
             vnode.sp[name_1] = vnode.attrs[name_1];
         }
         for (var type in vnode.on) {
-            vnode.sp.addEventListener(type, vnode.on[type], this.vm);
+            vnode.sp.addEventListener(type, vnode.on[type], this._vm);
         }
         if (vnode.ref) {
-            this.vm.__refs[vnode.ref] = vnode.sp;
+            this._vm.__refs[vnode.ref] = vnode.sp;
         }
         if (vnode.sp instanceof index_1.default) {
             var vm = vnode.sp.vm;
             for (var key in vm._props) {
                 if (key in vnode.attrs)
                     vm._props[key] = vnode.attrs[key];
-                if (key in this.vm._props)
-                    this.vm._props[key];
+                if (key in this._vm._props)
+                    this._vm._props[key];
             }
-            vm.$callHook('mounted');
         }
         vnode.children.forEach(function (child) { return vnode.sp.addChild(_this._createDisObj(child)); });
         return vnode.sp;
@@ -626,8 +626,8 @@ var Render = (function () {
             for (var key in vm._props) {
                 if (key in newVNode.attrs)
                     vm._props[key] = newVNode.attrs[key];
-                if (key in this.vm._props)
-                    vm._props[key] = this.vm._props[key];
+                if (key in this._vm._props)
+                    vm._props[key] = this._vm._props[key];
             }
         }
         else {
@@ -638,8 +638,8 @@ var Render = (function () {
             }
             for (var type in newVNode.on) {
                 if (oldVNode.on[type] !== newVNode.on[type]) {
-                    oldVNode.sp.removeEventListener(type, oldVNode.on[type], this.vm);
-                    oldVNode.sp.addEventListener(type, newVNode.on[type], this.vm);
+                    oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm);
+                    oldVNode.sp.addEventListener(type, newVNode.on[type], this._vm);
                 }
             }
         }
@@ -651,7 +651,7 @@ var Render = (function () {
                 vnode.sp.vm.$callHook('beforeDestroyed');
             vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
             for (var type in vnode.on) {
-                vnode.sp.removeEventListener(type, vnode.on[type], this.vm);
+                vnode.sp.removeEventListener(type, vnode.on[type], this._vm);
             }
             if (vnode.sp instanceof index_1.default)
                 vnode.sp.vm.$callHook('destroyed');
@@ -723,12 +723,12 @@ var ParserFactory = (function () {
         return parser;
     };
     ParserFactory.prototype.startElement = function (tagName, attrs, unary) {
-        this.parent = this.target;
-        this.target = ast_node_1.default(tagName, attrs, this.parent);
-        if (!this.root) {
-            this.root = this.target;
+        this._parent = this._target;
+        this._target = ast_node_1.default(tagName, attrs, this._parent);
+        if (!this._root) {
+            this._root = this._target;
         }
-        else if (!this.parent) {
+        else if (!this._parent) {
             throw new Error('tow root');
         }
         if (unary) {
@@ -737,53 +737,60 @@ var ParserFactory = (function () {
     };
     ParserFactory.prototype.endElement = function (tagName) {
         var exp;
-        if (exp = index_1.getAndRemoveAttr(this.target, 'ref'))
-            this.target.ref = exp;
-        if (exp = index_1.getAndRemoveAttr(this.target, 'v-for'))
-            this.target.processMap.for = index_1.parseFor(exp);
-        if (exp = index_1.getAndRemoveAttr(this.target, 'v-if'))
-            this.target.processMap.if = this.addIfConditions(exp);
-        else if (exp = index_1.getAndRemoveAttr(this.target, 'v-else-if'))
-            this.target.processMap.elseif = this.addIfConditions(exp, true);
-        else if ('undefined' !== typeof (exp = index_1.getAndRemoveAttr(this.target, 'v-else')))
-            this.target.processMap.else = this.addIfConditions(true, true);
-        if (this.parent
-            && this.target !== this.root
-            && !this.target.processMap.elseif
-            && !this.target.processMap.else) {
-            this.parent.children.push(this.target);
+        if (exp = index_1.getAndRemoveAttr(this._target, 'ref'))
+            this._target.ref = exp;
+        if (exp = index_1.getAndRemoveAttr(this._target, 'v-for'))
+            this._target.processMap.for = index_1.parseFor(exp);
+        if (exp = index_1.getAndRemoveAttr(this._target, 'v-if'))
+            this._target.processMap.if = this.addIfConditions(exp);
+        else if (exp = index_1.getAndRemoveAttr(this._target, 'v-else-if'))
+            this._target.processMap.elseif = this.addIfConditions(exp, true);
+        else if ('undefined' !== typeof (exp = index_1.getAndRemoveAttr(this._target, 'v-else')))
+            this._target.processMap.else = this.addIfConditions(true, true);
+        if (this._parent
+            && this._target !== this._root
+            && !this._target.processMap.elseif
+            && !this._target.processMap.else) {
+            this._parent.children.push(this._target);
         }
-        this.target = this.parent;
-        if (this.parent) {
-            this.parent = this.parent.parent;
+        this._target = this._parent;
+        if (this._parent) {
+            this._parent = this._parent.parent;
         }
     };
     ParserFactory.prototype.comment = function (text) {
     };
     ParserFactory.prototype.characters = function (text) {
-        this.target.text = text.replace(/^\s+|\s+$/g, '');
+        this._target.text = text.replace(/^\s+|\s+$/g, '');
     };
     ParserFactory.prototype.addIfConditions = function (exp, prev) {
         if (prev === void 0) { prev = false; }
         var processMap;
         if (prev) {
-            var parent_1 = this.target.parent;
+            var parent_1 = this._target.parent;
             if (parent_1) {
                 var curTarget = parent_1.children[parent_1.children.length - 1];
                 if (curTarget) {
                     processMap = curTarget.processMap;
-                    processMap.ifConditions.push({ exp: exp, target: this.target });
+                    processMap.ifConditions.push({ exp: exp, target: this._target });
                 }
             }
         }
         else {
-            processMap = this.target.processMap;
+            processMap = this._target.processMap;
             if (!processMap.ifConditions)
                 processMap.ifConditions = [];
-            processMap.ifConditions.push({ exp: exp, target: this.target });
+            processMap.ifConditions.push({ exp: exp, target: this._target });
         }
         return exp;
     };
+    Object.defineProperty(ParserFactory.prototype, "root", {
+        get: function () {
+            return this._root;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return ParserFactory;
 }());
 exports.default = ParserFactory;

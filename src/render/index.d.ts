@@ -1,10 +1,9 @@
-import { VNode } from "./v-node";
 import { Component } from "../index";
 export declare function installRender(target: any): void;
 export default class Render {
-    vm: Component;
-    vnode: VNode;
-    astCode: string;
+    private _ast;
+    private _vm;
+    private _vnode;
     constructor(vm: Component);
     private _init;
     update(): void;
