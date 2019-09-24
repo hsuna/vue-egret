@@ -493,12 +493,12 @@ var Render = (function () {
         this._vm.__refs = [];
         var vnode = this._createVNode(this._ast);
         this._vnode = this._patch(this._vnode, vnode);
-        this._vm.$callHook('mounted');
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
         if (!oldVNode) {
             var sp = this._createDisObj(newVNode);
             this._vm.sp.addChild(sp);
+            this._vm.$callHook('mounted');
         }
         else if (this._sameVNode(oldVNode, newVNode)) {
             this._patchVNode(oldVNode, newVNode);

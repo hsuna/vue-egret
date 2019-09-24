@@ -29,7 +29,6 @@ export default class Render {
     this._vm.__refs = [];//清空节点
     let vnode:VNode = this._createVNode(this._ast);
     this._vnode = this._patch(this._vnode, vnode);
-    this._vm.$callHook('mounted');
   }
 
   private _patch(oldVNode:VNode, newVNode:VNode): VNode{
@@ -37,6 +36,7 @@ export default class Render {
         // 创建新节点
         let sp:egret.DisplayObject = this._createDisObj(newVNode);
         (this._vm.sp as egret.DisplayObjectContainer).addChild(sp);
+        this._vm.$callHook('mounted');
     }else if(this._sameVNode(oldVNode, newVNode)){//相似节点采用更新的方式
         this._patchVNode(oldVNode, newVNode);
     }else{//非相似节点直接替换
