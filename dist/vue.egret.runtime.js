@@ -121,7 +121,7 @@ function toString(val) {
 exports.toString = toString;
 function toNumber(val) {
     var n = Number(val);
-    return isNaN(n) ? val : n;
+    return isNaN(n) || '' === val ? val : n;
 }
 exports.toNumber = toNumber;
 var _toString = Object.prototype.toString;
@@ -208,6 +208,17 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __spreadArrays = (this && this.__spreadArrays) || function () {
     for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
     for (var r = Array(s), k = 0, i = 0; i < il; i++)
@@ -217,8 +228,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var render_1 = __webpack_require__(3);
-var index_1 = __webpack_require__(11);
-var watcher_1 = __webpack_require__(13);
+var watcher_1 = __webpack_require__(11);
+var index_1 = __webpack_require__(12);
 var dep_1 = __webpack_require__(1);
 var index_2 = __webpack_require__(0);
 var props_1 = __webpack_require__(14);
@@ -241,27 +252,30 @@ var Component = (function () {
         this.__props = {};
         this.__watchers = [];
         this.__components = {};
-        this.__refs = [];
+        this.__refs = {};
         this.sp = sp;
         this.options = options;
         this._init();
     }
     Component.prototype._init = function () {
-        this._initProps(this.options.props);
         this._initMethods(this.options.methods);
         this._initData(this.options.data);
+        this._initProps(this.options.props, this.options._parentOptions.propsData);
         this._initComputed(this.options.computed);
         this.$callHook('beforeCreate');
-        this._initWatch();
+        this._initWatch(this.options.watch);
         this._initComponents(this.options.components);
         this.$callHook('created');
+        this.$callHook('beforeMounted');
         this.__render = new render_1.default(this);
         this.__watcher = new watcher_1.default(this, this.__render.update.bind(this.__render), index_2.noop);
+        this.$callHook('mounted');
     };
-    Component.prototype._initProps = function (propsOptions) {
+    Component.prototype._initProps = function (propsOptions, propsData) {
         if (propsOptions === void 0) { propsOptions = {}; }
+        if (propsData === void 0) { propsData = {}; }
         var _loop_1 = function (key) {
-            this_1.__props[key] = props_1.validateProp(propsOptions[key]);
+            this_1.__props[key] = propsData[key] || props_1.validateProp(propsOptions[key]);
             Object.defineProperty(this_1, key, {
                 get: function () {
                     return this.__props[key];
@@ -379,9 +393,13 @@ var Component = (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             rest[_i - 1] = arguments[_i];
         }
+        dep_1.pushTarget();
         if ('function' === typeof this.options[name]) {
             (_a = this.options[name]).call.apply(_a, __spreadArrays([this], rest));
         }
+        dep_1.popTarget();
+    };
+    Component.prototype.$nextTick = function (callback) {
     };
     Object.defineProperty(Component.prototype, "$refs", {
         get: function () {
@@ -449,13 +467,16 @@ var VueEgret = (function (_super) {
     VueEgret.component = function (name, options) {
         VueEgret._components[name] = VueEgret.classFactory(options);
     };
-    VueEgret.classFactory = function (options) { return (function (_super) {
-        __extends(class_1, _super);
-        function class_1() {
-            return _super.call(this, options) || this;
-        }
-        return class_1;
-    }(VueEgret)); };
+    VueEgret.classFactory = function (options) { var _a; return _a = (function (_super) {
+            __extends(class_1, _super);
+            function class_1(parentOptions) {
+                if (parentOptions === void 0) { parentOptions = {}; }
+                return _super.call(this, __assign(__assign({}, options), { _parentOptions: parentOptions })) || this;
+            }
+            return class_1;
+        }(VueEgret)),
+        _a.options = options,
+        _a; };
     return VueEgret;
 }(egret.Sprite));
 exports.default = VueEgret;
@@ -481,6 +502,7 @@ function installRender(target) {
     target._l = rendreList_1.renderList;
 }
 exports.installRender = installRender;
+var TIME_COOL = 100;
 var Render = (function () {
     function Render(vm) {
         this._vm = vm;
@@ -489,11 +511,22 @@ var Render = (function () {
     Render.prototype._init = function () {
         installRender(this._vm);
         this._ast = v_node_1.genVNode(parser_1.default.created(this._vm.options.template).root);
+        this.update();
+        this._tick();
+    };
+    Render.prototype._tick = function () {
+        this._vnode = this._patch(this._vnode, this._newVnode);
     };
     Render.prototype.update = function () {
-        this._vm.__refs = [];
-        var vnode = this._createVNode(this._ast);
-        this._vnode = this._patch(this._vnode, vnode);
+        var _this = this;
+        this._newVnode = this._createVNode(this._ast);
+        if (this._timeoutCool)
+            return;
+        this._timeoutCool = setTimeout(function (_) {
+            _this._tick();
+            clearTimeout(_this._timeoutCool);
+            _this._timeoutCool = null;
+        }, TIME_COOL);
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
         if (!oldVNode) {
@@ -595,11 +628,32 @@ var Render = (function () {
     };
     Render.prototype._createDisObj = function (vnode) {
         var _this = this;
-        var VClass = this._vm._components[vnode.tag] || index_1.default._components[vnode.tag] || egret[vnode.tag];
+        var VClass = this._vm._components[vnode.tag] || index_1.default._components[vnode.tag];
+        dep_1.pushTarget();
+        if (VClass) {
+            var propsData = {};
+            var _propsKeys = [];
+            var props = VClass.options.props;
+            for (var key in props) {
+                _propsKeys.push(key);
+                if (key in vnode.attrs)
+                    propsData[key] = vnode.attrs[key];
+                if (key in this._vm._props)
+                    propsData[key] = this._vm._props[key];
+            }
+            vnode.sp = new VClass({
+                parent: this._vm,
+                _propsKeys: _propsKeys,
+                propsData: propsData
+            });
+        }
+        else {
+            VClass = egret[vnode.tag];
+            if (VClass)
+                vnode.sp = new VClass;
+        }
         if (!VClass)
             throw new Error("Then [" + vnode.tag + "] Node is undefined!!!");
-        vnode.sp = new VClass;
-        dep_1.pushTarget();
         for (var name_1 in vnode.attrs) {
             vnode.sp[name_1] = vnode.attrs[name_1];
         }
@@ -609,20 +663,8 @@ var Render = (function () {
         if (vnode.ref) {
             this._vm.__refs[vnode.ref] = vnode.sp;
         }
-        var vm = vnode.sp.vm;
-        if (vm instanceof index_1.Component) {
-            for (var key in vm._props) {
-                if (key in vnode.attrs)
-                    vm._props[key] = vnode.attrs[key];
-                if (key in this._vm._props)
-                    this._vm._props[key];
-            }
-        }
         vnode.children.forEach(function (child) { return vnode.sp.addChild(_this._createDisObj(child)); });
         dep_1.popTarget();
-        if (vm instanceof index_1.Component) {
-            vm.$callHook('mounted');
-        }
         return vnode.sp;
     };
     Render.prototype._updateDisObj = function (oldVNode, newVNode) {
@@ -660,6 +702,9 @@ var Render = (function () {
             }
             if (vnode.sp instanceof index_1.default)
                 vnode.sp.vm.$callHook('destroyed');
+        }
+        if (vnode.ref) {
+            delete this._vm.__refs[vnode.ref];
         }
         vnode.children.forEach(function (vnode) { return _this._destroyDisObj(vnode); });
         return vnode;
@@ -766,7 +811,9 @@ var ParserFactory = (function () {
     ParserFactory.prototype.comment = function (text) {
     };
     ParserFactory.prototype.characters = function (text) {
-        this._target.text = text.replace(/^\s+|\s+$/g, '');
+        if (this._target) {
+            this._target.text = text.replace(/^\s+|\s+$/g, '');
+        }
     };
     ParserFactory.prototype.addIfConditions = function (exp, prev) {
         if (prev === void 0) { prev = false; }
@@ -1066,6 +1113,7 @@ function createVNode(tag, key, data, children) {
         props: {},
         on: data.on,
     };
+    vnode.children.forEach(function (child) { return child.parent = vnode; });
     return vnode;
 }
 exports.createVNode = createVNode;
@@ -1102,7 +1150,108 @@ exports.renderList = renderList;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var index_1 = __webpack_require__(0);
-var array_1 = __webpack_require__(12);
+var dep_1 = __webpack_require__(1);
+var uid = 0;
+var Watcher = (function () {
+    function Watcher(vm, expOrFn, cb) {
+        vm._watchers.push(this);
+        this.id = uid++;
+        this.active = true;
+        this.vm = vm;
+        this.deps = [];
+        this.newDeps = [];
+        this.depIds = new Set();
+        this.newDepIds = new Set();
+        this.cb = cb;
+        this.expression = expOrFn.toString();
+        if ('function' === typeof expOrFn) {
+            this.getter = expOrFn;
+        }
+        else {
+            this.getter = index_1.parsePath(expOrFn);
+            if (!this.getter) {
+                this.getter = index_1.noop;
+            }
+        }
+        this.value = this.get();
+    }
+    Watcher.prototype.get = function () {
+        dep_1.pushTarget(this);
+        var value = this.getter.call(this.vm, this.vm);
+        dep_1.popTarget();
+        this.cleanupDeps();
+        return value;
+    };
+    Watcher.prototype.addDep = function (dep) {
+        var id = dep.id;
+        if (!this.newDepIds.has(id)) {
+            this.newDepIds.add(id);
+            this.newDeps.push(dep);
+            if (!this.depIds.has(id)) {
+                dep.addSub(this);
+            }
+        }
+    };
+    Watcher.prototype.cleanupDeps = function () {
+        var i = this.deps.length;
+        while (i--) {
+            var dep = this.deps[i];
+            if (!this.newDepIds.has(dep.id)) {
+                dep.removeSub(this);
+            }
+        }
+        var tmp = this.depIds;
+        this.depIds = this.newDepIds;
+        this.newDepIds = tmp;
+        this.newDepIds.clear();
+        var tmp2 = this.deps;
+        this.deps = this.newDeps;
+        this.newDeps = tmp2;
+        this.newDeps.length = 0;
+    };
+    Watcher.prototype.update = function () {
+        this.run();
+    };
+    Watcher.prototype.run = function () {
+        if (!this.active)
+            return;
+        var value = this.get();
+        if (value !== this.value ||
+            index_1.isObject(value)) {
+            var oldValue = this.value;
+            this.value = value;
+            this.cb.call(this.vm, value, oldValue);
+        }
+    };
+    Watcher.prototype.depend = function () {
+        var i = this.deps.length;
+        while (i--) {
+            this.deps[i].depend();
+        }
+    };
+    Watcher.prototype.teardown = function () {
+        if (!this.active)
+            return;
+        var i = this.deps.length;
+        while (i--) {
+            this.deps[i].removeSub(this);
+        }
+        this.active = false;
+    };
+    return Watcher;
+}());
+exports.default = Watcher;
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var index_1 = __webpack_require__(0);
+var array_1 = __webpack_require__(13);
 var dep_1 = __webpack_require__(1);
 var Observer = (function () {
     function Observer(value) {
@@ -1212,7 +1361,7 @@ function copyAugment(target, src, keys) {
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1256,107 +1405,6 @@ methodsToPatch.forEach(function (method) {
         return result;
     });
 });
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var index_1 = __webpack_require__(0);
-var dep_1 = __webpack_require__(1);
-var uid = 0;
-var Watcher = (function () {
-    function Watcher(vm, expOrFn, cb) {
-        vm._watchers.push(this);
-        this.id = uid++;
-        this.active = true;
-        this.vm = vm;
-        this.deps = [];
-        this.newDeps = [];
-        this.depIds = new Set();
-        this.newDepIds = new Set();
-        this.cb = cb;
-        this.expression = expOrFn.toString();
-        if ('function' === typeof expOrFn) {
-            this.getter = expOrFn;
-        }
-        else {
-            this.getter = index_1.parsePath(expOrFn);
-            if (!this.getter) {
-                this.getter = index_1.noop;
-            }
-        }
-        this.value = this.get();
-    }
-    Watcher.prototype.get = function () {
-        dep_1.pushTarget(this);
-        var value = this.getter.call(this.vm, this.vm);
-        dep_1.popTarget();
-        this.cleanupDeps();
-        return value;
-    };
-    Watcher.prototype.addDep = function (dep) {
-        var id = dep.id;
-        if (!this.newDepIds.has(id)) {
-            this.newDepIds.add(id);
-            this.newDeps.push(dep);
-            if (!this.depIds.has(id)) {
-                dep.addSub(this);
-            }
-        }
-    };
-    Watcher.prototype.cleanupDeps = function () {
-        var i = this.deps.length;
-        while (i--) {
-            var dep = this.deps[i];
-            if (!this.newDepIds.has(dep.id)) {
-                dep.removeSub(this);
-            }
-        }
-        var tmp = this.depIds;
-        this.depIds = this.newDepIds;
-        this.newDepIds = tmp;
-        this.newDepIds.clear();
-        var tmp2 = this.deps;
-        this.deps = this.newDeps;
-        this.newDeps = tmp2;
-        this.newDeps.length = 0;
-    };
-    Watcher.prototype.update = function () {
-        this.run();
-    };
-    Watcher.prototype.run = function () {
-        if (!this.active)
-            return;
-        var value = this.get();
-        if (value !== this.value ||
-            index_1.isObject(value)) {
-            var oldValue = this.value;
-            this.value = value;
-            this.cb.call(this.vm, value, oldValue);
-        }
-    };
-    Watcher.prototype.depend = function () {
-        var i = this.deps.length;
-        while (i--) {
-            this.deps[i].depend();
-        }
-    };
-    Watcher.prototype.teardown = function () {
-        if (!this.active)
-            return;
-        var i = this.deps.length;
-        while (i--) {
-            this.deps[i].removeSub(this);
-        }
-        this.active = false;
-    };
-    return Watcher;
-}());
-exports.default = Watcher;
 
 
 /***/ }),

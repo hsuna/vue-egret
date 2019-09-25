@@ -7,6 +7,7 @@ export interface VNode {
     key?: string | number;
     tag: string;
     ref: string;
+    parent?: VNode;
     children: Array<VNode>;
     attrs: {
         [propsName: string]: any;

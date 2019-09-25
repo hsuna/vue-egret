@@ -2,7 +2,7 @@ import { toNumber, toString } from "../util";
 import ParserFactory from "../parser";
 import { createVNode, VNode, genVNode } from "./v-node";
 import { renderList } from "./rendreList";
-import VueEgret, { Component } from "../index";
+import VueEgret, { Component, ComponentClass, ComponentMap } from "../index";
 import { pushTarget, popTarget } from "../observer/dep";
 
 export function installRender (target: any) {
@@ -11,10 +11,14 @@ export function installRender (target: any) {
   target._s = toString
   target._l = renderList
 }
+
+const TIME_COOL = 50
 export default class Render {
+  private _timeoutCool: any;
   private _ast:string;
   private _vm: Component;
   private _vnode:VNode;
+  private _newVnode:VNode;
   
   constructor(vm:Component){
     this._vm = vm;
@@ -24,12 +28,25 @@ export default class Render {
   private _init(){
     installRender(this._vm);
     this._ast = genVNode(ParserFactory.created(this._vm.options.template).root);
+    this.update();
+    this._tick();
+  }
+
+  private _tick(){
+    this._vnode = this._patch(this._vnode, this._newVnode);
+    // this._vm.nextTick();
   }
 
   public update(){
-    this._vm.__refs = [];//清空节点
-    let vnode:VNode = this._createVNode(this._ast);
-    this._vnode = this._patch(this._vnode, vnode);
+    this._newVnode = this._createVNode(this._ast);
+    
+    // 设置冷却时间
+    if(this._timeoutCool) return;
+    this._timeoutCool = setTimeout(_ => {
+      this._tick();
+      clearTimeout(this._timeoutCool);
+      this._timeoutCool = null;
+    }, TIME_COOL)
   }
   
   private _patch(oldVNode:VNode, newVNode:VNode): VNode{
@@ -135,10 +152,29 @@ export default class Render {
   }
   
   private _createDisObj(vnode:VNode):egret.DisplayObject {
-    const VClass: Function = this._vm._components[vnode.tag] || VueEgret._components[vnode.tag] || egret[vnode.tag]
-    if(!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`)
-    vnode.sp = new (<any>VClass)
+    let VClass: ComponentClass = this._vm._components[vnode.tag] || VueEgret._components[vnode.tag]
     pushTarget();//阻断所有更新监听
+    // Component
+    if(VClass){
+      const propsData: ComponentMap<any> = {};
+      const _propsKeys: Array<string> = [];
+      const props:ComponentMap<any> = VClass.options.props;
+      for(const key in props){
+        _propsKeys.push(key);
+        if(key in vnode.attrs) propsData[key] = vnode.attrs[key]
+        if(key in this._vm._props) propsData[key] = this._vm._props[key]
+      }
+      vnode.sp = new VClass({
+        parent: this._vm,
+        _propsKeys,
+        propsData
+      })
+    }else{
+      VClass = egret[vnode.tag]
+      if(VClass) vnode.sp = new (<any>VClass)
+    }
+    if(!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`)
+
     for(const name in vnode.attrs){
       vnode.sp[name] = vnode.attrs[name]
     }
@@ -149,18 +185,8 @@ export default class Render {
     if(vnode.ref){
       this._vm.__refs[vnode.ref] = vnode.sp
     }
-    const vm:Component = (vnode.sp as VueEgret).vm;
-    if(vm instanceof Component){
-      for(const key in vm._props){
-        if(key in vnode.attrs) vm._props[key] = vnode.attrs[key]
-        if(key in this._vm._props) this._vm._props[key]
-      }
-    }
     vnode.children.forEach((child:VNode) => (vnode.sp as egret.DisplayObjectContainer).addChild(this._createDisObj(child)))
     popTarget();
-    if(vm instanceof Component){
-      vm.$callHook('mounted');
-    }
     return vnode.sp;
   }
 
@@ -196,6 +222,9 @@ export default class Render {
         vnode.sp.removeEventListener(type, vnode.on[type], this._vm)
       }
       if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).vm.$callHook('destroyed');
+    }
+    if(vnode.ref){
+      delete this._vm.__refs[vnode.ref];
     }
     vnode.children.forEach((vnode:VNode) => this._destroyDisObj(vnode))
     return vnode;

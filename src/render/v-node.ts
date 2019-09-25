@@ -18,6 +18,7 @@ export interface VNode {
     key?: string | number;
     tag: string;
     ref: string;
+    parent?: VNode,
     children: Array<VNode>;
     attrs: {
         [propsName:string]: any;
@@ -79,5 +80,6 @@ export function createVNode(tag:string, key:string|number, data:any, children:Ar
         props: {},
         on: data.on,
     }
+    vnode.children.forEach((child:VNode) => child.parent = vnode);
     return vnode;
 }

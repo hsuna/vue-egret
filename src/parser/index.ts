@@ -30,7 +30,7 @@ export default class ParserFactory implements ParseHtmlOptions {
     }
 
     endElement(tagName:string){
-        let exp
+        let exp:any
         if(exp = getAndRemoveAttr(this._target, 'ref')) this._target.ref = exp
         if(exp = getAndRemoveAttr(this._target, 'v-for')) this._target.processMap.for = parseFor(exp)
         if(exp = getAndRemoveAttr(this._target, 'v-if')) this._target.processMap.if = this.addIfConditions(exp)
@@ -55,7 +55,9 @@ export default class ParserFactory implements ParseHtmlOptions {
     }
 
     characters(text:string){
-        this._target.text = text.replace(/^\s+|\s+$/g, '')
+        if(this._target){
+            this._target.text = text.replace(/^\s+|\s+$/g, '')
+        }
         //this._command.push(new CommandText(this.vm, this._target, text))
     }
 

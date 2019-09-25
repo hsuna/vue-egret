@@ -37,8 +37,8 @@ export default class Watcher {
         this.depIds = new Set()
         this.newDepIds = new Set()
         // 更新触发回调函数
-        this.cb = cb
-        this.expression = expOrFn.toString()
+        this.cb = cb;
+        this.expression = expOrFn.toString();
         if ('function' === typeof expOrFn) {
             this.getter = expOrFn
         } else {

@@ -5,28 +5,41 @@
 /// <reference path="./egret.d.ts" />
 
 import Render from './render';
-import { observe } from './observer/index'
 import Watcher from './observer/watcher'
+import { observe } from './observer/index'
 import { pushTarget, popTarget } from './observer/dep'
 import { noop, isPlainObject } from './util/index'
 import { validateProp } from './util/props'
 
+export interface ComponentClass {
+    options:ComponentOptions;
+    new (parentOptions:ComponentParentOptions);
+}
 export interface ComponentMap<T> {
     [propName:string]: T;
 }
-export interface ComponentOptions {
+
+export interface ComponentParentOptions {
+    parent?: Component;
+    propsData?: ComponentMap<any>;
+    _propsKeys?: Array<string>;
+}
+
+export interface ComponentOptions{
     template?: string;
     data?: Function | Object;
-    props?: Object;
-    computed?: Object;
+    props?: ComponentMap<any>;
+    computed?: ComponentMap<Function>;
+    watch?: ComponentMap<Function>;
     components?: ComponentMap<ComponentOptions>;
-    methods?: {
-        [propName:string]: Function;
-    };
+    methods?: ComponentMap<Function>;
     beforeCreate?: Function;
     created?: Function;
+    beforeMounted?: Function;
+    mounted?: Function;
     beforeDestroyed?: Function;
     destroyed?: Function;
+    _parentOptions?: ComponentParentOptions;
 }
 
 export class ComponentEvent extends egret.Event {
@@ -41,37 +54,38 @@ export class Component {
     sp: egret.DisplayObject;
     options: ComponentOptions;
 
+    // private __tickHandler: ComponentMap<Function> = [];
     private __data: any={};
     private __props: any={};
     private __render: Render;
     private __watcher: Watcher;
     private __watchers: Array<Watcher> = [];
-    private __components: ComponentMap<Function> = {};
-
-    public __refs: Array<egret.DisplayObject> = [];
+    private __components: ComponentMap<ComponentClass> = {};
+    public __refs: ComponentMap<egret.DisplayObject> = {};
 
     constructor(sp:egret.DisplayObject, options:ComponentOptions={}) {
         this.sp = sp;
         this.options = options;
-
         this._init()
     }
-    private _init() {
-        this._initProps(this.options.props)
+
+    public _init() {
         this._initMethods(this.options.methods)
         this._initData(this.options.data)
+        this._initProps(this.options.props, this.options._parentOptions.propsData)
         this._initComputed(this.options.computed);
         this.$callHook('beforeCreate');
-        this._initWatch()
+        this._initWatch(this.options.watch)
         this._initComponents(this.options.components)
         this.$callHook('created');
+        this.$callHook('beforeMounted');
         this.__render = new Render(this)
         this.__watcher = new Watcher(this, this.__render.update.bind(this.__render), noop)
+        this.$callHook('mounted');
     }
-    private _initProps(propsOptions: any={}) {
+    private _initProps(propsOptions: any={}, propsData:any={}) {
         for(const key in propsOptions){
-
-            this.__props[key] = validateProp(propsOptions[key])
+            this.__props[key] = propsData[key] || validateProp(propsOptions[key])
             Object.defineProperty(this, key, {
                 get(){
                     return this.__props[key]
@@ -163,11 +177,16 @@ export class Component {
         }
     }
     public $callHook(name:string, ...rest) {
+        // 阻断所有数据变动
+        pushTarget()
         if('function' === typeof this.options[name]){
             this.options[name].call(this, ...rest)
         }
+        popTarget()
     }
-    public get $refs():Array<egret.DisplayObject>{
+    public $nextTick(callback:Function) {
+    }
+    public get $refs():ComponentMap<egret.DisplayObject>{
         return this.__refs;
     }
     public get _data():any{
@@ -188,21 +207,30 @@ export class Component {
     public get _watchers():Array<Watcher>{
         return this.__watchers;
     }
-    public get _components():ComponentMap<Function>{
+    public get _components():ComponentMap<ComponentClass>{
         return this.__components;
     }
 }
 
 export default class VueEgret extends egret.Sprite {
-    static _components:ComponentMap<Function> = {}
+    static _components:ComponentMap<ComponentClass> = {}
     static component = (name:string, options:ComponentOptions) => {
         VueEgret._components[name] = VueEgret.classFactory(options)
     }
-    static classFactory = (options:ComponentOptions):Function => class extends VueEgret { constructor(){ super(options) } }
+    static classFactory = (options:ComponentOptions):ComponentClass => class extends VueEgret { 
+        static options:ComponentOptions = options; 
+        constructor(parentOptions: ComponentParentOptions={}) {
+            super({
+                ...options,
+                _parentOptions: parentOptions
+            }) 
+        } 
+    }
 
     public vm:Component;
     constructor(options:ComponentOptions){
         super()
         this.vm = new Component(this as egret.DisplayObject, options)
+       
     }
 }

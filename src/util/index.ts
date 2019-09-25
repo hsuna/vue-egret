@@ -33,7 +33,7 @@ export function toString (val: any): string {
  */
 export function toNumber (val: string): number | string {
     const n = Number(val)
-    return isNaN(n) ? val : n
+    return isNaN(n) || ''===val ? val : n
 }
   
 /**

@@ -1,11 +1,14 @@
 import { Component } from "../index";
 export declare function installRender(target: any): void;
 export default class Render {
+    private _timeoutCool;
     private _ast;
     private _vm;
     private _vnode;
+    private _newVnode;
     constructor(vm: Component);
     private _init;
+    private _tick;
     update(): void;
     private _patch;
     private _patchVNode;
