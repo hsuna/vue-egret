@@ -33,20 +33,21 @@ export default class Render {
   }
 
   private _tick(){
-    this._vnode = this._patch(this._vnode, this._newVnode);
+    // this._vnode = this._patch(this._vnode, this._newVnode);
     // this._vm.nextTick();
   }
 
   public update(){
     this._newVnode = this._createVNode(this._ast);
+    this._vnode = this._patch(this._vnode, this._newVnode);
     
     // 设置冷却时间
-    if(this._timeoutCool) return;
+    /* if(this._timeoutCool) return;
     this._timeoutCool = setTimeout(_ => {
       this._tick();
       clearTimeout(this._timeoutCool);
       this._timeoutCool = null;
-    }, TIME_COOL)
+    }, TIME_COOL) */
   }
   
   private _patch(oldVNode:VNode, newVNode:VNode): VNode{

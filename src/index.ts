@@ -52,6 +52,7 @@ export class ComponentEvent extends egret.Event {
 
 export class Component {
     sp: egret.DisplayObject;
+    parentOptions: ComponentParentOptions;
     options: ComponentOptions;
 
     // private __tickHandler: ComponentMap<Function> = [];
@@ -63,16 +64,17 @@ export class Component {
     private __components: ComponentMap<ComponentClass> = {};
     public __refs: ComponentMap<egret.DisplayObject> = {};
 
-    constructor(sp:egret.DisplayObject, options:ComponentOptions={}) {
+    constructor(sp:egret.DisplayObject, options:ComponentOptions={}, parentOptions: ComponentParentOptions={}) {
         this.sp = sp;
         this.options = options;
+        this.parentOptions = parentOptions;
         this._init()
     }
 
     public _init() {
         this._initMethods(this.options.methods)
         this._initData(this.options.data)
-        this._initProps(this.options.props, this.options._parentOptions.propsData)
+        this._initProps(this.options.props, this.parentOptions.propsData)
         this._initComputed(this.options.computed);
         this.$callHook('beforeCreate');
         this._initWatch(this.options.watch)
@@ -213,6 +215,8 @@ export class Component {
 }
 
 export default class VueEgret extends egret.Sprite {
+    public vm:Component;
+
     static _components:ComponentMap<ComponentClass> = {}
     static component = (name:string, options:ComponentOptions) => {
         VueEgret._components[name] = VueEgret.classFactory(options)
@@ -220,17 +224,8 @@ export default class VueEgret extends egret.Sprite {
     static classFactory = (options:ComponentOptions):ComponentClass => class extends VueEgret { 
         static options:ComponentOptions = options; 
         constructor(parentOptions: ComponentParentOptions={}) {
-            super({
-                ...options,
-                _parentOptions: parentOptions
-            }) 
+            super() 
+            this.vm = new Component(this as egret.DisplayObject, options, parentOptions)
         } 
-    }
-
-    public vm:Component;
-    constructor(options:ComponentOptions){
-        super()
-        this.vm = new Component(this as egret.DisplayObject, options)
-       
     }
 }

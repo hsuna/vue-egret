@@ -39,6 +39,7 @@ export declare class ComponentEvent extends egret.Event {
 }
 export declare class Component {
     sp: egret.DisplayObject;
+    parentOptions: ComponentParentOptions;
     options: ComponentOptions;
     private __data;
     private __props;
@@ -47,7 +48,7 @@ export declare class Component {
     private __watchers;
     private __components;
     __refs: ComponentMap<egret.DisplayObject>;
-    constructor(sp: egret.DisplayObject, options?: ComponentOptions);
+    constructor(sp: egret.DisplayObject, options?: ComponentOptions, parentOptions?: ComponentParentOptions);
     _init(): void;
     private _initProps;
     private _initData;
@@ -70,9 +71,8 @@ export declare class Component {
     readonly _components: ComponentMap<ComponentClass>;
 }
 export default class VueEgret extends egret.Sprite {
+    vm: Component;
     static _components: ComponentMap<ComponentClass>;
     static component: (name: string, options: ComponentOptions) => void;
     static classFactory: (options: ComponentOptions) => ComponentClass;
-    vm: Component;
-    constructor(options: ComponentOptions);
 }

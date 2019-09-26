@@ -208,17 +208,6 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __spreadArrays = (this && this.__spreadArrays) || function () {
     for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
     for (var r = Array(s), k = 0, i = 0; i < il; i++)
@@ -246,8 +235,9 @@ var ComponentEvent = (function (_super) {
 }(egret.Event));
 exports.ComponentEvent = ComponentEvent;
 var Component = (function () {
-    function Component(sp, options) {
+    function Component(sp, options, parentOptions) {
         if (options === void 0) { options = {}; }
+        if (parentOptions === void 0) { parentOptions = {}; }
         this.__data = {};
         this.__props = {};
         this.__watchers = [];
@@ -255,12 +245,13 @@ var Component = (function () {
         this.__refs = {};
         this.sp = sp;
         this.options = options;
+        this.parentOptions = parentOptions;
         this._init();
     }
     Component.prototype._init = function () {
         this._initMethods(this.options.methods);
         this._initData(this.options.data);
-        this._initProps(this.options.props, this.options._parentOptions.propsData);
+        this._initProps(this.options.props, this.parentOptions.propsData);
         this._initComputed(this.options.computed);
         this.$callHook('beforeCreate');
         this._initWatch(this.options.watch);
@@ -458,10 +449,8 @@ var Component = (function () {
 exports.Component = Component;
 var VueEgret = (function (_super) {
     __extends(VueEgret, _super);
-    function VueEgret(options) {
-        var _this = _super.call(this) || this;
-        _this.vm = new Component(_this, options);
-        return _this;
+    function VueEgret() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     VueEgret._components = {};
     VueEgret.component = function (name, options) {
@@ -471,7 +460,9 @@ var VueEgret = (function (_super) {
             __extends(class_1, _super);
             function class_1(parentOptions) {
                 if (parentOptions === void 0) { parentOptions = {}; }
-                return _super.call(this, __assign(__assign({}, options), { _parentOptions: parentOptions })) || this;
+                var _this = _super.call(this) || this;
+                _this.vm = new Component(_this, options, parentOptions);
+                return _this;
             }
             return class_1;
         }(VueEgret)),
@@ -502,7 +493,7 @@ function installRender(target) {
     target._l = rendreList_1.renderList;
 }
 exports.installRender = installRender;
-var TIME_COOL = 100;
+var TIME_COOL = 50;
 var Render = (function () {
     function Render(vm) {
         this._vm = vm;
@@ -515,18 +506,10 @@ var Render = (function () {
         this._tick();
     };
     Render.prototype._tick = function () {
-        this._vnode = this._patch(this._vnode, this._newVnode);
     };
     Render.prototype.update = function () {
-        var _this = this;
         this._newVnode = this._createVNode(this._ast);
-        if (this._timeoutCool)
-            return;
-        this._timeoutCool = setTimeout(function (_) {
-            _this._tick();
-            clearTimeout(_this._timeoutCool);
-            _this._timeoutCool = null;
-        }, TIME_COOL);
+        this._vnode = this._patch(this._vnode, this._newVnode);
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
         if (!oldVNode) {
@@ -1335,7 +1318,7 @@ function observe(value) {
     if (Object.prototype.hasOwnProperty.call(value, '__ob__') && value.__ob__ instanceof Observer) {
         ob = value.__ob__;
     }
-    else {
+    else if (!(value instanceof egret.DisplayObject)) {
         ob = new Observer(value);
     }
     return ob;

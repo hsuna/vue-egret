@@ -101,7 +101,7 @@ export function observe (value: any): Observer {
     let ob: Observer
     if (Object.prototype.hasOwnProperty.call(value, '__ob__') && value.__ob__ instanceof Observer) {
       ob = value.__ob__
-    } else {
+    } else if(!(value instanceof egret.DisplayObject)){
       ob = new Observer(value)
     }
     return ob
