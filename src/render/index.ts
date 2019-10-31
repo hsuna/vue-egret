@@ -28,14 +28,15 @@ export default class Render {
   private _init(){
     installRender(this._vm);
     this._ast = genVNode(ParserFactory.created(this._vm.options.template).root);
-    this.update();
     this._tick();
   }
 
   private _tick(){
-    this._newVnode = this._createVNode(this._ast);
-    this._vnode = this._patch(this._vnode, this._newVnode);
-    this._vm._$tick();
+    if(this._vm){
+      this._newVnode = this._createVNode(this._ast);
+      this._vnode = this._patch(this._vnode, this._newVnode);
+      this._vm._$tick();
+    }
   }
 
   public update(){
@@ -48,6 +49,11 @@ export default class Render {
       clearTimeout(this._timeoutCool);
       this._timeoutCool = null;
     }, TIME_COOL) */
+  }
+
+  public destroy(){
+    this._vnode && this._destroyDisObj(this._vnode)
+    this._vm = null;
   }
   
   private _patch(oldVNode:VNode, newVNode:VNode): VNode{
@@ -217,11 +223,13 @@ export default class Render {
   private _destroyDisObj(vnode:VNode):VNode {
     if(vnode.sp){
       if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).vm.$callHook('beforeDestroyed');
+
       vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
       for(const type in vnode.on){
         vnode.sp.removeEventListener(type, vnode.on[type], this._vm)
       }
-      if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).vm.$callHook('destroyed');
+      
+      if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).destroy()
     }
     if(vnode.ref){
       delete this._vm.__refs[vnode.ref];

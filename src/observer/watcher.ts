@@ -152,7 +152,7 @@ export default class Watcher {
         // if the vm is being destroyed.
         let i = this.deps.length
         while (i--) {
-        this.deps[i].removeSub(this)
+            this.deps[i].removeSub(this)
         }
         this.active = false
     }

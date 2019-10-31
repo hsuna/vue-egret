@@ -63,6 +63,7 @@ export declare class Component {
     $emit(event: string, data: any): Component;
     $watch(expOrFn: string | Function, cb: any, options?: Object): Function;
     $callHook(name: string, ...rest: any[]): void;
+    $destroy(): void;
     $nextTick(callback: Function): void;
     $displayObject(ref: any): egret.DisplayObject;
     $hitTestPoint(ref: any, x: number, y: number, shapeFlag?: boolean): boolean;
@@ -82,4 +83,5 @@ export default class VueEgret extends egret.Sprite {
     static _components: ComponentMap<ComponentClass>;
     static component: (name: string, options: ComponentOptions) => void;
     static classFactory: (options: ComponentOptions) => ComponentClass;
+    destroy(): void;
 }

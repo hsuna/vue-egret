@@ -398,6 +398,11 @@ var Component = (function () {
         }
         dep_1.popTarget();
     };
+    Component.prototype.$destroy = function () {
+        this.__watchers = null;
+        this.__render.destroy();
+        this.__render = null;
+    };
     Component.prototype.$nextTick = function (callback) {
         this.__nextTickCall.push(callback);
     };
@@ -497,6 +502,13 @@ var VueEgret = (function (_super) {
     function VueEgret() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
+    VueEgret.prototype.destroy = function () {
+        if (this.vm) {
+            this.vm.$destroy();
+            this.vm.$callHook('destroyed');
+            this.vm = null;
+        }
+    };
     VueEgret._components = {};
     VueEgret.component = function (name, options) {
         VueEgret._components[name] = VueEgret.classFactory(options);
@@ -547,16 +559,21 @@ var Render = (function () {
     Render.prototype._init = function () {
         installRender(this._vm);
         this._ast = v_node_1.genVNode(parser_1.default.created(this._vm.options.template).root);
-        this.update();
         this._tick();
     };
     Render.prototype._tick = function () {
-        this._newVnode = this._createVNode(this._ast);
-        this._vnode = this._patch(this._vnode, this._newVnode);
-        this._vm._$tick();
+        if (this._vm) {
+            this._newVnode = this._createVNode(this._ast);
+            this._vnode = this._patch(this._vnode, this._newVnode);
+            this._vm._$tick();
+        }
     };
     Render.prototype.update = function () {
         this._tick();
+    };
+    Render.prototype.destroy = function () {
+        this._vnode && this._destroyDisObj(this._vnode);
+        this._vm = null;
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
         if (!oldVNode) {
@@ -724,7 +741,7 @@ var Render = (function () {
                 vnode.sp.removeEventListener(type, vnode.on[type], this._vm);
             }
             if (vnode.sp instanceof index_1.default)
-                vnode.sp.vm.$callHook('destroyed');
+                vnode.sp.destroy();
         }
         if (vnode.ref) {
             delete this._vm.__refs[vnode.ref];

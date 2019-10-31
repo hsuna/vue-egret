@@ -10,6 +10,7 @@ export default class Render {
     private _init;
     private _tick;
     update(): void;
+    destroy(): void;
     private _patch;
     private _patchVNode;
     private _updateChildren;

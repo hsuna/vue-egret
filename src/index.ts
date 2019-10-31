@@ -193,6 +193,11 @@ export class Component {
         }
         popTarget()
     }
+    public $destroy(){
+        this.__watchers = null;
+        this.__render.destroy()
+        this.__render = null
+    }
     public $nextTick(callback:Function) {
         this.__nextTickCall.push(callback)
     }
@@ -265,5 +270,13 @@ export default class VueEgret extends egret.Sprite {
             super() 
             this.vm = new Component(this as egret.DisplayObject, options, parentOptions)
         } 
+    }
+
+    public destroy(){
+        if(this.vm){
+            this.vm.$destroy()
+            this.vm.$callHook('destroyed')
+            this.vm = null
+        }
     }
 }
