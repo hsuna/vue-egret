@@ -33,13 +33,13 @@ export default class Render {
   }
 
   private _tick(){
-    // this._vnode = this._patch(this._vnode, this._newVnode);
-    // this._vm.nextTick();
+    this._newVnode = this._createVNode(this._ast);
+    this._vnode = this._patch(this._vnode, this._newVnode);
+    this._vm._$tick();
   }
 
   public update(){
-    this._newVnode = this._createVNode(this._ast);
-    this._vnode = this._patch(this._vnode, this._newVnode);
+    this._tick();
     
     // 设置冷却时间
     /* if(this._timeoutCool) return;
@@ -145,11 +145,11 @@ export default class Render {
   }
 
   private _createVNode(code):VNode {
-    try{
-        return Function.prototype.constructor(`with(this){ return ${code};}`).call(this._vm)
+    return Function.prototype.constructor(`with(this){ return ${code};}`).call(this._vm)
+    /* try{
     }catch(e){
         throw new Error(e)
-    }
+    } */
   }
   
   private _createDisObj(vnode:VNode):egret.DisplayObject {
@@ -198,19 +198,18 @@ export default class Render {
         if(key in newVNode.attrs) vm._props[key] = newVNode.attrs[key]
         if(key in this._vm._props) vm._props[key] = this._vm._props[key]
       }
-    }else{
-      for(const name in newVNode.attrs){
-        if(oldVNode.attrs[name] !== newVNode.attrs[name]){
-          oldVNode.sp[name] = newVNode.attrs[name]
-          // oldVNode.attrs[name] = newVNode.attrs[name]
-        }
+    }
+    for(const name in newVNode.attrs){
+      if(oldVNode.attrs[name] !== newVNode.attrs[name]){
+        oldVNode.sp[name] = newVNode.attrs[name]
+        // oldVNode.attrs[name] = newVNode.attrs[name]
       }
-      for(const type in newVNode.on){
-        if(oldVNode.on[type] !== newVNode.on[type]){//事件不一样的，先销毁再重新注册
-            oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm)
-            oldVNode.sp.addEventListener(type, newVNode.on[type], this._vm)
-            // oldVNode.on[type] = newVNode.on[type]
-        }
+    }
+    for(const type in newVNode.on){
+      if(oldVNode.on[type] !== newVNode.on[type]){//事件不一样的，先销毁再重新注册
+          oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm)
+          oldVNode.sp.addEventListener(type, newVNode.on[type], this._vm)
+          // oldVNode.on[type] = newVNode.on[type]
       }
     }
   }

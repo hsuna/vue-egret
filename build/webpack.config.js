@@ -81,7 +81,7 @@ const configFactory = function(webpackEnv) {
 				// contentBase: path.resolve(process.cwd(), 'dist'), //本地服务器所加载的页面所在的目录
 				historyApiFallback: true, //不跳转
 				host: '0.0.0.0',  // 使用0,0,0,0才可支持外部访问
-				port: 8088,
+				port: 2335,
 				inline: true, //实时刷新
 				// https: true, //支持https
 				hot: true, //Enable webpack's Hot Module Replacement feature

@@ -47,7 +47,8 @@ export declare class Component {
     private __watcher;
     private __watchers;
     private __components;
-    __refs: ComponentMap<egret.DisplayObject>;
+    private __nextTickCall;
+    __refs: ComponentMap<egret.DisplayObject | Component>;
     constructor(sp: egret.DisplayObject, options?: ComponentOptions, parentOptions?: ComponentParentOptions);
     _init(): void;
     private _initProps;
@@ -58,11 +59,17 @@ export declare class Component {
     private _initComponents;
     private _getData;
     private _createWatcher;
+    _$tick(): void;
     $emit(event: string, data: any): Component;
     $watch(expOrFn: string | Function, cb: any, options?: Object): Function;
     $callHook(name: string, ...rest: any[]): void;
     $nextTick(callback: Function): void;
-    readonly $refs: ComponentMap<egret.DisplayObject>;
+    $displayObject(ref: any): egret.DisplayObject;
+    $hitTestPoint(ref: any, x: number, y: number, shapeFlag?: boolean): boolean;
+    $globalToLocal(ref: any, stateX: number, stateY: number): egret.Point;
+    $localToGlobal(ref: any, stateX: number, stateY: number): egret.Point;
+    readonly $refs: ComponentMap<egret.DisplayObject | Component>;
+    readonly $stage: egret.Stage;
     readonly _data: any;
     _props: any;
     readonly _render: Render;

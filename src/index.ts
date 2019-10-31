@@ -62,7 +62,8 @@ export class Component {
     private __watcher: Watcher;
     private __watchers: Array<Watcher> = [];
     private __components: ComponentMap<ComponentClass> = {};
-    public __refs: ComponentMap<egret.DisplayObject> = {};
+    private __nextTickCall: Array<Function> = [];
+    public __refs: ComponentMap<egret.DisplayObject|Component> = {};
 
     constructor(sp:egret.DisplayObject, options:ComponentOptions={}, parentOptions: ComponentParentOptions={}) {
         this.sp = sp;
@@ -164,6 +165,12 @@ export class Component {
         }
         return this.$watch(expOrFn, handler, options)
     }
+    public _$tick () {
+        while(this.__nextTickCall.length>0){
+            let callback:Function = this.__nextTickCall.shift()
+            if('function' === typeof callback) callback()
+        }
+    }
     public $emit (event: string, data:any): Component {
         this.sp.dispatchEvent(new ComponentEvent(event, data));
         return this;
@@ -187,17 +194,48 @@ export class Component {
         popTarget()
     }
     public $nextTick(callback:Function) {
+        this.__nextTickCall.push(callback)
     }
-    public get $refs():ComponentMap<egret.DisplayObject>{
+    public $displayObject(ref:any):egret.DisplayObject {
+        if('string' === typeof ref){
+            if(this.__refs[ref] instanceof Component) 
+                return (this.__refs[ref] as Component).sp
+            else (this.__refs[ref] instanceof egret.DisplayObject) 
+                return this.__refs[ref] as egret.DisplayObject
+        }else if(ref instanceof egret.DisplayObject){
+            return ref as egret.DisplayObject
+        }
+        return null;
+    }
+    public $hitTestPoint(ref:any, x:number, y:number, shapeFlag?: boolean): boolean {
+        let disObj: egret.DisplayObject = this.$displayObject(ref)
+        return disObj ? disObj.hitTestPoint(x, y, shapeFlag) : false
+    }
+    public $globalToLocal(ref:any, stateX:number, stateY:number): egret.Point {
+        let disObj: egret.DisplayObject = this.$displayObject(ref)
+        let resultPoint: egret.Point = new egret.Point(stateX, stateY)
+        disObj && disObj.globalToLocal(stateX, stateY, resultPoint)
+        return resultPoint
+    }
+    public $localToGlobal(ref:any, stateX:number, stateY:number): egret.Point {
+        let disObj: egret.DisplayObject = this.$displayObject(ref)
+        let resultPoint: egret.Point = new egret.Point(stateX, stateY)
+        disObj && disObj.localToGlobal(stateX, stateY, resultPoint)
+        return resultPoint
+    }
+    public get $refs():ComponentMap<egret.DisplayObject|Component> {
         return this.__refs;
     }
-    public get _data():any{
+    public get $stage():egret.Stage {
+        return this.sp && this.sp.stage
+    }
+    public get _data():any {
         return this.__data;
     }
-    public set _props(val:any){
+    public set _props(val:any) {
         this.__props = val;
     }
-    public get _props():any{
+    public get _props():any {
         return this.__props;
     }
     public get _render():Render{

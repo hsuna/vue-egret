@@ -2,6 +2,7 @@
 import { ASTNode, ASTAttr } from './ast-node'
 import { ForParseResult } from '../helpers';
 
+const REF_REG:RegExp = /^(:?ref)/
 const BIND_REG:RegExp = /^(v-bind:|:)/
 const ON_REG:RegExp = /^(v-on:|@)/
 const TEXT_REG:RegExp = /\{\{([^}]+)\}\}/g
@@ -32,9 +33,11 @@ export interface VNode {
 }
 
 export function genAttr(ast: ASTNode):string {
-    let attrs = '', on = '';
+    let ref='', attrs = '', on = '';
     ast.attrsList.forEach((attr:ASTAttr) => {
-        if(BIND_REG.test(attr.name)){
+        if(REF_REG.test(attr.name)){
+            ref = /^(:)/.test(attr.name)?`${attr.value}`:`"${attr.value}"`
+        }else if(BIND_REG.test(attr.name)){
             attrs += `"${attr.name.replace(BIND_REG,'')}":_n(${attr.value}),`
         }else if(ON_REG.test(attr.name)){
             on += `"${attr.name.replace(ON_REG,'')}":${genHandler(attr.value)},`
@@ -45,7 +48,7 @@ export function genAttr(ast: ASTNode):string {
     if(ast.text){
         attrs += `text:${genText(ast)},`
     }
-    return `{attrs:{${attrs}},on:{${on}}${ast.ref?`,ref:"${ast.ref}"`:''}}`;
+    return `{attrs:{${attrs}},on:{${on}}${ref?`,ref:${ref}`:''}}`;
 }
 
 export function genText(ast: ASTNode):string {

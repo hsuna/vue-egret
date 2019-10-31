@@ -242,6 +242,7 @@ var Component = (function () {
         this.__props = {};
         this.__watchers = [];
         this.__components = {};
+        this.__nextTickCall = [];
         this.__refs = {};
         this.sp = sp;
         this.options = options;
@@ -364,6 +365,13 @@ var Component = (function () {
         }
         return this.$watch(expOrFn, handler, options);
     };
+    Component.prototype._$tick = function () {
+        while (this.__nextTickCall.length > 0) {
+            var callback = this.__nextTickCall.shift();
+            if ('function' === typeof callback)
+                callback();
+        }
+    };
     Component.prototype.$emit = function (event, data) {
         this.sp.dispatchEvent(new ComponentEvent(event, data));
         return this;
@@ -391,10 +399,47 @@ var Component = (function () {
         dep_1.popTarget();
     };
     Component.prototype.$nextTick = function (callback) {
+        this.__nextTickCall.push(callback);
+    };
+    Component.prototype.$displayObject = function (ref) {
+        if ('string' === typeof ref) {
+            if (this.__refs[ref] instanceof Component)
+                return this.__refs[ref].sp;
+            else
+                (this.__refs[ref] instanceof egret.DisplayObject);
+            return this.__refs[ref];
+        }
+        else if (ref instanceof egret.DisplayObject) {
+            return ref;
+        }
+        return null;
+    };
+    Component.prototype.$hitTestPoint = function (ref, x, y, shapeFlag) {
+        var disObj = this.$displayObject(ref);
+        return disObj ? disObj.hitTestPoint(x, y, shapeFlag) : false;
+    };
+    Component.prototype.$globalToLocal = function (ref, stateX, stateY) {
+        var disObj = this.$displayObject(ref);
+        var resultPoint = new egret.Point(stateX, stateY);
+        disObj && disObj.globalToLocal(stateX, stateY, resultPoint);
+        return resultPoint;
+    };
+    Component.prototype.$localToGlobal = function (ref, stateX, stateY) {
+        var disObj = this.$displayObject(ref);
+        var resultPoint = new egret.Point(stateX, stateY);
+        disObj && disObj.localToGlobal(stateX, stateY, resultPoint);
+        return resultPoint;
     };
     Object.defineProperty(Component.prototype, "$refs", {
         get: function () {
             return this.__refs;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Component.prototype, "$stage", {
+        get: function () {
+            return this.sp && this.sp.stage;
         },
         enumerable: true,
         configurable: true
@@ -506,10 +551,12 @@ var Render = (function () {
         this._tick();
     };
     Render.prototype._tick = function () {
-    };
-    Render.prototype.update = function () {
         this._newVnode = this._createVNode(this._ast);
         this._vnode = this._patch(this._vnode, this._newVnode);
+        this._vm._$tick();
+    };
+    Render.prototype.update = function () {
+        this._tick();
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
         if (!oldVNode) {
@@ -602,12 +649,7 @@ var Render = (function () {
             oldVNode.tag === newVNode.tag);
     };
     Render.prototype._createVNode = function (code) {
-        try {
-            return Function.prototype.constructor("with(this){ return " + code + ";}").call(this._vm);
-        }
-        catch (e) {
-            throw new Error(e);
-        }
+        return Function.prototype.constructor("with(this){ return " + code + ";}").call(this._vm);
     };
     Render.prototype._createDisObj = function (vnode) {
         var _this = this;
@@ -660,17 +702,15 @@ var Render = (function () {
                     vm._props[key] = this._vm._props[key];
             }
         }
-        else {
-            for (var name_2 in newVNode.attrs) {
-                if (oldVNode.attrs[name_2] !== newVNode.attrs[name_2]) {
-                    oldVNode.sp[name_2] = newVNode.attrs[name_2];
-                }
+        for (var name_2 in newVNode.attrs) {
+            if (oldVNode.attrs[name_2] !== newVNode.attrs[name_2]) {
+                oldVNode.sp[name_2] = newVNode.attrs[name_2];
             }
-            for (var type in newVNode.on) {
-                if (oldVNode.on[type] !== newVNode.on[type]) {
-                    oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm);
-                    oldVNode.sp.addEventListener(type, newVNode.on[type], this._vm);
-                }
+        }
+        for (var type in newVNode.on) {
+            if (oldVNode.on[type] !== newVNode.on[type]) {
+                oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm);
+                oldVNode.sp.addEventListener(type, newVNode.on[type], this._vm);
             }
         }
     };
@@ -770,8 +810,6 @@ var ParserFactory = (function () {
     };
     ParserFactory.prototype.endElement = function (tagName) {
         var exp;
-        if (exp = index_1.getAndRemoveAttr(this._target, 'ref'))
-            this._target.ref = exp;
         if (exp = index_1.getAndRemoveAttr(this._target, 'v-for'))
             this._target.processMap.for = index_1.parseFor(exp);
         if (exp = index_1.getAndRemoveAttr(this._target, 'v-if'))
@@ -1011,7 +1049,6 @@ function createASTNode(tag, attrs, parent) {
     return {
         key: tag + "_" + ++uuid,
         tag: tag,
-        ref: '',
         text: '',
         attrsList: attrs,
         attrsMap: attrs.reduce(function (m, i) {
@@ -1033,15 +1070,19 @@ exports.default = createASTNode;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var REF_REG = /^(:?ref)/;
 var BIND_REG = /^(v-bind:|:)/;
 var ON_REG = /^(v-on:|@)/;
 var TEXT_REG = /\{\{([^}]+)\}\}/g;
 var fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
 var simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/;
 function genAttr(ast) {
-    var attrs = '', on = '';
+    var ref = '', attrs = '', on = '';
     ast.attrsList.forEach(function (attr) {
-        if (BIND_REG.test(attr.name)) {
+        if (REF_REG.test(attr.name)) {
+            ref = /^(:)/.test(attr.name) ? "" + attr.value : "\"" + attr.value + "\"";
+        }
+        else if (BIND_REG.test(attr.name)) {
             attrs += "\"" + attr.name.replace(BIND_REG, '') + "\":_n(" + attr.value + "),";
         }
         else if (ON_REG.test(attr.name)) {
@@ -1054,7 +1095,7 @@ function genAttr(ast) {
     if (ast.text) {
         attrs += "text:" + genText(ast) + ",";
     }
-    return "{attrs:{" + attrs + "},on:{" + on + "}" + (ast.ref ? ",ref:\"" + ast.ref + "\"" : '') + "}";
+    return "{attrs:{" + attrs + "},on:{" + on + "}" + (ref ? ",ref:" + ref : '') + "}";
 }
 exports.genAttr = genAttr;
 function genText(ast) {
