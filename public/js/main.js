@@ -64,11 +64,14 @@ VueEgret.component('MyButton', {
         this.$emit('test', '1111');
     },
     methods: {
+        onLabelClick(){
+            this.$emit('test', '1111');
+        }
     },
-    template: `<MyImage :skin="skin"></MyImage>`
+    template: `<MyImage touchEnabled="true" @touchTap="onLabelClick" :skin="skin"></MyImage>`
 })
 
-var Main = VueEgret.classFactory({
+var Main = VueEgret.classMain({
     data(){
         return {
             count: 0,
@@ -81,13 +84,14 @@ var Main = VueEgret.classFactory({
             this.list.push(this.count)
         },
         onTest(evt){
+            this.count += 1
             console.log(evt.data)
         }
     },
     mounted () {
         console.log(this);
     },
-    template: `<MyButton @test="onTest" skin="1112xxxxxxx"></MyButton>`
+    template: `<MyButton @test="onTest" :skin="count"></MyButton>`
 })
 
 /*      <Sprite v-for="(value, key) in list" x="11" y="40">

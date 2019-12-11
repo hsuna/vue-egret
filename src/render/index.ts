@@ -12,9 +12,7 @@ export function installRender (target: any) {
   target._l = renderList
 }
 
-const TIME_COOL = 50
 export default class Render {
-  private _timeoutCool: any;
   private _ast:string;
   private _vm: Component;
   private _vnode:VNode;
@@ -41,14 +39,6 @@ export default class Render {
 
   public update(){
     this._tick();
-    
-    // 设置冷却时间
-    /* if(this._timeoutCool) return;
-    this._timeoutCool = setTimeout(_ => {
-      this._tick();
-      clearTimeout(this._timeoutCool);
-      this._timeoutCool = null;
-    }, TIME_COOL) */
   }
 
   public destroy(){
@@ -60,7 +50,7 @@ export default class Render {
     if(!oldVNode){//如果不存在旧节点的情况下，说明还未初始化，则初始化页面
         // 创建新节点
         let sp:egret.DisplayObject = this._createDisObj(newVNode);
-        (this._vm.sp as egret.DisplayObjectContainer).addChild(sp);
+        (this._vm.$el as egret.DisplayObjectContainer).addChild(sp);
     }else if(this._sameVNode(oldVNode, newVNode)){//相似节点采用更新的方式
         this._patchVNode(oldVNode, newVNode);
     }else{//非相似节点直接替换
@@ -77,6 +67,7 @@ export default class Render {
 
   private _patchVNode(oldVNode:VNode, newVNode:VNode){
     newVNode.sp = oldVNode.sp;
+    newVNode.vm = oldVNode.vm;
     this._updateDisObj(oldVNode, newVNode);
     this._updateChildren(oldVNode.children, newVNode.children, newVNode.sp as egret.DisplayObjectContainer)
   }
@@ -171,7 +162,8 @@ export default class Render {
         if(key in vnode.attrs) propsData[key] = vnode.attrs[key]
         if(key in this._vm._props) propsData[key] = this._vm._props[key]
       }
-      vnode.sp = new VClass({
+      vnode.sp = new egret.DisplayObjectContainer
+      vnode.vm = new VClass(vnode.sp as egret.DisplayObjectContainer, {
         parent: this._vm,
         _propsKeys,
         propsData
@@ -190,7 +182,7 @@ export default class Render {
     }
     // 实例节点
     if(vnode.ref){
-      this._vm.__refs[vnode.ref] = vnode.sp
+      this._vm.__refs[vnode.ref] = vnode.vm || vnode.sp
     }
     vnode.children.forEach((child:VNode) => (vnode.sp as egret.DisplayObjectContainer).addChild(this._createDisObj(child)))
     popTarget();
@@ -198,11 +190,10 @@ export default class Render {
   }
 
   private _updateDisObj(oldVNode:VNode, newVNode:VNode) {
-    if(oldVNode.sp instanceof VueEgret){
-      const vm:Component = (oldVNode.sp as VueEgret).vm;
-      for(const key in vm._props){
-        if(key in newVNode.attrs) vm._props[key] = newVNode.attrs[key]
-        if(key in this._vm._props) vm._props[key] = this._vm._props[key]
+    if(oldVNode.vm){
+      for(const key in oldVNode.vm._props){
+        if(key in newVNode.attrs) oldVNode.vm._props[key] = newVNode.attrs[key]
+        if(key in this._vm._props) oldVNode.vm._props[key] = this._vm._props[key]
       }
     }
     for(const name in newVNode.attrs){
@@ -221,16 +212,16 @@ export default class Render {
   }
 
   private _destroyDisObj(vnode:VNode):VNode {
-    if(vnode.sp){
-      if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).vm.$callHook('beforeDestroyed');
+    if(vnode.vm) vnode.vm.$callHook('beforeDestroyed');
 
+    if(vnode.sp){
       vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
       for(const type in vnode.on){
         vnode.sp.removeEventListener(type, vnode.on[type], this._vm)
       }
-      
-      if(vnode.sp instanceof VueEgret) (vnode.sp as VueEgret).destroy()
     }
+    if(vnode.vm) vnode.vm.$destroy()
+
     if(vnode.ref){
       delete this._vm.__refs[vnode.ref];
     }

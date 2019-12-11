@@ -1,11 +1,7 @@
 {
 	"initial": [
-		"js/egret.min_d92caeca.js",
-		"js/egret.web.min_e835c5d0.js",
-		"js/game.min_8f561331.js",
-		"js/assetsmanager.min_77c2fdfe.js",
-		"js/tween.min_6c5a88f9.js",
-		"js/promise.min_83a6a5d.js"
+		"lib/egret.min.js",
+		"lib/egret.web.min.js"
 	],
 	"game": [
 		"js/vue.egret.js",

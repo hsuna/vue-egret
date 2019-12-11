@@ -1,13 +1,9 @@
-/*!
-* vue-egret 1.0.0
-* @author Hsuna
-*/
 /// <reference types="src/egret" />
 import Render from './render';
 import Watcher from './observer/watcher';
 export interface ComponentClass {
     options: ComponentOptions;
-    new (parentOptions: ComponentParentOptions): any;
+    new (sp: egret.DisplayObjectContainer, parentOptions: ComponentParentOptions): any;
 }
 export interface ComponentMap<T> {
     [propName: string]: T;
@@ -38,7 +34,7 @@ export declare class ComponentEvent extends egret.Event {
     constructor(type: string, data: any, bubbles?: boolean, cancelable?: boolean);
 }
 export declare class Component {
-    sp: egret.DisplayObject;
+    $el: egret.DisplayObject;
     parentOptions: ComponentParentOptions;
     options: ComponentOptions;
     private __data;
@@ -49,7 +45,7 @@ export declare class Component {
     private __components;
     private __nextTickCall;
     __refs: ComponentMap<egret.DisplayObject | Component>;
-    constructor(sp: egret.DisplayObject, options?: ComponentOptions, parentOptions?: ComponentParentOptions);
+    constructor($el: egret.DisplayObject, options?: ComponentOptions, parentOptions?: ComponentParentOptions);
     _init(): void;
     private _initProps;
     private _initData;
@@ -78,10 +74,10 @@ export declare class Component {
     readonly _watchers: Array<Watcher>;
     readonly _components: ComponentMap<ComponentClass>;
 }
-export default class VueEgret extends egret.Sprite {
-    vm: Component;
+export default class VueEgret extends Component {
     static _components: ComponentMap<ComponentClass>;
     static component: (name: string, options: ComponentOptions) => void;
     static classFactory: (options: ComponentOptions) => ComponentClass;
-    destroy(): void;
+    static classMain: (options: ComponentOptions) => any;
+    constructor(options: ComponentOptions);
 }
