@@ -1,7 +1,6 @@
 import { Component } from "../index";
 export declare function installRender(target: any): void;
 export default class Render {
-    private _timeoutCool;
     private _ast;
     private _vm;
     private _vnode;

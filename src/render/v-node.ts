@@ -1,6 +1,7 @@
 /** 虚拟树 */
 import { ASTNode, ASTAttr } from './ast-node'
 import { ForParseResult } from '../helpers';
+import { Component } from '../index';
 
 const REF_REG:RegExp = /^(:?ref)/
 const BIND_REG:RegExp = /^(v-bind:|:)/
@@ -15,6 +16,7 @@ export interface Variate {
 }
 
 export interface VNode {
+    vm?: Component;
     sp?: egret.DisplayObject;
     key?: string | number;
     tag: string;

@@ -191,10 +191,6 @@ exports.popTarget = popTarget;
 
 "use strict";
 
-/*!
-* vue-egret 1.0.0
-* @author Hsuna
-*/
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -235,7 +231,7 @@ var ComponentEvent = (function (_super) {
 }(egret.Event));
 exports.ComponentEvent = ComponentEvent;
 var Component = (function () {
-    function Component(sp, options, parentOptions) {
+    function Component($el, options, parentOptions) {
         if (options === void 0) { options = {}; }
         if (parentOptions === void 0) { parentOptions = {}; }
         this.__data = {};
@@ -244,12 +240,13 @@ var Component = (function () {
         this.__components = {};
         this.__nextTickCall = [];
         this.__refs = {};
-        this.sp = sp;
+        this.$el = $el;
         this.options = options;
         this.parentOptions = parentOptions;
         this._init();
     }
     Component.prototype._init = function () {
+        var _this = this;
         this._initMethods(this.options.methods);
         this._initData(this.options.data);
         this._initProps(this.options.props, this.parentOptions.propsData);
@@ -260,14 +257,18 @@ var Component = (function () {
         this.$callHook('created');
         this.$callHook('beforeMounted');
         this.__render = new render_1.default(this);
-        this.__watcher = new watcher_1.default(this, this.__render.update.bind(this.__render), index_2.noop);
-        this.$callHook('mounted');
+        this.__watcher = new watcher_1.default(this, function () {
+            _this.$callHook('beforeUpdate');
+            _this.__render.update();
+            _this.$callHook('update');
+        }, index_2.noop);
+        setTimeout(function () { return _this.$callHook('mounted'); }, 1);
     };
     Component.prototype._initProps = function (propsOptions, propsData) {
         if (propsOptions === void 0) { propsOptions = {}; }
         if (propsData === void 0) { propsData = {}; }
         var _loop_1 = function (key) {
-            this_1.__props[key] = propsData[key] || props_1.validateProp(propsOptions[key]);
+            this_1.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : props_1.validateProp(propsOptions[key]);
             Object.defineProperty(this_1, key, {
                 get: function () {
                     return this.__props[key];
@@ -373,7 +374,7 @@ var Component = (function () {
         }
     };
     Component.prototype.$emit = function (event, data) {
-        this.sp.dispatchEvent(new ComponentEvent(event, data));
+        this.$el.dispatchEvent(new ComponentEvent(event, data));
         return this;
     };
     Component.prototype.$watch = function (expOrFn, cb, options) {
@@ -402,17 +403,17 @@ var Component = (function () {
         this.__watchers = null;
         this.__render.destroy();
         this.__render = null;
+        this.$callHook('destroyed');
     };
     Component.prototype.$nextTick = function (callback) {
         this.__nextTickCall.push(callback);
     };
     Component.prototype.$displayObject = function (ref) {
         if ('string' === typeof ref) {
-            if (this.__refs[ref] instanceof Component)
-                return this.__refs[ref].sp;
-            else
-                (this.__refs[ref] instanceof egret.DisplayObject);
-            return this.__refs[ref];
+            return this.$displayObject(this.__refs[ref]);
+        }
+        else if (ref instanceof Component) {
+            return ref.$el;
         }
         else if (ref instanceof egret.DisplayObject) {
             return ref;
@@ -444,7 +445,7 @@ var Component = (function () {
     });
     Object.defineProperty(Component.prototype, "$stage", {
         get: function () {
-            return this.sp && this.sp.stage;
+            return this.$el && this.$el.stage;
         },
         enumerable: true,
         configurable: true
@@ -499,34 +500,34 @@ var Component = (function () {
 exports.Component = Component;
 var VueEgret = (function (_super) {
     __extends(VueEgret, _super);
-    function VueEgret() {
-        return _super !== null && _super.apply(this, arguments) || this;
+    function VueEgret(options) {
+        return _super.call(this, new egret.DisplayObjectContainer, options) || this;
     }
-    VueEgret.prototype.destroy = function () {
-        if (this.vm) {
-            this.vm.$destroy();
-            this.vm.$callHook('destroyed');
-            this.vm = null;
-        }
-    };
     VueEgret._components = {};
     VueEgret.component = function (name, options) {
         VueEgret._components[name] = VueEgret.classFactory(options);
     };
     VueEgret.classFactory = function (options) { var _a; return _a = (function (_super) {
             __extends(class_1, _super);
-            function class_1(parentOptions) {
+            function class_1(sp, parentOptions) {
                 if (parentOptions === void 0) { parentOptions = {}; }
-                var _this = _super.call(this) || this;
-                _this.vm = new Component(_this, options, parentOptions);
-                return _this;
+                return _super.call(this, sp, options, parentOptions) || this;
             }
             return class_1;
-        }(VueEgret)),
+        }(Component)),
         _a.options = options,
         _a; };
+    VueEgret.classMain = function (options) { return (function (_super) {
+        __extends(class_2, _super);
+        function class_2() {
+            var _this = _super.call(this) || this;
+            new Component(_this, options);
+            return _this;
+        }
+        return class_2;
+    }(egret.DisplayObjectContainer)); };
     return VueEgret;
-}(egret.Sprite));
+}(Component));
 exports.default = VueEgret;
 
 
@@ -550,7 +551,6 @@ function installRender(target) {
     target._l = rendreList_1.renderList;
 }
 exports.installRender = installRender;
-var TIME_COOL = 50;
 var Render = (function () {
     function Render(vm) {
         this._vm = vm;
@@ -578,7 +578,7 @@ var Render = (function () {
     Render.prototype._patch = function (oldVNode, newVNode) {
         if (!oldVNode) {
             var sp = this._createDisObj(newVNode);
-            this._vm.sp.addChild(sp);
+            this._vm.$el.addChild(sp);
         }
         else if (this._sameVNode(oldVNode, newVNode)) {
             this._patchVNode(oldVNode, newVNode);
@@ -595,6 +595,7 @@ var Render = (function () {
     };
     Render.prototype._patchVNode = function (oldVNode, newVNode) {
         newVNode.sp = oldVNode.sp;
+        newVNode.vm = oldVNode.vm;
         this._updateDisObj(oldVNode, newVNode);
         this._updateChildren(oldVNode.children, newVNode.children, newVNode.sp);
     };
@@ -683,7 +684,8 @@ var Render = (function () {
                 if (key in this._vm._props)
                     propsData[key] = this._vm._props[key];
             }
-            vnode.sp = new VClass({
+            vnode.sp = new egret.DisplayObjectContainer;
+            vnode.vm = new VClass(vnode.sp, {
                 parent: this._vm,
                 _propsKeys: _propsKeys,
                 propsData: propsData
@@ -703,20 +705,19 @@ var Render = (function () {
             vnode.sp.addEventListener(type, vnode.on[type], this._vm);
         }
         if (vnode.ref) {
-            this._vm.__refs[vnode.ref] = vnode.sp;
+            this._vm.__refs[vnode.ref] = vnode.vm || vnode.sp;
         }
         vnode.children.forEach(function (child) { return vnode.sp.addChild(_this._createDisObj(child)); });
         dep_1.popTarget();
         return vnode.sp;
     };
     Render.prototype._updateDisObj = function (oldVNode, newVNode) {
-        if (oldVNode.sp instanceof index_1.default) {
-            var vm = oldVNode.sp.vm;
-            for (var key in vm._props) {
+        if (oldVNode.vm) {
+            for (var key in oldVNode.vm._props) {
                 if (key in newVNode.attrs)
-                    vm._props[key] = newVNode.attrs[key];
+                    oldVNode.vm._props[key] = newVNode.attrs[key];
                 if (key in this._vm._props)
-                    vm._props[key] = this._vm._props[key];
+                    oldVNode.vm._props[key] = this._vm._props[key];
             }
         }
         for (var name_2 in newVNode.attrs) {
@@ -733,16 +734,16 @@ var Render = (function () {
     };
     Render.prototype._destroyDisObj = function (vnode) {
         var _this = this;
+        if (vnode.vm)
+            vnode.vm.$callHook('beforeDestroyed');
         if (vnode.sp) {
-            if (vnode.sp instanceof index_1.default)
-                vnode.sp.vm.$callHook('beforeDestroyed');
             vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
             for (var type in vnode.on) {
                 vnode.sp.removeEventListener(type, vnode.on[type], this._vm);
             }
-            if (vnode.sp instanceof index_1.default)
-                vnode.sp.destroy();
         }
+        if (vnode.vm)
+            vnode.vm.$destroy();
         if (vnode.ref) {
             delete this._vm.__refs[vnode.ref];
         }

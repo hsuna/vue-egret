@@ -1,8 +1,10 @@
 import { ASTNode } from './ast-node';
+import { Component } from '../index';
 export interface Variate {
     [varName: string]: string;
 }
 export interface VNode {
+    vm?: Component;
     sp?: egret.DisplayObject;
     key?: string | number;
     tag: string;

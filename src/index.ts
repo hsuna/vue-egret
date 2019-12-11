@@ -1,4 +1,4 @@
-/*!
+/*
 * vue-egret 1.0.0
 * @author Hsuna
 */
@@ -13,7 +13,7 @@ import { validateProp } from './util/props'
 
 export interface ComponentClass {
     options:ComponentOptions;
-    new (parentOptions:ComponentParentOptions);
+    new (sp:egret.DisplayObjectContainer, parentOptions:ComponentParentOptions);
 }
 export interface ComponentMap<T> {
     [propName:string]: T;
@@ -51,7 +51,7 @@ export class ComponentEvent extends egret.Event {
 }
 
 export class Component {
-    sp: egret.DisplayObject;
+    $el: egret.DisplayObject;
     parentOptions: ComponentParentOptions;
     options: ComponentOptions;
 
@@ -65,8 +65,8 @@ export class Component {
     private __nextTickCall: Array<Function> = [];
     public __refs: ComponentMap<egret.DisplayObject|Component> = {};
 
-    constructor(sp:egret.DisplayObject, options:ComponentOptions={}, parentOptions: ComponentParentOptions={}) {
-        this.sp = sp;
+    constructor($el:egret.DisplayObject, options:ComponentOptions={}, parentOptions: ComponentParentOptions={}) {
+        this.$el = $el;
         this.options = options;
         this.parentOptions = parentOptions;
         this._init()
@@ -83,12 +83,16 @@ export class Component {
         this.$callHook('created');
         this.$callHook('beforeMounted');
         this.__render = new Render(this)
-        this.__watcher = new Watcher(this, this.__render.update.bind(this.__render), noop)
-        this.$callHook('mounted');
+        this.__watcher = new Watcher(this, () => {
+            this.$callHook('beforeUpdate')
+            this.__render.update()
+            this.$callHook('update')
+        }, noop)
+        setTimeout(() => this.$callHook('mounted'), 1)
     }
     private _initProps(propsOptions: any={}, propsData:any={}) {
         for(const key in propsOptions){
-            this.__props[key] = propsData[key] || validateProp(propsOptions[key])
+            this.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(propsOptions[key])
             Object.defineProperty(this, key, {
                 get(){
                     return this.__props[key]
@@ -172,7 +176,7 @@ export class Component {
         }
     }
     public $emit (event: string, data:any): Component {
-        this.sp.dispatchEvent(new ComponentEvent(event, data));
+        this.$el.dispatchEvent(new ComponentEvent(event, data));
         return this;
     }
     public $watch (expOrFn: string | Function, cb: any, options?: Object): Function {
@@ -197,16 +201,16 @@ export class Component {
         this.__watchers = null;
         this.__render.destroy()
         this.__render = null
+        this.$callHook('destroyed')
     }
     public $nextTick(callback:Function) {
         this.__nextTickCall.push(callback)
     }
     public $displayObject(ref:any):egret.DisplayObject {
         if('string' === typeof ref){
-            if(this.__refs[ref] instanceof Component) 
-                return (this.__refs[ref] as Component).sp
-            else (this.__refs[ref] instanceof egret.DisplayObject) 
-                return this.__refs[ref] as egret.DisplayObject
+            return this.$displayObject(this.__refs[ref])
+        }else if(ref instanceof Component){
+            return(ref as Component).$el
         }else if(ref instanceof egret.DisplayObject){
             return ref as egret.DisplayObject
         }
@@ -232,7 +236,7 @@ export class Component {
         return this.__refs;
     }
     public get $stage():egret.Stage {
-        return this.sp && this.sp.stage
+        return this.$el && this.$el.stage
     }
     public get _data():any {
         return this.__data;
@@ -257,26 +261,24 @@ export class Component {
     }
 }
 
-export default class VueEgret extends egret.Sprite {
-    public vm:Component;
-
+export default class VueEgret extends Component {
     static _components:ComponentMap<ComponentClass> = {}
     static component = (name:string, options:ComponentOptions) => {
         VueEgret._components[name] = VueEgret.classFactory(options)
     }
-    static classFactory = (options:ComponentOptions):ComponentClass => class extends VueEgret { 
+    static classFactory = (options:ComponentOptions):ComponentClass => class extends Component {
         static options:ComponentOptions = options; 
-        constructor(parentOptions: ComponentParentOptions={}) {
-            super() 
-            this.vm = new Component(this as egret.DisplayObject, options, parentOptions)
-        } 
-    }
-
-    public destroy(){
-        if(this.vm){
-            this.vm.$destroy()
-            this.vm.$callHook('destroyed')
-            this.vm = null
+        constructor(sp:egret.DisplayObjectContainer, parentOptions: ComponentParentOptions={}) {
+            super(sp, options, parentOptions)
         }
+    }
+    static classMain = (options:ComponentOptions):any => class extends egret.DisplayObjectContainer {
+        constructor(){
+            super()
+            new Component(this, options)
+        }
+    }
+    constructor(options:ComponentOptions) {
+        super(new egret.DisplayObjectContainer, options)
     }
 }
