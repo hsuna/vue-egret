@@ -121,7 +121,7 @@ function toString(val) {
 exports.toString = toString;
 function toNumber(val) {
     var n = Number(val);
-    return isNaN(n) || '' === val ? val : n;
+    return Array.isArray(val) || isNaN(n) || '' === val ? val : n;
 }
 exports.toNumber = toNumber;
 var _toString = Object.prototype.toString;
