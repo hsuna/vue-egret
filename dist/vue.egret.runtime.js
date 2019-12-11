@@ -1377,7 +1377,9 @@ function observe(value) {
     if (Object.prototype.hasOwnProperty.call(value, '__ob__') && value.__ob__ instanceof Observer) {
         ob = value.__ob__;
     }
-    else if (!(value instanceof egret.DisplayObject)) {
+    else if ((Array.isArray(value) || index_1.isPlainObject(value))
+        && Object.isExtensible(value)
+        && !(value instanceof egret.DisplayObject)) {
         ob = new Observer(value);
     }
     return ob;
