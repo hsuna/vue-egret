@@ -1,4 +1,4 @@
-import { def, hasProto } from '../util/index'
+import { def, hasProto, isPlainObject } from '../util/index'
 import { arrayMethods, arrayKeys } from './array'
 import Dep from './dep'
 
@@ -101,7 +101,11 @@ export function observe (value: any): Observer {
     let ob: Observer
     if (Object.prototype.hasOwnProperty.call(value, '__ob__') && value.__ob__ instanceof Observer) {
       ob = value.__ob__
-    } else if(!(value instanceof egret.DisplayObject)){
+    } else if(
+        (Array.isArray(value) || isPlainObject(value))
+        && Object.isExtensible(value) 
+        && !(value instanceof egret.DisplayObject)
+    ){
       ob = new Observer(value)
     }
     return ob
