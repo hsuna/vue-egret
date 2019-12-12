@@ -1,4 +1,4 @@
-/// <reference types="src/egret" />
+/// <reference types="types/egret" />
 import Render from './render';
 import Watcher from './observer/watcher';
 export interface ComponentClass {
@@ -37,6 +37,7 @@ export declare class Component {
     $el: egret.DisplayObject;
     parentOptions: ComponentParentOptions;
     options: ComponentOptions;
+    private __global;
     private __data;
     private __props;
     private __render;
@@ -47,6 +48,7 @@ export declare class Component {
     __refs: ComponentMap<egret.DisplayObject | Component>;
     constructor($el: egret.DisplayObject, options?: ComponentOptions, parentOptions?: ComponentParentOptions);
     _init(): void;
+    private _initglobal;
     private _initProps;
     private _initData;
     private _initMethods;
@@ -65,6 +67,7 @@ export declare class Component {
     $hitTestPoint(ref: any, x: number, y: number, shapeFlag?: boolean): boolean;
     $globalToLocal(ref: any, stateX: number, stateY: number): egret.Point;
     $localToGlobal(ref: any, stateX: number, stateY: number): egret.Point;
+    $tween(props: any, duration?: number, ease?: Function): Promise<any>;
     readonly $refs: ComponentMap<egret.DisplayObject | Component>;
     readonly $stage: egret.Stage;
     readonly _data: any;

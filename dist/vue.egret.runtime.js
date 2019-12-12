@@ -218,12 +218,12 @@ var index_1 = __webpack_require__(12);
 var dep_1 = __webpack_require__(1);
 var index_2 = __webpack_require__(0);
 var props_1 = __webpack_require__(14);
-var ComponentEvent = (function (_super) {
-    __extends(ComponentEvent, _super);
+var ComponentEvent = (function (_super_1) {
+    __extends(ComponentEvent, _super_1);
     function ComponentEvent(type, data, bubbles, cancelable) {
         if (bubbles === void 0) { bubbles = false; }
         if (cancelable === void 0) { cancelable = false; }
-        var _this = _super.call(this, type, bubbles, cancelable) || this;
+        var _this = _super_1.call(this, type, bubbles, cancelable) || this;
         _this.data = data;
         return _this;
     }
@@ -234,6 +234,7 @@ var Component = (function () {
     function Component($el, options, parentOptions) {
         if (options === void 0) { options = {}; }
         if (parentOptions === void 0) { parentOptions = {}; }
+        this.__global = {};
         this.__data = {};
         this.__props = {};
         this.__watchers = [];
@@ -248,6 +249,7 @@ var Component = (function () {
     Component.prototype._init = function () {
         var _this = this;
         this._initMethods(this.options.methods);
+        this._initglobal();
         this._initData(this.options.data);
         this._initProps(this.options.props, this.parentOptions.propsData);
         this._initComputed(this.options.computed);
@@ -262,7 +264,16 @@ var Component = (function () {
             _this.__render.update();
             _this.$callHook('update');
         }, index_2.noop);
-        setTimeout(function () { return _this.$callHook('mounted'); }, 1);
+        setTimeout(function () {
+            _this.__global.stage = _this.$el.stage;
+            _this.$callHook('mounted');
+        }, 1);
+    };
+    Component.prototype._initglobal = function () {
+        this.__global = {
+            stage: this.$el.stage || new egret.Stage()
+        };
+        index_1.observe(this.__global);
     };
     Component.prototype._initProps = function (propsOptions, propsData) {
         if (propsOptions === void 0) { propsOptions = {}; }
@@ -436,6 +447,15 @@ var Component = (function () {
         disObj && disObj.localToGlobal(stateX, stateY, resultPoint);
         return resultPoint;
     };
+    Component.prototype.$tween = function (props, duration, ease) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if ('Tween' in egret)
+                egret.Tween.get(_this).to(props, duration, ease).call(resolve);
+            else
+                reject('The egret.Tween.js not import!!!');
+        });
+    };
     Object.defineProperty(Component.prototype, "$refs", {
         get: function () {
             return this.__refs;
@@ -445,7 +465,7 @@ var Component = (function () {
     });
     Object.defineProperty(Component.prototype, "$stage", {
         get: function () {
-            return this.$el && this.$el.stage;
+            return this.__global.stage;
         },
         enumerable: true,
         configurable: true
@@ -498,29 +518,29 @@ var Component = (function () {
     return Component;
 }());
 exports.Component = Component;
-var VueEgret = (function (_super) {
-    __extends(VueEgret, _super);
+var VueEgret = (function (_super_1) {
+    __extends(VueEgret, _super_1);
     function VueEgret(options) {
-        return _super.call(this, new egret.DisplayObjectContainer, options) || this;
+        return _super_1.call(this, new egret.DisplayObjectContainer, options) || this;
     }
     VueEgret._components = {};
     VueEgret.component = function (name, options) {
         VueEgret._components[name] = VueEgret.classFactory(options);
     };
-    VueEgret.classFactory = function (options) { var _a; return _a = (function (_super) {
-            __extends(class_1, _super);
+    VueEgret.classFactory = function (options) { var _a; return _a = (function (_super_1) {
+            __extends(class_1, _super_1);
             function class_1(sp, parentOptions) {
                 if (parentOptions === void 0) { parentOptions = {}; }
-                return _super.call(this, sp, options, parentOptions) || this;
+                return _super_1.call(this, sp, options, parentOptions) || this;
             }
             return class_1;
         }(Component)),
         _a.options = options,
         _a; };
-    VueEgret.classMain = function (options) { return (function (_super) {
-        __extends(class_2, _super);
+    VueEgret.classMain = function (options) { return (function (_super_1) {
+        __extends(class_2, _super_1);
         function class_2() {
-            var _this = _super.call(this) || this;
+            var _this = _super_1.call(this) || this;
             new Component(_this, options);
             return _this;
         }
