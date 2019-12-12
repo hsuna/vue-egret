@@ -2,7 +2,7 @@
 * vue-egret 1.0.0
 * @author Hsuna
 */
-/// <reference path="./egret.d.ts" />
+/// <reference path="../types/egret.d.ts" />
 
 import Render from './render';
 import Watcher from './observer/watcher'
@@ -56,6 +56,7 @@ export class Component {
     options: ComponentOptions;
 
     // private __tickHandler: ComponentMap<Function> = [];
+    private __global: any={};
     private __data: any={};
     private __props: any={};
     private __render: Render;
@@ -74,6 +75,7 @@ export class Component {
 
     public _init() {
         this._initMethods(this.options.methods)
+        this._initglobal()
         this._initData(this.options.data)
         this._initProps(this.options.props, this.parentOptions.propsData)
         this._initComputed(this.options.computed);
@@ -88,7 +90,18 @@ export class Component {
             this.__render.update()
             this.$callHook('update')
         }, noop)
-        setTimeout(() => this.$callHook('mounted'), 1)
+        setTimeout(() => {
+            this.__global.stage = this.$el.stage
+            this.$callHook('mounted')
+        }, 1)
+    }
+    /** 初始化全局参数，用于全局方便获取 */
+    private _initglobal(){
+        this.__global = {
+            stage: this.$el.stage || new egret.Stage()
+        }
+        // 监听数据
+        observe(this.__global)
     }
     private _initProps(propsOptions: any={}, propsData:any={}) {
         for(const key in propsOptions){
@@ -232,11 +245,17 @@ export class Component {
         disObj && disObj.localToGlobal(stateX, stateY, resultPoint)
         return resultPoint
     }
+    public $tween(props: any, duration?: number, ease?: Function): Promise<any> {
+        return new Promise((resolve:Function, reject:Function) => {
+            if('Tween' in egret) egret.Tween.get(this).to(props, duration, ease).call(resolve)
+            else reject('The egret.Tween.js not import!!!')
+        })
+    }
     public get $refs():ComponentMap<egret.DisplayObject|Component> {
         return this.__refs;
     }
     public get $stage():egret.Stage {
-        return this.$el && this.$el.stage
+        return this.__global.stage
     }
     public get _data():any {
         return this.__data;

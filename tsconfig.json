@@ -19,6 +19,9 @@
 			"src/*": ["./src/*"]
 		}
 	},
+	"includes": [
+		"./types/*"
+	],
 	"exclude": [
 		"dist",
 		"build",

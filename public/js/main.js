@@ -91,7 +91,7 @@ var Main = VueEgret.classMain({
     mounted () {
         console.log(this);
     },
-    template: `<MyButton @test="onTest" :skin="count"></MyButton>`
+    template: `<MyButton :x="$stage.stageWidth>>1" @test="onTest" :skin="count"></MyButton>`
 })
 
 /*      <Sprite v-for="(value, key) in list" x="11" y="40">
