@@ -127,7 +127,7 @@ export default class Render {
         parent.addChildAt(sp, newStartIdx);
       }
     }else if(newStartIdx > newEndIdx){
-      for (; oldStartIdx <= oldEndIdx; ++oldEndIdx) {
+      for (; oldStartIdx <= oldEndIdx; ++oldStartIdx) {
         oldStartVNode = oldCh[oldStartIdx]
         this._destroyDisObj(oldStartVNode);
       }
