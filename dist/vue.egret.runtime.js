@@ -260,6 +260,8 @@ var Component = (function () {
         this.$callHook('beforeMounted');
         this.__render = new render_1.default(this);
         this.__watcher = new watcher_1.default(this, function () {
+            if (!_this.__render)
+                return;
             _this.$callHook('beforeUpdate');
             _this.__render.update();
             _this.$callHook('update');
@@ -411,6 +413,8 @@ var Component = (function () {
         dep_1.popTarget();
     };
     Component.prototype.$destroy = function () {
+        this.__watcher.teardown();
+        this.__watcher = null;
         this.__watchers = null;
         this.__render.destroy();
         this.__render = null;
