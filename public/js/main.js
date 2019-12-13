@@ -74,6 +74,7 @@ VueEgret.component('MyButton', {
 var Main = VueEgret.classMain({
     data(){
         return {
+            y: 0,
             count: 0,
             list: [1,2]
         }
@@ -89,9 +90,19 @@ var Main = VueEgret.classMain({
         }
     },
     mounted () {
+        this.$tweenWait(1000).then(() => {
+            return this.$tweenTo({
+                y: 100
+            }, 1000)
+        }).then(() => {
+            console.log('动画完成')
+        }).catch(err => {
+            console.log(err)
+        })
+        console.log(this.$hitTest('test', 'test'))
         console.log(this);
     },
-    template: `<MyButton :x="$stage.stageWidth>>1" @test="onTest" :skin="count"></MyButton>`
+    template: `<MyButton ref="test" :x="$stage.stageWidth>>1" :y="y" @test="onTest" :skin="count"></MyButton>`
 })
 
 /*      <Sprite v-for="(value, key) in list" x="11" y="40">

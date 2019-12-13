@@ -42,6 +42,9 @@ export interface ComponentOptions{
     _parentOptions?: ComponentParentOptions;
 }
 
+/** 类型-注册信息 */
+export type ComponentRef = String | Component | egret.DisplayObject
+
 export class ComponentEvent extends egret.Event {
     public data:any;
     constructor(type:string, data:any, bubbles:boolean=false, cancelable:boolean = false) {
@@ -219,7 +222,7 @@ export class Component {
     public $nextTick(callback:Function) {
         this.__nextTickCall.push(callback)
     }
-    public $displayObject(ref:any):egret.DisplayObject {
+    public $displayObject(ref:ComponentRef):egret.DisplayObject {
         if('string' === typeof ref){
             return this.$displayObject(this.__refs[ref])
         }else if(ref instanceof Component){
@@ -229,27 +232,83 @@ export class Component {
         }
         return null;
     }
-    public $hitTestPoint(ref:any, x:number, y:number, shapeFlag?: boolean): boolean {
-        let disObj: egret.DisplayObject = this.$displayObject(ref)
+    /**
+     * 碰撞检测
+     * @description 用于检测两个显示对象间是否存在碰撞
+     * @author Hsuna
+     * @param { ComponentRef } ref1 显示对象1
+     * @param { ComponentRef } ref2 显示对象2
+     * @return { boolean }
+     */
+    public $hitTest(ref1:ComponentRef, ref2:ComponentRef): boolean {
+        const disObj1: egret.DisplayObject = this.$displayObject(ref1)
+        const disObj2: egret.DisplayObject = this.$displayObject(ref2)
+        if(!disObj1 || !disObj2) return true
+        let rect1: egret.Rectangle = disObj1.getBounds()
+        let rect2: egret.Rectangle = disObj2.getBounds()
+        rect1.x = disObj1.x, rect1.y = disObj1.y; 
+        rect2.x = disObj2.x, rect2.y = disObj2.y; 
+        return rect1.intersects(rect2)
+    }
+    public $hitTestPoint(ref:ComponentRef, x:number, y:number, shapeFlag?: boolean): boolean {
+        const disObj: egret.DisplayObject = this.$displayObject(ref)
         return disObj ? disObj.hitTestPoint(x, y, shapeFlag) : false
     }
-    public $globalToLocal(ref:any, stateX:number, stateY:number): egret.Point {
-        let disObj: egret.DisplayObject = this.$displayObject(ref)
-        let resultPoint: egret.Point = new egret.Point(stateX, stateY)
+    public $globalToLocal(ref:ComponentRef, stateX:number, stateY:number): egret.Point {
+        const disObj: egret.DisplayObject = this.$displayObject(ref)
+        const resultPoint: egret.Point = new egret.Point(stateX, stateY)
         disObj && disObj.globalToLocal(stateX, stateY, resultPoint)
         return resultPoint
     }
-    public $localToGlobal(ref:any, stateX:number, stateY:number): egret.Point {
-        let disObj: egret.DisplayObject = this.$displayObject(ref)
-        let resultPoint: egret.Point = new egret.Point(stateX, stateY)
+    public $localToGlobal(ref:ComponentRef, stateX:number, stateY:number): egret.Point {
+        const disObj: egret.DisplayObject = this.$displayObject(ref)
+        const resultPoint: egret.Point = new egret.Point(stateX, stateY)
         disObj && disObj.localToGlobal(stateX, stateY, resultPoint)
         return resultPoint
     }
-    public $tween(props: any, duration?: number, ease?: Function): Promise<any> {
-        return new Promise((resolve:Function, reject:Function) => {
-            if('Tween' in egret) egret.Tween.get(this).to(props, duration, ease).call(resolve)
-            else reject('The egret.Tween.js not import!!!')
-        })
+    /**
+     * 获取Tween对象
+     * @description 用于检测egret.Tween是否被安装，且空值时，返回this的Tween
+     * @author Hsuna
+     * @param {egret.Tween} tween 可选，若不填，则返回egret.Tween.get(this)
+     * @return {egret.Tween} 
+     */
+    public $tween(tween?:egret.Tween): egret.Tween{
+        if('Tween' in egret) return (tween instanceof egret.Tween) ? tween : egret.Tween.get(this)
+        else throw 'The egret.Tween.js not import!!!'
+    }
+    /**
+     * 简单运动动画
+     * @description 仅适用于to函数，复杂的动画效果请使用原egret.Tween结合$tweenPromise实现
+     * @author Hsuna
+     * @param { any } props 对象的属性集合
+     * @param { number } duration 持续时间
+     * @param { Function } ease 缓动算法
+     * @return {Promise<egret.Tween>}
+     */
+    public $tweenTo(props: any, duration?: number, ease?: Function): Promise<egret.Tween> {
+        return this.$tweenPromise(this.$tween().to(props, duration, ease))
+    }
+    /**
+     * 简单等待动画
+     * @description 仅适用于wait函数，复杂的动画效果请使用原egret.Tween结合$tweenPromise实现
+     * @author Hsuna
+     * @param { number } duration 持续时间
+     * @param { boolean } passive 等待期间属性是否会更新
+     * @return {Promise<egret.Tween>}
+     */
+    public $tweenWait(duration: number, passive?: boolean): Promise<egret.Tween> {
+        return this.$tweenPromise(this.$tween().wait(duration, passive))
+    }
+    /**
+     * 动画Promise包装
+     * @description 将Tween.call包装为Promise的方式
+     * @author Hsuna
+     * @param {egret.Tween} tween 
+     * @return {Promise<egret.Tween>}
+     */
+    public $tweenPromise(tween: egret.Tween): Promise<egret.Tween> {
+        return new Promise((resolve:(value:egret.Tween) => void) => tween.call(resolve))
     }
     public get $refs():ComponentMap<egret.DisplayObject|Component> {
         return this.__refs;
