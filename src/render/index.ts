@@ -136,8 +136,9 @@ export default class Render {
 
   private _sameVNode(oldVNode:VNode, newVNode:VNode):boolean {
     return (
-        newVNode.key === oldVNode.key && //key值
-        oldVNode.tag === newVNode.tag // 类名
+      oldVNode.key === newVNode.key && // key值
+      oldVNode.tag === newVNode.tag && // 类名
+      oldVNode.attrs.key === newVNode.attrs.key // 属性key值，当属性使用key时，进行强制比对，特别是MovieClip循环列表，进行强制替换
     )
   }
 
