@@ -700,8 +700,9 @@ var Render = (function () {
         }
     };
     Render.prototype._sameVNode = function (oldVNode, newVNode) {
-        return (newVNode.key === oldVNode.key &&
-            oldVNode.tag === newVNode.tag);
+        return (oldVNode.key === newVNode.key &&
+            oldVNode.tag === newVNode.tag &&
+            oldVNode.attrs.key === newVNode.attrs.key);
     };
     Render.prototype._createVNode = function (code) {
         return Function.prototype.constructor("with(this){ return " + code + ";}").call(this._vm);
