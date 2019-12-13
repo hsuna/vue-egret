@@ -121,15 +121,15 @@ export default class Render {
     }
     if(oldStartIdx > oldEndIdx){
       let sp:egret.DisplayObject
-      while(newStartVNode){
+      for (; newStartIdx <= newEndIdx; ++newStartIdx) {
+        newStartVNode = newCh[newStartIdx]
         sp = this._createDisObj(newStartVNode);
-        parent.addChild(sp);
-        newStartVNode = newCh[++newStartIdx]
+        parent.addChildAt(sp, newStartIdx);
       }
     }else if(newStartIdx > newEndIdx){
-      while(oldStartVNode){
-        this._destroyDisObj(oldStartVNode)
-        oldStartVNode = oldCh[++oldStartIdx]
+      for (; oldStartIdx <= oldEndIdx; ++oldEndIdx) {
+        oldStartVNode = oldCh[oldStartIdx]
+        this._destroyDisObj(oldStartVNode);
       }
     }
   }

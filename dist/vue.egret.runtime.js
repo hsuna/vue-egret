@@ -686,16 +686,16 @@ var Render = (function () {
         }
         if (oldStartIdx > oldEndIdx) {
             var sp = void 0;
-            while (newStartVNode) {
+            for (; newStartIdx <= newEndIdx; ++newStartIdx) {
+                newStartVNode = newCh[newStartIdx];
                 sp = this._createDisObj(newStartVNode);
-                parent.addChild(sp);
-                newStartVNode = newCh[++newStartIdx];
+                parent.addChildAt(sp, newStartIdx);
             }
         }
         else if (newStartIdx > newEndIdx) {
-            while (oldStartVNode) {
+            for (; oldStartIdx <= oldEndIdx; ++oldEndIdx) {
+                oldStartVNode = oldCh[oldStartIdx];
                 this._destroyDisObj(oldStartVNode);
-                oldStartVNode = oldCh[++oldStartIdx];
             }
         }
     };
