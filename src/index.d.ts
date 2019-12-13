@@ -1,4 +1,5 @@
 /// <reference types="types/egret" />
+/// <reference types="types/tween" />
 import Render from './render';
 import Watcher from './observer/watcher';
 export interface ComponentClass {
@@ -29,6 +30,7 @@ export interface ComponentOptions {
     destroyed?: Function;
     _parentOptions?: ComponentParentOptions;
 }
+export declare type ComponentRef = String | Component | egret.DisplayObject;
 export declare class ComponentEvent extends egret.Event {
     data: any;
     constructor(type: string, data: any, bubbles?: boolean, cancelable?: boolean);
@@ -63,11 +65,15 @@ export declare class Component {
     $callHook(name: string, ...rest: any[]): void;
     $destroy(): void;
     $nextTick(callback: Function): void;
-    $displayObject(ref: any): egret.DisplayObject;
-    $hitTestPoint(ref: any, x: number, y: number, shapeFlag?: boolean): boolean;
-    $globalToLocal(ref: any, stateX: number, stateY: number): egret.Point;
-    $localToGlobal(ref: any, stateX: number, stateY: number): egret.Point;
-    $tween(props: any, duration?: number, ease?: Function): Promise<any>;
+    $displayObject(ref: ComponentRef): egret.DisplayObject;
+    $hitTest(ref1: ComponentRef, ref2: ComponentRef): boolean;
+    $hitTestPoint(ref: ComponentRef, x: number, y: number, shapeFlag?: boolean): boolean;
+    $globalToLocal(ref: ComponentRef, stateX: number, stateY: number): egret.Point;
+    $localToGlobal(ref: ComponentRef, stateX: number, stateY: number): egret.Point;
+    $tween(tween?: egret.Tween): egret.Tween;
+    $tweenTo(props: any, duration?: number, ease?: Function): Promise<egret.Tween>;
+    $tweenWait(duration: number, passive?: boolean): Promise<egret.Tween>;
+    $tweenPromise(tween: egret.Tween): Promise<egret.Tween>;
     readonly $refs: ComponentMap<egret.DisplayObject | Component>;
     readonly $stage: egret.Stage;
     readonly _data: any;
