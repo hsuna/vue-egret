@@ -3,6 +3,7 @@
 * @author Hsuna
 */
 /// <reference path="../types/egret.d.ts" />
+/// <reference path="../types/tween.d.ts" />
 
 import Render from './render';
 import Watcher from './observer/watcher'

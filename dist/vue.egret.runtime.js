@@ -431,6 +431,17 @@ var Component = (function () {
         }
         return null;
     };
+    Component.prototype.$hitTest = function (ref1, ref2) {
+        var disObj1 = this.$displayObject(ref1);
+        var disObj2 = this.$displayObject(ref2);
+        if (!disObj1 || !disObj2)
+            return true;
+        var rect1 = disObj1.getBounds();
+        var rect2 = disObj2.getBounds();
+        rect1.x = disObj1.x, rect1.y = disObj1.y;
+        rect2.x = disObj2.x, rect2.y = disObj2.y;
+        return rect1.intersects(rect2);
+    };
     Component.prototype.$hitTestPoint = function (ref, x, y, shapeFlag) {
         var disObj = this.$displayObject(ref);
         return disObj ? disObj.hitTestPoint(x, y, shapeFlag) : false;
@@ -447,14 +458,20 @@ var Component = (function () {
         disObj && disObj.localToGlobal(stateX, stateY, resultPoint);
         return resultPoint;
     };
-    Component.prototype.$tween = function (props, duration, ease) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            if ('Tween' in egret)
-                egret.Tween.get(_this).to(props, duration, ease).call(resolve);
-            else
-                reject('The egret.Tween.js not import!!!');
-        });
+    Component.prototype.$tween = function (tween) {
+        if ('Tween' in egret)
+            return (tween instanceof egret.Tween) ? tween : egret.Tween.get(this);
+        else
+            throw 'The egret.Tween.js not import!!!';
+    };
+    Component.prototype.$tweenTo = function (props, duration, ease) {
+        return this.$tweenPromise(this.$tween().to(props, duration, ease));
+    };
+    Component.prototype.$tweenWait = function (duration, passive) {
+        return this.$tweenPromise(this.$tween().wait(duration, passive));
+    };
+    Component.prototype.$tweenPromise = function (tween) {
+        return new Promise(function (resolve) { return tween.call(resolve); });
     };
     Object.defineProperty(Component.prototype, "$refs", {
         get: function () {
