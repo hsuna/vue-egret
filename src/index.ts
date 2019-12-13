@@ -90,6 +90,7 @@ export class Component {
         this.$callHook('beforeMounted');
         this.__render = new Render(this)
         this.__watcher = new Watcher(this, () => {
+            if(!this.__render) return; // 反正渲染器销毁时，进程依然回调方法
             this.$callHook('beforeUpdate')
             this.__render.update()
             this.$callHook('update')
@@ -214,8 +215,17 @@ export class Component {
         }
         popTarget()
     }
+    /**
+     * 销毁
+     * @description 销毁对象
+     * @author Hsuna
+     */
     public $destroy(){
+        // 销毁观察器
+        this.__watcher.teardown()
+        this.__watcher = null
         this.__watchers = null;
+        // 销毁渲染器
         this.__render.destroy()
         this.__render = null
         this.$callHook('destroyed')
