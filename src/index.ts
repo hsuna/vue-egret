@@ -110,7 +110,7 @@ export class Component {
     }
     private _initProps(propsOptions: any={}, propsData:any={}) {
         for(const key in propsOptions){
-            this.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(propsOptions[key])
+            this.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(propsOptions[key], this)
             Object.defineProperty(this, key, {
                 get(){
                     return this.__props[key]
