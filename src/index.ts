@@ -110,7 +110,7 @@ export class Component {
     }
     private _initProps(propsOptions: any={}, propsData:any={}) {
         for(const key in propsOptions){
-            this.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(propsOptions[key])
+            this.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(propsOptions[key], this)
             Object.defineProperty(this, key, {
                 get(){
                     return this.__props[key]
@@ -281,11 +281,11 @@ export class Component {
      * 获取Tween对象
      * @description 用于检测egret.Tween是否被安装，且空值时，返回this的Tween
      * @author Hsuna
-     * @param {egret.Tween} tween 可选，若不填，则返回egret.Tween.get(this)
+     * @param {egret.Tween} tween 可选，若不为Tween类型，则返回egret.Tween.get(this, ...arguments)
      * @return {egret.Tween} 
      */
     public $tween(tween?:egret.Tween): egret.Tween{
-        if('Tween' in egret) return (tween instanceof egret.Tween) ? tween : egret.Tween.get(this)
+        if('Tween' in egret) return (tween instanceof egret.Tween) ? tween : egret.Tween.get(this, ...arguments)
         else throw 'The egret.Tween.js not import!!!'
     }
     /**

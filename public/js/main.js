@@ -131,6 +131,10 @@ VueEgret.component('Player', {
         skin: {
             type: String,
             default: ''
+        },
+        size: {
+            type: Array,
+            default: () => [0,0]
         }
     },
     data(){
@@ -147,6 +151,7 @@ VueEgret.component('Player', {
         egret.BitmapData.create("base64", LOGO_BASE64, bitmapData => this.bitmapData = bitmapData)
     },
     mounted () {
+        console.log(this.size)
     },
     methods: {
         onTouchBegin(evt){
