@@ -204,12 +204,25 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var render_1 = __webpack_require__(3);
@@ -281,7 +294,7 @@ var Component = (function () {
         if (propsOptions === void 0) { propsOptions = {}; }
         if (propsData === void 0) { propsData = {}; }
         var _loop_1 = function (key) {
-            this_1.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : props_1.validateProp(propsOptions[key]);
+            this_1.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : props_1.validateProp(propsOptions[key], this_1);
             Object.defineProperty(this_1, key, {
                 get: function () {
                     return this.__props[key];
@@ -408,7 +421,7 @@ var Component = (function () {
         }
         dep_1.pushTarget();
         if ('function' === typeof this.options[name]) {
-            (_a = this.options[name]).call.apply(_a, __spreadArrays([this], rest));
+            (_a = this.options[name]).call.apply(_a, __spread([this], rest));
         }
         dep_1.popTarget();
     };
@@ -463,8 +476,9 @@ var Component = (function () {
         return resultPoint;
     };
     Component.prototype.$tween = function (tween) {
+        var _a;
         if ('Tween' in egret)
-            return (tween instanceof egret.Tween) ? tween : egret.Tween.get(this);
+            return (tween instanceof egret.Tween) ? tween : (_a = egret.Tween).get.apply(_a, __spread([this], arguments));
         else
             throw 'The egret.Tween.js not import!!!';
     };
@@ -935,12 +949,25 @@ exports.default = ParserFactory;
 
 "use strict";
 
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var START_TAG_CLOSE = /\/\s*>/;
@@ -1018,7 +1045,7 @@ var ParseHtml = (function () {
             for (var _i = 0; _i < arguments.length; _i++) {
                 arg[_i] = arguments[_i];
             }
-            var attr = (_a = _this.parseAttribute).call.apply(_a, __spreadArrays([_this, sTagName], arg));
+            var attr = (_a = _this.parseAttribute).call.apply(_a, __spread([_this, sTagName], arg));
             if (attr.name && '/' !== attr.name)
                 attrs.push(attr);
             return '';
@@ -1513,8 +1540,24 @@ function checkType(type, expectedTypes) {
     return eTypes.some(function (eType) { return isSameType(eType, type); });
 }
 exports.checkType = checkType;
-function validateProp(options) {
+function validateProp(options, vm) {
     if ('object' === typeof options && options.type) {
+        if (typeof options.default === 'function') {
+            if (!checkType(Function, options.type))
+                return options.default.call(vm);
+        }
+        else if (typeof options.default === 'undefined') {
+            if (checkType(String, options.type))
+                return '';
+            else if (checkType(Number, options.type))
+                return 0;
+            else if (checkType(Boolean, options.type))
+                return false;
+            else if (checkType(Array, options.type))
+                return [];
+            else if (checkType(Object, options.type))
+                return {};
+        }
         return options.default;
     }
     return options;
