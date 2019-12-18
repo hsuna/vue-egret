@@ -193,8 +193,8 @@ export default class Render {
   private _updateDisObj(oldVNode:VNode, newVNode:VNode) {
     if(oldVNode.vm){
       for(const key in oldVNode.vm._props){
+        if(key in this._vm._props) oldVNode.vm._props[key] = this._vm._props[key] // bug：1.1.6 属性优先级错误，导致继承失败
         if(key in newVNode.attrs) oldVNode.vm._props[key] = newVNode.attrs[key]
-        if(key in this._vm._props) oldVNode.vm._props[key] = this._vm._props[key]
       }
     }
     for(const name in newVNode.attrs){

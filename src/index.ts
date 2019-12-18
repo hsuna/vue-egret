@@ -79,7 +79,7 @@ export class Component {
 
     public _init() {
         this._initMethods(this.options.methods)
-        this._initglobal()
+        this._initGlobal()
         this._initData(this.options.data)
         this._initProps(this.options.props, this.parentOptions.propsData)
         this._initComputed(this.options.computed);
@@ -101,7 +101,7 @@ export class Component {
         }, 1)
     }
     /** 初始化全局参数，用于全局方便获取 */
-    private _initglobal(){
+    private _initGlobal(){
         this.__global = {
             stage: this.$el.stage || new egret.Stage()
         }
