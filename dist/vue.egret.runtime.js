@@ -262,7 +262,7 @@ var Component = (function () {
     Component.prototype._init = function () {
         var _this = this;
         this._initMethods(this.options.methods);
-        this._initglobal();
+        this._initGlobal();
         this._initData(this.options.data);
         this._initProps(this.options.props, this.parentOptions.propsData);
         this._initComputed(this.options.computed);
@@ -284,7 +284,7 @@ var Component = (function () {
             _this.$callHook('mounted');
         }, 1);
     };
-    Component.prototype._initglobal = function () {
+    Component.prototype._initGlobal = function () {
         this.__global = {
             stage: this.$el.stage || new egret.Stage()
         };
@@ -735,10 +735,10 @@ var Render = (function () {
             var props = VClass.options.props;
             for (var key in props) {
                 _propsKeys.push(key);
-                if (key in vnode.attrs)
-                    propsData[key] = vnode.attrs[key];
                 if (key in this._vm._props)
                     propsData[key] = this._vm._props[key];
+                if (key in vnode.attrs)
+                    propsData[key] = vnode.attrs[key];
             }
             vnode.sp = new egret.DisplayObjectContainer;
             vnode.vm = new VClass(vnode.sp, {
@@ -770,10 +770,10 @@ var Render = (function () {
     Render.prototype._updateDisObj = function (oldVNode, newVNode) {
         if (oldVNode.vm) {
             for (var key in oldVNode.vm._props) {
-                if (key in newVNode.attrs)
-                    oldVNode.vm._props[key] = newVNode.attrs[key];
                 if (key in this._vm._props)
                     oldVNode.vm._props[key] = this._vm._props[key];
+                if (key in newVNode.attrs)
+                    oldVNode.vm._props[key] = newVNode.attrs[key];
             }
         }
         for (var name_2 in newVNode.attrs) {
