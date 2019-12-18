@@ -160,8 +160,8 @@ export default class Render {
       const props:ComponentMap<any> = VClass.options.props;
       for(const key in props){
         _propsKeys.push(key);
-        if(key in vnode.attrs) propsData[key] = vnode.attrs[key]
         if(key in this._vm._props) propsData[key] = this._vm._props[key]
+        if(key in vnode.attrs) propsData[key] = vnode.attrs[key]
       }
       vnode.sp = new egret.DisplayObjectContainer
       vnode.vm = new VClass(vnode.sp as egret.DisplayObjectContainer, {

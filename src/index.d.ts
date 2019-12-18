@@ -50,7 +50,7 @@ export declare class Component {
     __refs: ComponentMap<egret.DisplayObject | Component>;
     constructor($el: egret.DisplayObject, options?: ComponentOptions, parentOptions?: ComponentParentOptions);
     _init(): void;
-    private _initglobal;
+    private _initGlobal;
     private _initProps;
     private _initData;
     private _initMethods;
