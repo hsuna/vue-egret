@@ -1,56 +1,28 @@
-# tiny-vue
+# VueEgret
 
-## What is this?
+## 简介
 
-[中文版文档](./README.cn.md)
+`VueEgret`框架是基于MVVM的思想，将`Vue`的开发模式，复制到`egret`上，通过虚拟节点与`egret`显示对象的一一对应，来实现数据驱动。由于`VueEgret`是基于`egret`上的，所以需要额外引入`egret`相关的库
 
-There is several detailed articles show how to write tiny-vue (in Chinese) [Diving into Vue1.0 source code](https://github.com/lihongxun945/myblog/labels/vue1.0%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90)
+你可以这样使用它:
 
-A dead simple implement of vuejs, use to learn the source code of vuejs (v1.0.28).
-Vuejs source code is very elegant, but it's difficult for beginner to understand. You can try to learn this project, it will be very helpful to understand vuejs.
-Most of lifecycle, modular and function name is same to vuejs, but all the code is rewrited (except `dep.js` and very few function implements)
-
-There are two main part:
-
-1. state: reactive state, listen to state's change, State -> Observer -> Dep -> Watcher
-2. directive: support directive, you can add your own directives: Compile -> Directive -> directives
-
-You can use it ike this:
-
-```
-<div id="a">
-	<input v-model="message" />
-	<button v-on:click="increase">Increase</button>
-	<p v-text="message"></p>
-</div>
-<script>
-	new Vue({
-		el: "#a",
-		data: {
-			message: 1
-		},
-		methods: {
-			increase () {
-				this.message += 1
-			}
+```js
+var Main = VueEgret.classMain({
+	data(){
+        return {
+			text: 'Hello Word!!!'
 		}
-	})
-</script>
+	},
+	methods: {
+		onTextClick(){
+			this.text = 'Text is Click'
+		}
+    },
+	template: `<Sprite touchEnabled="true" @touchTap="onTextClick">
+		<TextField textColor="#00FFFF" x="11" y="12">{{text}}</TextField>
+	</Sprite>`
+})
 ```
-
-## Supported Features
-
-1. reactive data.
-2. interal directives: `v-on:click`, `v-text`, `v-model`
-3. two-way data binding
-4. more feature is coming
-
-## implements
-
-![1](./imgs/1.png)
-![2](./imgs/2.png)
-![3](./imgs/3.png)
-![4](./imgs/4.png)
 
 ## Build Setup
 
@@ -58,11 +30,11 @@ You can use it ike this:
 # install dependencies
 npm install
 
-# serve with hot reload at localhost:8080
+# serve with hot reload at localhost:2335
 npm run dev
 
 # build for production with minification
 npm run build
 ```
 
-For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).
+关于webpack的使用，请参阅文档 [vue-egret-loader](http://git.3k.com/web/Tech/vue-egret-loader.git).

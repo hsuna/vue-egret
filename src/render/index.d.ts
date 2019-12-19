@@ -4,7 +4,6 @@ export default class Render {
     private _ast;
     private _vm;
     private _vnode;
-    private _newVnode;
     constructor(vm: Component);
     private _init;
     private _tick;

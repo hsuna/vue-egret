@@ -12,11 +12,19 @@ export function installRender (target: any) {
   target._l = renderList
 }
 
+/**
+ * 渲染器
+ * @author Hsuna
+ */
 export default class Render {
+  /** AST字符串 */
   private _ast:string;
+  /** VM对象 */
   private _vm: Component;
+  /** 虚拟节点 */
   private _vnode:VNode;
-  private _newVnode:VNode;
+  /** 新虚拟节点 */
+  // private _newVnode:VNode;
   
   constructor(vm:Component){
     this._vm = vm;
@@ -24,15 +32,17 @@ export default class Render {
   }
   
   private _init(){
+    // 安装渲染器AST运行方法
     installRender(this._vm);
+    // 通过模板解析，将模板转化为AST
     this._ast = genVNode(ParserFactory.created(this._vm.options.template).root);
     this._tick();
   }
 
   private _tick(){
     if(this._vm){
-      this._newVnode = this._createVNode(this._ast);
-      this._vnode = this._patch(this._vnode, this._newVnode);
+      const newVnode: VNode = this._createVNode(this._ast);
+      this._vnode = this._patch(this._vnode, newVnode);
       this._vm._$tick();
     }
   }
@@ -46,25 +56,36 @@ export default class Render {
     this._vm = null;
   }
   
+  /**
+   * 
+   * @param { VNode } oldVNode 
+   * @param { VNode } newVNode 
+   * @return { VNode }
+   */
   private _patch(oldVNode:VNode, newVNode:VNode): VNode{
     if(!oldVNode){//如果不存在旧节点的情况下，说明还未初始化，则初始化页面
         // 创建新节点
-        let sp:egret.DisplayObject = this._createDisObj(newVNode);
-        (this._vm.$el as egret.DisplayObjectContainer).addChild(sp);
+        this._vm.$el = this._createDisObj(newVNode);
     }else if(this._sameVNode(oldVNode, newVNode)){//相似节点采用更新的方式
         this._patchVNode(oldVNode, newVNode);
     }else{//非相似节点直接替换
-        const parent:egret.DisplayObjectContainer = oldVNode.sp.parent
-        if(parent){
-            // 创建新节点
-            let sp:egret.DisplayObject = this._createDisObj(newVNode);
-            parent.addChildAt(sp, parent.getChildIndex(oldVNode.sp))
-            this._destroyDisObj(oldVNode)
-        }
+      // 获取父节点
+      const parent:egret.DisplayObjectContainer = oldVNode.parent.sp as egret.DisplayObjectContainer
+      if(parent){
+          // 创建新节点
+          let sp:egret.DisplayObject = this._createDisObj(newVNode);
+          parent.addChildAt(sp, parent.getChildIndex(oldVNode.sp))
+          this._destroyDisObj(oldVNode)
+      }
     }
     return newVNode;
   }
 
+  /**
+   * 比较替换新旧节点
+   * @param { VNode } oldVNode 
+   * @param { VNode } newVNode 
+   */
   private _patchVNode(oldVNode:VNode, newVNode:VNode){
     newVNode.sp = oldVNode.sp;
     newVNode.vm = oldVNode.vm;
@@ -72,6 +93,12 @@ export default class Render {
     this._updateChildren(oldVNode.children, newVNode.children, newVNode.sp as egret.DisplayObjectContainer)
   }
 
+  /**
+   * 通过diff算法，最小粒度更新节点
+   * @param { Array<VNode> } oldCh 虚拟节点旧子列表 
+   * @param { Array<VNode> } newCh 虚拟节点新子列表
+   * @param { egret.DisplayObjectContainer } parent 节点显示对象
+   */
   private _updateChildren(oldCh:Array<VNode>, newCh:Array<VNode>, parent:egret.DisplayObjectContainer){
     if(oldCh === newCh) return;
     let oldStartIdx:number = 0
@@ -88,23 +115,24 @@ export default class Render {
         oldStartVNode = oldCh[++oldStartIdx]
       } else if (!oldEndVNode) {
         oldEndVNode = oldCh[--oldEndIdx]
-      } else if (this._sameVNode(oldStartVNode, newStartVNode)) {
+      } else if (this._sameVNode(oldStartVNode, newStartVNode)) {// 头部节点相似，头部指针移动
         this._patchVNode(oldStartVNode, newStartVNode)
         oldStartVNode = oldCh[++oldStartIdx]
         newStartVNode = newCh[++newStartIdx]
-      } else if (this._sameVNode(oldEndVNode, newEndVNode)) {
+      } else if (this._sameVNode(oldEndVNode, newEndVNode)) {// 底部节点相似，底部指针移动
         this._patchVNode(oldEndVNode, newEndVNode)
         oldEndVNode = oldCh[--oldEndIdx]
         newEndVNode = newCh[--newEndIdx]
       } else {
         let sp:egret.DisplayObject
         for(let i=oldStartIdx; i<=oldEndIdx; i++){
-          if(this._sameVNode(newStartVNode, oldCh[i])){
+          if(this._sameVNode(newStartVNode, oldCh[i])){ // 查找旧显示列表是否有与当前位置相似的新节点
             this._patchVNode(oldCh[i], newStartVNode);
-            //修改位置
+            // 将相似的旧节点插入到新节点对应位置
+            // 修改显示对象位置
             sp = newStartVNode.sp;
-            parent.setChildIndex(sp, newStartIdx);
-            
+            parent.setChildIndex(sp, newStartIdx); 
+            // 修改虚拟节点位置
             let oldVNode:VNode = oldCh.splice(i, 1)[0];
             oldCh.splice(newStartIdx, 0, oldVNode);
             oldStartVNode = oldCh[++oldStartIdx]
@@ -119,14 +147,14 @@ export default class Render {
         newStartVNode = newCh[++newStartIdx]
       }
     }
-    if(oldStartIdx > oldEndIdx){
+    if(oldStartIdx > oldEndIdx){// 新增缺少的显示对象列表
       let sp:egret.DisplayObject
       for (; newStartIdx <= newEndIdx; ++newStartIdx) {
         newStartVNode = newCh[newStartIdx]
         sp = this._createDisObj(newStartVNode);
         parent.addChildAt(sp, newStartIdx);
       }
-    }else if(newStartIdx > newEndIdx){
+    }else if(newStartIdx > newEndIdx){// 删除多余的显示对象列表
       for (; oldStartIdx <= oldEndIdx; ++oldStartIdx) {
         oldStartVNode = oldCh[oldStartIdx]
         this._destroyDisObj(oldStartVNode);
@@ -134,15 +162,26 @@ export default class Render {
     }
   }
 
+  /**
+   * 判断新旧节点是否一致
+   * @param { VNode } oldVNode 旧节点
+   * @param { VNode } newVNode 新节点
+   * @return { boolean } 
+   */
   private _sameVNode(oldVNode:VNode, newVNode:VNode):boolean {
     return (
-      oldVNode.key === newVNode.key && // key值
+      oldVNode.key === newVNode.key && // VM实例时生成的key值
       oldVNode.tag === newVNode.tag && // 类名
-      oldVNode.attrs.key === newVNode.attrs.key // 属性key值，当属性使用key时，进行强制比对，特别是MovieClip循环列表，进行强制替换
+      oldVNode.attrs.key === newVNode.attrs.key // 属性key值，当属性使用key时，进行强制比对，特别是循环列表，进行强制替换
     )
   }
 
-  private _createVNode(code):VNode {
+  /**
+   * 通过AST代码获取虚拟节点
+   * @param { string } code
+   * @return { VNode }
+   */
+  private _createVNode(code:string):VNode {
     return Function.prototype.constructor(`with(this){ return ${code};}`).call(this._vm)
     /* try{
     }catch(e){
@@ -150,6 +189,11 @@ export default class Render {
     } */
   }
   
+  /**
+   * 创建新的显示对象
+   * @param { VNode } vnode 对象虚拟节点
+   * @return { egret.DisplayObject } 返回新的显示对象
+   */
   private _createDisObj(vnode:VNode):egret.DisplayObject {
     let VClass: ComponentClass = this._vm._components[vnode.tag] || VueEgret._components[vnode.tag]
     pushTarget();//阻断所有更新监听
@@ -163,12 +207,14 @@ export default class Render {
         if(key in this._vm._props) propsData[key] = this._vm._props[key]
         if(key in vnode.attrs) propsData[key] = vnode.attrs[key]
       }
-      vnode.sp = new egret.DisplayObjectContainer
-      vnode.vm = new VClass(vnode.sp as egret.DisplayObjectContainer, {
+      // 创建虚拟dom节点
+      vnode.vm = new VClass({
         parent: this._vm,
         _propsKeys,
         propsData
       })
+      // 将实际显示对象关联虚拟节点
+      vnode.sp = vnode.vm.$el 
     }else{
       VClass = egret[vnode.tag]
       if(VClass) vnode.sp = new (<any>VClass)
@@ -190,19 +236,27 @@ export default class Render {
     return vnode.sp;
   }
 
+  /**
+   * 更新显示对象
+   * @param { VNode } oldVNode 旧虚拟节点
+   * @param { VNode } newVNode 新虚拟节点
+   */
   private _updateDisObj(oldVNode:VNode, newVNode:VNode) {
     if(oldVNode.vm){
+      // 更新继承属性
       for(const key in oldVNode.vm._props){
         if(key in this._vm._props) oldVNode.vm._props[key] = this._vm._props[key] // bug：1.1.6 属性优先级错误，导致继承失败
         if(key in newVNode.attrs) oldVNode.vm._props[key] = newVNode.attrs[key]
       }
     }
+    // 更新属性
     for(const name in newVNode.attrs){
       if(oldVNode.attrs[name] !== newVNode.attrs[name]){
         oldVNode.sp[name] = newVNode.attrs[name]
         // oldVNode.attrs[name] = newVNode.attrs[name]
       }
     }
+    // 更新事件
     for(const type in newVNode.on){
       if(oldVNode.on[type] !== newVNode.on[type]){//事件不一样的，先销毁再重新注册
           oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm)
@@ -212,20 +266,29 @@ export default class Render {
     }
   }
 
+  /**
+   * 通过虚拟节点销毁显示对象
+   * @param { VNode } vnode 
+   * @return { VNode } 返回销毁的虚拟节点
+   */
   private _destroyDisObj(vnode:VNode):VNode {
     if(vnode.vm) vnode.vm.$callHook('beforeDestroyed');
 
     if(vnode.sp){
-      vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
+      // 通过获取父节点，移除显示对象
+      vnode.parent && vnode.parent.sp && (vnode.parent.sp as egret.DisplayObjectContainer).removeChild(vnode.sp);
+      // 移除显示对象时间
       for(const type in vnode.on){
         vnode.sp.removeEventListener(type, vnode.on[type], this._vm)
       }
     }
+    // 触发销毁方法
     if(vnode.vm) vnode.vm.$destroy()
-
+    // 移除各项示例挂载
     if(vnode.ref){
       delete this._vm.__refs[vnode.ref];
     }
+    // 递归子对象，进行销毁
     vnode.children.forEach((vnode:VNode) => this._destroyDisObj(vnode))
     return vnode;
   }
