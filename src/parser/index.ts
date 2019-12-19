@@ -2,7 +2,11 @@ import ParseHtml, { ParseHtmlAttr, ParseHtmlOptions } from './html-parser'
 import { parseFor, getAndRemoveAttr } from '../helpers/index'
 import createASTNode, { ASTNode } from '../render/ast-node'
 
-// 指令解析器
+/**
+ * 模板解析工厂
+ * @description 将模板解析成AST
+ * @author Hsuna
+ */
 export default class ParserFactory implements ParseHtmlOptions {
     private _root: ASTNode;
     private _target: ASTNode;
@@ -60,6 +64,11 @@ export default class ParserFactory implements ParseHtmlOptions {
         //this._command.push(new CommandText(this.vm, this._target, text))
     }
 
+    /**
+     * 
+     * @param exp 
+     * @param prev 前置 
+     */
     addIfConditions(exp:any, prev:boolean=false):any {
         let processMap;
         if(prev){

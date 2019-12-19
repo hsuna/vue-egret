@@ -244,7 +244,7 @@ var ComponentEvent = (function (_super_1) {
 }(egret.Event));
 exports.ComponentEvent = ComponentEvent;
 var Component = (function () {
-    function Component($el, options, parentOptions) {
+    function Component(options, parentOptions) {
         if (options === void 0) { options = {}; }
         if (parentOptions === void 0) { parentOptions = {}; }
         this.__global = {};
@@ -254,7 +254,6 @@ var Component = (function () {
         this.__components = {};
         this.__nextTickCall = [];
         this.__refs = {};
-        this.$el = $el;
         this.options = options;
         this.parentOptions = parentOptions;
         this._init();
@@ -286,7 +285,7 @@ var Component = (function () {
     };
     Component.prototype._initGlobal = function () {
         this.__global = {
-            stage: this.$el.stage || new egret.Stage()
+            stage: new egret.Stage()
         };
         index_1.observe(this.__global);
     };
@@ -400,7 +399,7 @@ var Component = (function () {
         }
     };
     Component.prototype.$emit = function (event, data) {
-        this.$el.dispatchEvent(new ComponentEvent(event, data));
+        this.$el && this.$el.dispatchEvent(new ComponentEvent(event, data));
         return this;
     };
     Component.prototype.$watch = function (expOrFn, cb, options) {
@@ -425,6 +424,9 @@ var Component = (function () {
         }
         dep_1.popTarget();
     };
+    Component.prototype.$nextTick = function (callback) {
+        this.__nextTickCall.push(callback);
+    };
     Component.prototype.$destroy = function () {
         this.__watcher.teardown();
         this.__watcher = null;
@@ -432,9 +434,6 @@ var Component = (function () {
         this.__render.destroy();
         this.__render = null;
         this.$callHook('destroyed');
-    };
-    Component.prototype.$nextTick = function (callback) {
-        this.__nextTickCall.push(callback);
     };
     Component.prototype.$displayObject = function (ref) {
         if ('string' === typeof ref) {
@@ -457,6 +456,13 @@ var Component = (function () {
         var rect2 = disObj2.getBounds();
         rect1.x = disObj1.x, rect1.y = disObj1.y;
         rect2.x = disObj2.x, rect2.y = disObj2.y;
+        return rect1.intersects(rect2);
+    };
+    Component.prototype.$hitTestRect = function (rect1, rect2) {
+        if (!rect1 || !rect2)
+            return true;
+        rect1 = rect1 instanceof egret.Rectangle ? rect1 : new egret.Rectangle(rect1.x, rect1.y, rect1.width, rect1.height);
+        rect2 = rect2 instanceof egret.Rectangle ? rect2 : new egret.Rectangle(rect2.x, rect2.y, rect2.width, rect2.height);
         return rect1.intersects(rect2);
     };
     Component.prototype.$hitTestPoint = function (ref, x, y, shapeFlag) {
@@ -556,31 +562,36 @@ exports.Component = Component;
 var VueEgret = (function (_super_1) {
     __extends(VueEgret, _super_1);
     function VueEgret(options) {
-        return _super_1.call(this, new egret.DisplayObjectContainer, options) || this;
+        return _super_1.call(this, options) || this;
     }
-    VueEgret._components = {};
     VueEgret.component = function (name, options) {
         VueEgret._components[name] = VueEgret.classFactory(options);
     };
-    VueEgret.classFactory = function (options) { var _a; return _a = (function (_super_1) {
-            __extends(class_1, _super_1);
-            function class_1(sp, parentOptions) {
-                if (parentOptions === void 0) { parentOptions = {}; }
-                return _super_1.call(this, sp, options, parentOptions) || this;
+    VueEgret.classFactory = function (options) {
+        var _a;
+        return _a = (function (_super_1) {
+                __extends(class_1, _super_1);
+                function class_1(parentOptions) {
+                    if (parentOptions === void 0) { parentOptions = {}; }
+                    return _super_1.call(this, options, parentOptions) || this;
+                }
+                return class_1;
+            }(Component)),
+            _a.options = options,
+            _a;
+    };
+    VueEgret.classMain = function (options) {
+        return (function (_super_1) {
+            __extends(class_2, _super_1);
+            function class_2() {
+                var _this = _super_1.call(this) || this;
+                _this.addChild(new Component(options).$el);
+                return _this;
             }
-            return class_1;
-        }(Component)),
-        _a.options = options,
-        _a; };
-    VueEgret.classMain = function (options) { return (function (_super_1) {
-        __extends(class_2, _super_1);
-        function class_2() {
-            var _this = _super_1.call(this) || this;
-            new Component(_this, options);
-            return _this;
-        }
-        return class_2;
-    }(egret.DisplayObjectContainer)); };
+            return class_2;
+        }(egret.DisplayObjectContainer));
+    };
+    VueEgret._components = {};
     return VueEgret;
 }(Component));
 exports.default = VueEgret;
@@ -618,8 +629,8 @@ var Render = (function () {
     };
     Render.prototype._tick = function () {
         if (this._vm) {
-            this._newVnode = this._createVNode(this._ast);
-            this._vnode = this._patch(this._vnode, this._newVnode);
+            var newVnode = this._createVNode(this._ast);
+            this._vnode = this._patch(this._vnode, newVnode);
             this._vm._$tick();
         }
     };
@@ -632,14 +643,13 @@ var Render = (function () {
     };
     Render.prototype._patch = function (oldVNode, newVNode) {
         if (!oldVNode) {
-            var sp = this._createDisObj(newVNode);
-            this._vm.$el.addChild(sp);
+            this._vm.$el = this._createDisObj(newVNode);
         }
         else if (this._sameVNode(oldVNode, newVNode)) {
             this._patchVNode(oldVNode, newVNode);
         }
         else {
-            var parent_1 = oldVNode.sp.parent;
+            var parent_1 = oldVNode.parent.sp;
             if (parent_1) {
                 var sp = this._createDisObj(newVNode);
                 parent_1.addChildAt(sp, parent_1.getChildIndex(oldVNode.sp));
@@ -740,12 +750,12 @@ var Render = (function () {
                 if (key in vnode.attrs)
                     propsData[key] = vnode.attrs[key];
             }
-            vnode.sp = new egret.DisplayObjectContainer;
-            vnode.vm = new VClass(vnode.sp, {
+            vnode.vm = new VClass({
                 parent: this._vm,
                 _propsKeys: _propsKeys,
                 propsData: propsData
             });
+            vnode.sp = vnode.vm.$el;
         }
         else {
             VClass = egret[vnode.tag];
@@ -793,7 +803,7 @@ var Render = (function () {
         if (vnode.vm)
             vnode.vm.$callHook('beforeDestroyed');
         if (vnode.sp) {
-            vnode.sp.parent && vnode.sp.parent.removeChild(vnode.sp);
+            vnode.parent && vnode.parent.sp && vnode.parent.sp.removeChild(vnode.sp);
             for (var type in vnode.on) {
                 vnode.sp.removeEventListener(type, vnode.on[type], this._vm);
             }

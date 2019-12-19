@@ -4,7 +4,7 @@ import Render from './render';
 import Watcher from './observer/watcher';
 export interface ComponentClass {
     options: ComponentOptions;
-    new (sp: egret.DisplayObjectContainer, parentOptions: ComponentParentOptions): any;
+    new (parentOptions: ComponentParentOptions): any;
 }
 export interface ComponentMap<T> {
     [propName: string]: T;
@@ -31,6 +31,12 @@ export interface ComponentOptions {
     _parentOptions?: ComponentParentOptions;
 }
 export declare type ComponentRef = String | Component | egret.DisplayObject;
+export interface ComponentRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
 export declare class ComponentEvent extends egret.Event {
     data: any;
     constructor(type: string, data: any, bubbles?: boolean, cancelable?: boolean);
@@ -48,7 +54,7 @@ export declare class Component {
     private __components;
     private __nextTickCall;
     __refs: ComponentMap<egret.DisplayObject | Component>;
-    constructor($el: egret.DisplayObject, options?: ComponentOptions, parentOptions?: ComponentParentOptions);
+    constructor(options?: ComponentOptions, parentOptions?: ComponentParentOptions);
     _init(): void;
     private _initGlobal;
     private _initProps;
@@ -63,10 +69,11 @@ export declare class Component {
     $emit(event: string, data: any): Component;
     $watch(expOrFn: string | Function, cb: any, options?: Object): Function;
     $callHook(name: string, ...rest: any[]): void;
-    $destroy(): void;
     $nextTick(callback: Function): void;
+    $destroy(): void;
     $displayObject(ref: ComponentRef): egret.DisplayObject;
     $hitTest(ref1: ComponentRef, ref2: ComponentRef): boolean;
+    $hitTestRect(rect1: ComponentRect, rect2: ComponentRect): boolean;
     $hitTestPoint(ref: ComponentRef, x: number, y: number, shapeFlag?: boolean): boolean;
     $globalToLocal(ref: ComponentRef, stateX: number, stateY: number): egret.Point;
     $localToGlobal(ref: ComponentRef, stateX: number, stateY: number): egret.Point;
@@ -85,8 +92,8 @@ export declare class Component {
 }
 export default class VueEgret extends Component {
     static _components: ComponentMap<ComponentClass>;
-    static component: (name: string, options: ComponentOptions) => void;
-    static classFactory: (options: ComponentOptions) => ComponentClass;
-    static classMain: (options: ComponentOptions) => any;
+    static component(name: string, options: ComponentOptions): void;
+    static classFactory(options: ComponentOptions): ComponentClass;
+    static classMain(options: ComponentOptions): any;
     constructor(options: ComponentOptions);
 }

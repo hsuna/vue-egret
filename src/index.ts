@@ -1,5 +1,5 @@
 /*
-* vue-egret 1.0.0
+* vue-egret 1.2.0
 * @author Hsuna
 */
 /// <reference path="../types/egret.d.ts" />
@@ -14,7 +14,7 @@ import { validateProp } from './util/props'
 
 export interface ComponentClass {
     options:ComponentOptions;
-    new (sp:egret.DisplayObjectContainer, parentOptions:ComponentParentOptions);
+    new (parentOptions:ComponentParentOptions);
 }
 export interface ComponentMap<T> {
     [propName:string]: T;
@@ -26,7 +26,7 @@ export interface ComponentParentOptions {
     _propsKeys?: Array<string>;
 }
 
-export interface ComponentOptions{
+export interface ComponentOptions {
     template?: string;
     data?: Function | Object;
     props?: ComponentMap<any>;
@@ -46,6 +46,14 @@ export interface ComponentOptions{
 /** 类型-注册信息 */
 export type ComponentRef = String | Component | egret.DisplayObject
 
+/** 组件矩形 */
+export interface ComponentRect {
+    x: number,
+    y: number,
+    width: number,
+    height: number
+}
+
 export class ComponentEvent extends egret.Event {
     public data:any;
     constructor(type:string, data:any, bubbles:boolean=false, cancelable:boolean = false) {
@@ -54,7 +62,14 @@ export class ComponentEvent extends egret.Event {
     }
 }
 
+/**
+ * 组件类
+ * @author Hsuna
+ * @param { ComponentOptions } options 组件配置
+ * @param { ComponentParentOptions } parentOptions 继承配置
+ */
 export class Component {
+    /** 显示对象 */
     $el: egret.DisplayObject;
     parentOptions: ComponentParentOptions;
     options: ComponentOptions;
@@ -70,8 +85,7 @@ export class Component {
     private __nextTickCall: Array<Function> = [];
     public __refs: ComponentMap<egret.DisplayObject|Component> = {};
 
-    constructor($el:egret.DisplayObject, options:ComponentOptions={}, parentOptions: ComponentParentOptions={}) {
-        this.$el = $el;
+    constructor(options:ComponentOptions={}, parentOptions: ComponentParentOptions={}) {
         this.options = options;
         this.parentOptions = parentOptions;
         this._init()
@@ -103,7 +117,7 @@ export class Component {
     /** 初始化全局参数，用于全局方便获取 */
     private _initGlobal(){
         this.__global = {
-            stage: this.$el.stage || new egret.Stage()
+            stage: new egret.Stage()
         }
         // 监听数据
         observe(this.__global)
@@ -194,9 +208,15 @@ export class Component {
         }
     }
     public $emit (event: string, data:any): Component {
-        this.$el.dispatchEvent(new ComponentEvent(event, data));
+        this.$el && this.$el.dispatchEvent(new ComponentEvent(event, data));
         return this;
     }
+    /**
+     * 
+     * @param expOrFn 
+     * @param cb 
+     * @param options 
+     */
     public $watch (expOrFn: string | Function, cb: any, options?: Object): Function {
         if (isPlainObject(cb)) {
           return this._createWatcher(expOrFn, cb, options)
@@ -215,6 +235,9 @@ export class Component {
         }
         popTarget()
     }
+    public $nextTick(callback:Function) {
+        this.__nextTickCall.push(callback)
+    }
     /**
      * 销毁
      * @description 销毁对象
@@ -230,15 +253,17 @@ export class Component {
         this.__render = null
         this.$callHook('destroyed')
     }
-    public $nextTick(callback:Function) {
-        this.__nextTickCall.push(callback)
-    }
+    /**
+     * 通过挂载名或者组件，获取实际的显示对象
+     * @param { ComponentRef } ref 显示对象名
+     * @return { egret.DisplayObject }
+     */
     public $displayObject(ref:ComponentRef):egret.DisplayObject {
-        if('string' === typeof ref){
+        if('string' === typeof ref){// 挂载名
             return this.$displayObject(this.__refs[ref])
-        }else if(ref instanceof Component){
+        }else if(ref instanceof Component){// 组件
             return(ref as Component).$el
-        }else if(ref instanceof egret.DisplayObject){
+        }else if(ref instanceof egret.DisplayObject){// 显示对象本身
             return ref as egret.DisplayObject
         }
         return null;
@@ -261,16 +286,54 @@ export class Component {
         rect2.x = disObj2.x, rect2.y = disObj2.y; 
         return rect1.intersects(rect2)
     }
+    /**
+     * 矩形碰撞检测
+     * @description 用于检测两个矩形对象间是否存在碰撞
+     * @author Hsuna
+     * @param { ComponentRect } rect1 矩形对象1
+     * @param { ComponentRect } rect2 矩形对象2
+     * @return { boolean }
+     */
+    public $hitTestRect(rect1:ComponentRect, rect2:ComponentRect): boolean {
+        if(!rect1 || !rect2) return true
+        rect1 = rect1 instanceof egret.Rectangle ? rect1 :  new egret.Rectangle(rect1.x, rect1.y, rect1.width, rect1.height)
+        rect2 = rect2 instanceof egret.Rectangle ? rect2 :  new egret.Rectangle(rect2.x, rect2.y, rect2.width, rect2.height)
+        return (rect1 as egret.Rectangle).intersects(rect2 as egret.Rectangle)
+    }
+    /**
+     * 坐标点碰撞检测
+     * @description 用于检测坐标点是否在对象内
+     * @author Hsuna
+     * @param { ComponentRef } ref 显示对象
+     * @param { number } x 坐标X 
+     * @param { number } y 坐标Y
+     * @param { boolean } shapeFlag 是否采用像素值检测
+     * @return { boolean }
+     */
     public $hitTestPoint(ref:ComponentRef, x:number, y:number, shapeFlag?: boolean): boolean {
         const disObj: egret.DisplayObject = this.$displayObject(ref)
         return disObj ? disObj.hitTestPoint(x, y, shapeFlag) : false
     }
+    /**
+     * 将全局坐标转化为本地坐标
+     * @param { ComponentRef } ref 显示对象
+     * @param { number } stateX  全局坐标X
+     * @param { number } stateY  全局坐标Y
+     * @return { egret.Point } 本地坐标
+     */
     public $globalToLocal(ref:ComponentRef, stateX:number, stateY:number): egret.Point {
         const disObj: egret.DisplayObject = this.$displayObject(ref)
         const resultPoint: egret.Point = new egret.Point(stateX, stateY)
         disObj && disObj.globalToLocal(stateX, stateY, resultPoint)
         return resultPoint
     }
+    /**
+     * 将本地坐标转化为全局坐标
+     * @param { ComponentRef } ref 显示对象
+     * @param { number } stateX  本地坐标X
+     * @param { number } stateY  本地坐标Y
+     * @return { egret.Point } 全局坐标
+     */
     public $localToGlobal(ref:ComponentRef, stateX:number, stateY:number): egret.Point {
         const disObj: egret.DisplayObject = this.$displayObject(ref)
         const resultPoint: egret.Point = new egret.Point(stateX, stateY)
@@ -321,9 +384,15 @@ export class Component {
     public $tweenPromise(tween: egret.Tween): Promise<egret.Tween> {
         return new Promise((resolve:(value:egret.Tween) => void) => tween.call(resolve))
     }
+    /**
+     * 获取注册列表
+     */
     public get $refs():ComponentMap<egret.DisplayObject|Component> {
         return this.__refs;
     }
+    /**
+     * 获取舞台信息
+     */
     public get $stage():egret.Stage {
         return this.__global.stage
     }
@@ -350,24 +419,48 @@ export class Component {
     }
 }
 
+/**
+ * VueEgret类
+ * @description 
+ * @author Hsuna
+ */
 export default class VueEgret extends Component {
+    /** 组件库缓存 */
     static _components:ComponentMap<ComponentClass> = {}
-    static component = (name:string, options:ComponentOptions) => {
+    /**
+     * 设置全局组件
+     * @param { string } name 组件名 用于全局定义
+     * @param { ComponentOptions } options 组件配置
+     */
+    static component(name:string, options:ComponentOptions){
         VueEgret._components[name] = VueEgret.classFactory(options)
     }
-    static classFactory = (options:ComponentOptions):ComponentClass => class extends Component {
-        static options:ComponentOptions = options; 
-        constructor(sp:egret.DisplayObjectContainer, parentOptions: ComponentParentOptions={}) {
-            super(sp, options, parentOptions)
+    /**
+     * 通过配置，获取组件类型
+     * @param { ComponentOptions } options 
+     */
+    static classFactory(options:ComponentOptions):ComponentClass {
+        return class extends Component {
+            static options:ComponentOptions = options; 
+            constructor(parentOptions: ComponentParentOptions={}) {
+                super(options, parentOptions)
+            }
         }
     }
-    static classMain = (options:ComponentOptions):any => class extends egret.DisplayObjectContainer {
-        constructor(){
-            super()
-            new Component(this, options)
+    /**
+     * 通过配置，获取主类
+     * 由于egret启动是需要实例化Main类
+     * @param { ComponentOptions } options 
+     */
+    static classMain(options:ComponentOptions):any {
+        return class extends egret.DisplayObjectContainer {
+            constructor(){
+                super()
+                this.addChild(new Component(options).$el)
+            }
         }
     }
     constructor(options:ComponentOptions) {
-        super(new egret.DisplayObjectContainer, options)
+        super(options)
     }
 }
