@@ -392,9 +392,24 @@ export class Component {
     }
     /**
      * 获取舞台信息
+     * @return { egret.Stage }
      */
     public get $stage():egret.Stage {
         return this.__global.stage
+    }
+    /**
+     * 获取舞台宽度
+     * @return { number }
+     */
+    public get $stageWidth():number {
+        return this.__global.stage.width
+    }
+    /**
+     * 获取舞台高度
+     * @return { number }
+     */
+    public get $stageHeight():number {
+        return this.__global.stage.height
     }
     public get _data():any {
         return this.__data;
