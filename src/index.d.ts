@@ -83,6 +83,8 @@ export declare class Component {
     $tweenPromise(tween: egret.Tween): Promise<egret.Tween>;
     readonly $refs: ComponentMap<egret.DisplayObject | Component>;
     readonly $stage: egret.Stage;
+    readonly $stageWidth: number;
+    readonly $stageHeight: number;
     readonly _data: any;
     _props: any;
     readonly _render: Render;

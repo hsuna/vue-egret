@@ -511,6 +511,20 @@ var Component = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(Component.prototype, "$stageWidth", {
+        get: function () {
+            return this.__global.stage.width;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Component.prototype, "$stageHeight", {
+        get: function () {
+            return this.__global.stage.height;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(Component.prototype, "_data", {
         get: function () {
             return this.__data;
@@ -917,7 +931,7 @@ var ParserFactory = (function () {
     };
     ParserFactory.prototype.characters = function (text) {
         if (this._target) {
-            this._target.text = text.replace(/^\s+|\s+$/g, '');
+            this._target.text = text.replace(/^\s+|\s+$|\r|\n/g, '');
         }
     };
     ParserFactory.prototype.addIfConditions = function (exp, prev) {
