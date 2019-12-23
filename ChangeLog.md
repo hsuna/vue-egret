@@ -2,6 +2,13 @@
 
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## 1.2.1 - 2019-12-20
+### Changed
+- 添加`$stageWidth`和`$stageHeight`字段，用于舞台宽高的属性访问
+
+### Fixed 
+- 修改模板解析调用characters方法时，换行符未处理，导致报错的问题
+
 ## 1.2.0 - 2019-12-19
 ### Changed 
 - 修改渲染方法及VueEgret暴露的方法，所有显示对象不再创建`egret.DisplayObjectContainer`进行包裹，而是直接使用root作为节点

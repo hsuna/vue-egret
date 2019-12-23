@@ -1,6 +1,6 @@
 {
   "name": "vue-egret",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Egret MVVM",
   "main": "dist/vue.egret.js",
   "typings": "src/index.d.ts",

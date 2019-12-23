@@ -57,11 +57,15 @@ export default class ParserFactory implements ParseHtmlOptions {
     comment(text:string){
     }
 
+    /**
+     * 
+     * @param { string } text 
+     */
     characters(text:string){
         if(this._target){
-            this._target.text = text.replace(/^\s+|\s+$/g, '')
+            //去掉头尾空白，以及换行符
+            this._target.text = text.replace(/^\s+|\s+$|\r|\n/g, '')
         }
-        //this._command.push(new CommandText(this.vm, this._target, text))
     }
 
     /**
@@ -88,6 +92,10 @@ export default class ParserFactory implements ParseHtmlOptions {
         return exp
     }
 
+    /**
+     * 获取根语法树节点
+     * @get { ASTNode } root
+     */
     public get root():ASTNode {
         return this._root;
     }
