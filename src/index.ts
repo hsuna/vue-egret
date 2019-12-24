@@ -1,5 +1,5 @@
 /*
-* vue-egret 1.2.0
+* vue-egret 1.2.2
 * @author Hsuna
 */
 /// <reference path="../types/egret.d.ts" />
@@ -128,6 +128,9 @@ export class Component {
             Object.defineProperty(this, key, {
                 get(){
                     return this.__props[key]
+                },
+                set(val){
+                    console.error('The props data not set!')
                 }
             })
         }

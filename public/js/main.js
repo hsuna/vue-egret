@@ -126,7 +126,7 @@ VueEgret.component('Image', {
     template: `<Bitmap :x="bitmapX" :y="bitmapY" :width="width" :height="height" :texture="texture" :fillMode="fillMode" :filters="filters"/>`
 })
 
-VueEgret.component('Player', {
+/* VueEgret.component('Player', {
     props: {
         skin: {
             type: String,
@@ -183,58 +183,80 @@ VueEgret.component('Player', {
     >
         <Image x="0" y="0" :width="width" :height="height" :bitmapData="bitmapData" fillMode="scale" />
     </Sprite>`
-})
+}) */
 
+
+VueEgret.component('Graphics', {
+    name: 'Graphics',
+    props: {
+        draw: {
+            type: Array,
+            default: () => []
+        }
+    },
+    mounted(){
+        this.update(this.draw)
+    },
+    watch: {
+        draw(newVal){
+            console.log('-=-=-=-=-=')
+            this.update(newVal)
+        }
+    },
+    methods: {
+        update(value){
+            const shape = this.$refs['shape']
+            if(shape){
+                const graphics = shape.graphics
+                graphics.clear()
+                if(Array.isArray(value)){
+                    value.forEach(([fnName, ...rest]) => {
+                        if('function' === typeof graphics[fnName]){
+                            graphics[fnName](...rest)
+                        }else if('rect' === fnName){
+                            graphics.beginFill(...rest.slice(4))
+                            graphics.drawRect(...rest)
+                            graphics.endFill()
+                        }else if('circle' === fnName){
+                            graphics.beginFill(...rest.slice(3))
+                            graphics.drawCircle(...rest)
+                            graphics.endFill()
+                        }
+                    })
+                }
+            }
+        }
+    },
+    template: `<Sprite ref="shape"/>`
+})
 
 var Main = VueEgret.classMain({
     data(){
         return {
-            playerX: 100,
-            playerY: 100,
-
-            bitmapData:null,
-            bullets: [],
+            rate: 0,
+            height: 400,
         }
     },
-    created () {
-        window.a = this
-        egret.BitmapData.create("base64", LOGO_BASE64, bitmapData => {
-            this.bitmapData = bitmapData;
-        })
-    },
     methods: {
-        onPlayerMove(evt){
-            this.playerX = evt.data.x;
-            this.playerY = evt.data.y;
+        onEnterFrame(){
+            this.rate++
+            // this.height--
+        },
+        onTouchTap(){
+            this.height--
         },
     },
-    mounted () {
-        this.bullets.push({
-            bitmapData:this.bitmapData,
-            width: 40,
-            height: 40,
-            x: 0,
-            y: 0,
-        })
-        this.bullets.push({
-            bitmapData:this.bitmapData,
-            width: 40,
-            height: 40,
-            x: 100,
-            y: 100,
-        })
-    },
-    template: `<Sprite>
-        <Image fillMode="scale" 
-            v-for="(item, index) in bullets" :key="index"
-            :x="item.x"
-            :y="item.y" 
-            :width="item.width"
-            :height="item.height"
-            :bitmapData="item.bitmapData"
-        />
-        <Player ref="player" :x="playerX" :y="playerY" @move="onPlayerMove" />
-    </Sprite>`
+    template: ` <Graphics 
+        :draw="[
+            ['rect', 0, 0, 480, height, 1, 0xffffff],
+            ['circle', 0, 0, 154, 1, 15400928],
+        ]"
+        touchEnabled="true"
+        @enterFrame="onEnterFrame"
+        @touchTap="onTouchTap"
+    >
+        <TextField>{{rate}}</TextField>
+    </Graphics>`
 })
 
 
