@@ -77,13 +77,16 @@ export default class Observer {
                 if (newVal === value || (newVal !== newVal && value !== value)) {
                     return
                 }
-                if(
-                    (Array.isArray(newVal) || isPlainObject(newVal))
-                    && Object.isExtensible(newVal) 
-                    && !(newVal instanceof egret.DisplayObject)
-                    && JSON.stringify(newVal) === JSON.stringify(value)
-                ){// 复杂类型的比较
-                    return
+                try{
+                    if(
+                        (Array.isArray(newVal) || isPlainObject(newVal))
+                        && Object.isExtensible(newVal) 
+                        && !(newVal instanceof egret.DisplayObject)
+                        && JSON.stringify(newVal) === JSON.stringify(value)
+                    ){// 复杂类型的比较，如果复杂类型数据没有不同，只是引用不一的话，则不更新
+                        return
+                    }
+                }catch(e){
                 }
 
                 // #7981: for accessor properties without setter
