@@ -297,6 +297,9 @@ var Component = (function () {
             Object.defineProperty(this_1, key, {
                 get: function () {
                     return this.__props[key];
+                },
+                set: function (val) {
+                    console.error('The props data not set!');
                 }
             });
         };
@@ -1446,6 +1449,16 @@ var Observer = (function () {
                 var value = getter ? getter.call(obj) : val;
                 if (newVal === value || (newVal !== newVal && value !== value)) {
                     return;
+                }
+                try {
+                    if ((Array.isArray(newVal) || index_1.isPlainObject(newVal))
+                        && Object.isExtensible(newVal)
+                        && !(newVal instanceof egret.DisplayObject)
+                        && JSON.stringify(newVal) === JSON.stringify(value)) {
+                        return;
+                    }
+                }
+                catch (e) {
                 }
                 if (getter && !setter)
                     return;
