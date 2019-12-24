@@ -128,6 +128,9 @@ export class Component {
             Object.defineProperty(this, key, {
                 get(){
                     return this.__props[key]
+                },
+                set(val){
+                    console.error('The props data not set!')
                 }
             })
         }
