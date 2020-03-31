@@ -1,9 +1,9 @@
 import { toNumber, toString } from "../util";
-import ParserFactory from "../parser";
 import { createVNode, VNode, genVNode } from "./v-node";
 import { renderList } from "./rendreList";
 import VueEgret, { Component, ComponentClass, ComponentMap } from "../index";
 import { pushTarget, popTarget } from "../observer/dep";
+import { astStrRender } from "../helpers/render";
 
 export function installRender (target: any) {
   target._c = createVNode
@@ -17,12 +17,12 @@ export function installRender (target: any) {
  * @author Hsuna
  */
 export default class Render {
-  /** AST字符串 */
-  private _ast:string;
   /** VM对象 */
   private _vm: Component;
   /** 虚拟节点 */
   private _vnode:VNode;
+  /** 渲染方法 */
+  private _render: (createVNode: (tag: string, key: string | number, data: any, children: VNode[]) => VNode) => VNode;
   /** 新虚拟节点 */
   // private _newVnode:VNode;
   
@@ -34,14 +34,17 @@ export default class Render {
   private _init(){
     // 安装渲染器AST运行方法
     installRender(this._vm);
-    // 通过模板解析，将模板转化为AST
-    this._ast = genVNode(ParserFactory.created(this._vm.options.template).root);
+
+    this._render = 
+      'function' === typeof this._vm.options.render // 如果存在渲染器这渲染，否则渲染模板
+      ? this._vm.options.render
+      : Function.prototype.constructor(astStrRender(this._vm.options.template));
     this._tick();
   }
 
   private _tick(){
     if(this._vm){
-      const newVnode: VNode = this._createVNode(this._ast);
+      const newVnode: VNode = this._createVNode();
       this._vnode = this._patch(this._vnode, newVnode);
       this._vm._$tick();
     }
@@ -177,16 +180,11 @@ export default class Render {
   }
 
   /**
-   * 通过AST代码获取虚拟节点
-   * @param { string } code
+   * 获取虚拟节点
    * @return { VNode }
    */
-  private _createVNode(code:string):VNode {
-    return Function.prototype.constructor(`with(this){ return ${code};}`).call(this._vm)
-    /* try{
-    }catch(e){
-        throw new Error(e)
-    } */
+  private _createVNode():VNode {
+    return this._render.call(this._vm, createVNode);
   }
   
   /**

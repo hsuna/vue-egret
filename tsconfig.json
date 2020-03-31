@@ -10,12 +10,13 @@
 		"downlevelIteration": true,
 		"emitDecoratorMetadata": false,
 		"experimentalDecorators": true,
-		"declaration": true,
+		"declaration": false,
 		"noImplicitAny": false,
 		"noImplicitReturns": false,
 		"removeComments": true,
 		"strictNullChecks": false,
 		"baseUrl": ".",
+		"outDir": "./types/",
 		"paths": {
 			"src/*": ["./src/*"]
 		}
@@ -30,6 +31,6 @@
 		"scripts",
 		"public",
 		"node_modules",
-		"lib"
+		"libs"
 	]
 }
