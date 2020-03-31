@@ -2,6 +2,11 @@
 
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## 1.3.0 - 2020-03-31
+### Added
+- 添加AST解析库，用于render处理
+    * ![Add](https://img.shields.io/badge/A-4ec820) [@master:packages/prerender/index.ts](http://git.3k.com/web/Tech/vue-egret/blob/79232b6a5554d54c4f8c392955f9ba46e95c6b94/packages/prerender/index.ts)
+
 ## 1.2.2 - 2019-12-24
 ### Fixed
 - 针对`props`复杂类型会不断赋值，更新数据导致性能底的问题

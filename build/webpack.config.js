@@ -1,7 +1,6 @@
 const path = require('path');
 const FriendlyErrorsPlugin = require("friendly-errors-webpack-plugin")
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 
 const configFactory = function(webpackEnv) {
 	const isEnvDevelopment = webpackEnv === 'development';
@@ -36,17 +35,6 @@ const configFactory = function(webpackEnv) {
           test: /\.(js|jsx)$/,
           exclude: /node_modules/,
           loader: 'babel-loader',
-				},
-				{
-          test: /\.(css|scss)$/,
-          use: ["css-loader", "sass-loader"]
-				},
-				{
-					test: /\.(jpe?g|png|svg|bmp|gif)$/,
-          loader: 'url-loader',
-          options: {
-						limit: 100000
-					}
 				}
 			]
 		},
@@ -55,17 +43,6 @@ const configFactory = function(webpackEnv) {
 		},
 		plugins: [
       new FriendlyErrorsPlugin(),
-			isEnvProduction && new UglifyJsPlugin({
-        uglifyOptions: {
-          warnings: false,
-          compress: {
-            drop_debugger: true,  
-            drop_console: true  
-          }
-        },
-        sourceMap: false,
-        parallel: true
-      }),
       // copy custom static assets
       isEnvDevelopment && new CopyWebpackPlugin([
         {

@@ -6,6 +6,7 @@
 /// <reference path="../types/tween.d.ts" />
 
 import Render from './render';
+import { VNode } from "./render/v-node";
 import Watcher from './observer/watcher'
 import { observe } from './observer/index'
 import { pushTarget, popTarget } from './observer/dep'
@@ -27,20 +28,21 @@ export interface ComponentParentOptions {
 }
 
 export interface ComponentOptions {
-    template?: string;
-    data?: Function | Object;
-    props?: ComponentMap<any>;
-    computed?: ComponentMap<Function>;
-    watch?: ComponentMap<Function>;
-    components?: ComponentMap<ComponentOptions>;
-    methods?: ComponentMap<Function>;
-    beforeCreate?: Function;
-    created?: Function;
-    beforeMounted?: Function;
-    mounted?: Function;
-    beforeDestroyed?: Function;
-    destroyed?: Function;
-    _parentOptions?: ComponentParentOptions;
+    template: string;
+    data: Function | Object;
+    props: ComponentMap<any>;
+    computed: ComponentMap<Function>;
+    watch: ComponentMap<Function>;
+    components: ComponentMap<ComponentOptions>;
+    methods: ComponentMap<Function>;
+    beforeCreate: Function;
+    created: Function;
+    beforeMounted: Function;
+    mounted: Function;
+    beforeDestroyed: Function;
+    destroyed: Function;
+    render: (createVNode:(tag:string, key:string|number, data:any, children:Array<VNode>) => VNode) => VNode;
+    _parentOptions: ComponentParentOptions;
 }
 
 /** 类型-注册信息 */
@@ -85,7 +87,7 @@ export class Component {
     private __nextTickCall: Array<Function> = [];
     public __refs: ComponentMap<egret.DisplayObject|Component> = {};
 
-    constructor(options:ComponentOptions={}, parentOptions: ComponentParentOptions={}) {
+    constructor(options:ComponentOptions=<any>{}, parentOptions: ComponentParentOptions={}) {
         this.options = options;
         this.parentOptions = parentOptions;
         this._init()
@@ -152,7 +154,7 @@ export class Component {
         // 监听数据
         observe(this.__data)
     }
-    private _initMethods(methods:any = {}) {
+    private _initMethods(methods:Record<string, Function> = {}) {
         // 将methods上的方法赋值到vm实例上
         for(const e in methods){
             this[e] = methods[e]
@@ -169,7 +171,7 @@ export class Component {
             })
         }
     }
-    private _initWatch (watch: Object={}) {
+    private _initWatch (watch: Record<string, any>={}) {
         for(const key in watch){
             const handler = watch[key]
             if (Array.isArray(handler)) {

@@ -133,7 +133,7 @@ function isRegExp(v) {
     return _toString.call(v) === '[object RegExp]';
 }
 exports.isRegExp = isRegExp;
-__export(__webpack_require__(4));
+__export(__webpack_require__(5));
 
 
 /***/ }),
@@ -225,12 +225,12 @@ var __spread = (this && this.__spread) || function () {
     return ar;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var render_1 = __webpack_require__(3);
-var watcher_1 = __webpack_require__(11);
-var index_1 = __webpack_require__(12);
+var render_1 = __webpack_require__(4);
+var watcher_1 = __webpack_require__(12);
+var index_1 = __webpack_require__(13);
 var dep_1 = __webpack_require__(1);
 var index_2 = __webpack_require__(0);
-var props_1 = __webpack_require__(14);
+var props_1 = __webpack_require__(15);
 var ComponentEvent = (function (_super_1) {
     __extends(ComponentEvent, _super_1);
     function ComponentEvent(type, data, bubbles, cancelable) {
@@ -621,12 +621,92 @@ exports.default = VueEgret;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var REF_REG = /^(:?ref)/;
+var BIND_REG = /^(v-bind:|:)/;
+var ON_REG = /^(v-on:|@)/;
+var TEXT_REG = /\{\{([^}]+)\}\}/g;
+var fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
+var simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/;
+function genAttr(ast) {
+    var ref = '', attrs = '', on = '';
+    ast.attrsList.forEach(function (attr) {
+        if (REF_REG.test(attr.name)) {
+            ref = /^(:)/.test(attr.name) ? "" + attr.value : "\"" + attr.value + "\"";
+        }
+        else if (BIND_REG.test(attr.name)) {
+            attrs += "\"" + attr.name.replace(BIND_REG, '') + "\":_n(" + attr.value + "),";
+        }
+        else if (ON_REG.test(attr.name)) {
+            on += "\"" + attr.name.replace(ON_REG, '') + "\":" + genHandler(attr.value) + ",";
+        }
+        else {
+            attrs += "\"" + attr.name + "\":_n(\"" + attr.value + "\"),";
+        }
+    });
+    if (ast.text) {
+        attrs += "text:" + genText(ast) + ",";
+    }
+    return "{attrs:{" + attrs + "},on:{" + on + "}" + (ref ? ",ref:" + ref : '') + "}";
+}
+exports.genAttr = genAttr;
+function genText(ast) {
+    return "_s(\"" + ast.text.replace(TEXT_REG, function (_, expOrFn) { return "\"+(" + expOrFn + ")+\""; }) + "\")";
+}
+exports.genText = genText;
+function genHandler(exp) {
+    if (simplePathRE.test(exp) || fnExpRE.test(exp)) {
+        return exp;
+    }
+    return "function($event){" + exp + "}";
+}
+exports.genHandler = genHandler;
+function genVNode(ast, isCheck) {
+    if (isCheck === void 0) { isCheck = true; }
+    var forRes = ast.processMap.for;
+    if (isCheck && forRes && forRes.for) {
+        return "_l((" + forRes.for + "), function(" + [forRes.alias, forRes.iterator1, forRes.iterator2].filter(Boolean).join(',') + "){return " + genVNode(ast, false) + "})";
+    }
+    else if (isCheck && ast.processMap.ifConditions) {
+        return '(' + ast.processMap.ifConditions.map(function (_a) {
+            var exp = _a.exp, target = _a.target;
+            return exp + "?" + genVNode(target, false) + ":";
+        }).join('') + '"")';
+    }
+    else {
+        return "_c(\"" + ast.tag + "\",\"" + ast.key + "\"," + genAttr(ast) + (ast.children.length > 0 ? ",[].concat(" + ast.children.map(function (ast) { return genVNode(ast); }) + ")" : '') + ")";
+    }
+}
+exports.genVNode = genVNode;
+function createVNode(tag, key, data, children) {
+    if (children === void 0) { children = []; }
+    var vnode = {
+        key: key,
+        tag: tag,
+        ref: data.ref || '',
+        children: children.filter(Boolean),
+        attrs: data.attrs,
+        props: {},
+        on: data.on,
+    };
+    vnode.children.forEach(function (child) { return child.parent = vnode; });
+    return vnode;
+}
+exports.createVNode = createVNode;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var util_1 = __webpack_require__(0);
-var parser_1 = __webpack_require__(5);
-var v_node_1 = __webpack_require__(9);
-var rendreList_1 = __webpack_require__(10);
+var v_node_1 = __webpack_require__(3);
+var rendreList_1 = __webpack_require__(6);
 var index_1 = __webpack_require__(2);
 var dep_1 = __webpack_require__(1);
+var render_1 = __webpack_require__(7);
 function installRender(target) {
     target._c = v_node_1.createVNode;
     target._n = util_1.toNumber;
@@ -641,12 +721,15 @@ var Render = (function () {
     }
     Render.prototype._init = function () {
         installRender(this._vm);
-        this._ast = v_node_1.genVNode(parser_1.default.created(this._vm.options.template).root);
+        this._render =
+            'function' === typeof this._vm.options.render
+                ? this._vm.options.render
+                : Function.prototype.constructor(render_1.astStrRender(this._vm.options.template));
         this._tick();
     };
     Render.prototype._tick = function () {
         if (this._vm) {
-            var newVnode = this._createVNode(this._ast);
+            var newVnode = this._createVNode();
             this._vnode = this._patch(this._vnode, newVnode);
             this._vm._$tick();
         }
@@ -749,8 +832,8 @@ var Render = (function () {
             oldVNode.tag === newVNode.tag &&
             oldVNode.attrs.key === newVNode.attrs.key);
     };
-    Render.prototype._createVNode = function (code) {
-        return Function.prototype.constructor("with(this){ return " + code + ";}").call(this._vm);
+    Render.prototype._createVNode = function () {
+        return this._render.call(this._vm, v_node_1.createVNode);
     };
     Render.prototype._createDisObj = function (vnode) {
         var _this = this;
@@ -839,7 +922,7 @@ exports.default = Render;
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -879,15 +962,54 @@ exports.parsePath = parsePath;
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var html_parser_1 = __webpack_require__(6);
-var index_1 = __webpack_require__(7);
-var ast_node_1 = __webpack_require__(8);
+var util_1 = __webpack_require__(0);
+function renderList(val, render) {
+    if (Array.isArray(val) || 'string' === typeof val) {
+        return Array.from(val).map(function (v, i) { return render(v, i); });
+    }
+    else if ('number' === typeof val) {
+        return Array.from({ length: val }).map(function (v, i) { return render(i + 1, i); });
+    }
+    else if (util_1.isObject(val)) {
+        return [].map.call(val, function (k, i) { return render(val[k], k, i); });
+    }
+    return [];
+}
+exports.renderList = renderList;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var parser_1 = __webpack_require__(8);
+var v_node_1 = __webpack_require__(3);
+function astStrRender(template) {
+    var ast = v_node_1.genVNode(parser_1.default.created(template).root);
+    return "with(this){ return " + ast + ";}";
+}
+exports.astStrRender = astStrRender;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var html_parser_1 = __webpack_require__(9);
+var index_1 = __webpack_require__(10);
+var ast_node_1 = __webpack_require__(11);
 var ParserFactory = (function () {
     function ParserFactory() {
     }
@@ -971,7 +1093,7 @@ exports.default = ParserFactory;
 
 
 /***/ }),
-/* 6 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1096,7 +1218,7 @@ exports.default = ParseHtml;
 
 
 /***/ }),
-/* 7 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1152,7 +1274,7 @@ exports.getAndRemoveAttrByRegex = getAndRemoveAttrByRegex;
 
 
 /***/ }),
-/* 8 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1178,110 +1300,7 @@ exports.default = createASTNode;
 
 
 /***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var REF_REG = /^(:?ref)/;
-var BIND_REG = /^(v-bind:|:)/;
-var ON_REG = /^(v-on:|@)/;
-var TEXT_REG = /\{\{([^}]+)\}\}/g;
-var fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
-var simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/;
-function genAttr(ast) {
-    var ref = '', attrs = '', on = '';
-    ast.attrsList.forEach(function (attr) {
-        if (REF_REG.test(attr.name)) {
-            ref = /^(:)/.test(attr.name) ? "" + attr.value : "\"" + attr.value + "\"";
-        }
-        else if (BIND_REG.test(attr.name)) {
-            attrs += "\"" + attr.name.replace(BIND_REG, '') + "\":_n(" + attr.value + "),";
-        }
-        else if (ON_REG.test(attr.name)) {
-            on += "\"" + attr.name.replace(ON_REG, '') + "\":" + genHandler(attr.value) + ",";
-        }
-        else {
-            attrs += "\"" + attr.name + "\":_n(\"" + attr.value + "\"),";
-        }
-    });
-    if (ast.text) {
-        attrs += "text:" + genText(ast) + ",";
-    }
-    return "{attrs:{" + attrs + "},on:{" + on + "}" + (ref ? ",ref:" + ref : '') + "}";
-}
-exports.genAttr = genAttr;
-function genText(ast) {
-    return "_s(\"" + ast.text.replace(TEXT_REG, function (_, expOrFn) { return "\"+(" + expOrFn + ")+\""; }) + "\")";
-}
-exports.genText = genText;
-function genHandler(exp) {
-    if (simplePathRE.test(exp) || fnExpRE.test(exp)) {
-        return exp;
-    }
-    return "function($event){" + exp + "}";
-}
-exports.genHandler = genHandler;
-function genVNode(ast, isCheck) {
-    if (isCheck === void 0) { isCheck = true; }
-    var forRes = ast.processMap.for;
-    if (isCheck && forRes && forRes.for) {
-        return "_l((" + forRes.for + "), function(" + [forRes.alias, forRes.iterator1, forRes.iterator2].filter(Boolean).join(',') + "){return " + genVNode(ast, false) + "})";
-    }
-    else if (isCheck && ast.processMap.ifConditions) {
-        return '(' + ast.processMap.ifConditions.map(function (_a) {
-            var exp = _a.exp, target = _a.target;
-            return exp + "?" + genVNode(target, false) + ":";
-        }).join('') + '"")';
-    }
-    else {
-        return "_c(\"" + ast.tag + "\",\"" + ast.key + "\"," + genAttr(ast) + (ast.children.length > 0 ? ",[].concat(" + ast.children.map(function (ast) { return genVNode(ast); }) + ")" : '') + ")";
-    }
-}
-exports.genVNode = genVNode;
-function createVNode(tag, key, data, children) {
-    if (children === void 0) { children = []; }
-    var vnode = {
-        key: key,
-        tag: tag,
-        ref: data.ref || '',
-        children: children.filter(Boolean),
-        attrs: data.attrs,
-        props: {},
-        on: data.on,
-    };
-    vnode.children.forEach(function (child) { return child.parent = vnode; });
-    return vnode;
-}
-exports.createVNode = createVNode;
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var util_1 = __webpack_require__(0);
-function renderList(val, render) {
-    if (Array.isArray(val) || 'string' === typeof val) {
-        return Array.from(val).map(function (v, i) { return render(v, i); });
-    }
-    else if ('number' === typeof val) {
-        return Array.from({ length: val }).map(function (v, i) { return render(i + 1, i); });
-    }
-    else if (util_1.isObject(val)) {
-        return [].map.call(val, function (k, i) { return render(val[k], k, i); });
-    }
-    return [];
-}
-exports.renderList = renderList;
-
-
-/***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1382,14 +1401,14 @@ exports.default = Watcher;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var index_1 = __webpack_require__(0);
-var array_1 = __webpack_require__(13);
+var array_1 = __webpack_require__(14);
 var dep_1 = __webpack_require__(1);
 var Observer = (function () {
     function Observer(value) {
@@ -1511,7 +1530,7 @@ function copyAugment(target, src, keys) {
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1558,7 +1577,7 @@ methodsToPatch.forEach(function (method) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
