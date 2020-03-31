@@ -37,4 +37,4 @@ npm run dev
 npm run build
 ```
 
-关于webpack的使用，请参阅文档 [vue-egret-loader](http://git.3k.com/web/Tech/vue-egret-loader.git).
+关于webpack的使用，请参阅文档 [vue-egret-loader](https://github.com/3kwan/vue-egret-loader.git).

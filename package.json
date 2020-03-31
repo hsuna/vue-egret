@@ -1,6 +1,7 @@
 {
   "name": "vue-egret",
-  "version": "1.2.2",
+  "version": "1.3.0",
+  "author": "Hsuna",
   "description": "Egret MVVM",
   "main": "dist/vue.egret.js",
   "typings": "src/index.d.ts",
@@ -31,9 +32,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://git.3k.com/rdc/web/Tech/vue-egret.git"
+    "url": "https://github.com/3kwan/vue-egret.git"
   },
-  "author": "",
   "license": "ISC",
   "browserslist": [
     "last 1 version",
