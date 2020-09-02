@@ -1,0 +1,27 @@
+{
+  "name": "vue-egret-docs",
+  "version": "1.0.0",
+  "description": "\"# vue-egret-docs\"",
+  "main": "index.js",
+  "authors": {
+    "name": "Hsuna",
+    "email": "me@hsuna.com"
+  },
+  "scripts": {
+    "dev": "vuepress dev src --temp .temp",
+    "build": "vuepress build src",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hsuna/vue-egret-docs.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hsuna/vue-egret-docs/issues"
+  },
+  "homepage": "https://github.com/hsuna/vue-egret-docs#readme",
+  "dependencies": {
+    "vuepress": "^1.5.4"
+  }
+}
