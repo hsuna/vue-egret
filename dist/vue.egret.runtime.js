@@ -1,3 +1,8 @@
+/*!
+ * VueEgret.js v1.3.1
+ * (c) 2019-2020 Evan You
+ * Released under the MIT License.
+ */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -100,10 +105,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isRegExp = exports.isPlainObject = exports.toNumber = exports.toString = exports.isObject = exports.hasProto = exports.noop = void 0;
 function noop(a, b, c) { }
 exports.noop = noop;
 exports.hasProto = '__proto__' in {};
@@ -133,7 +146,7 @@ function isRegExp(v) {
     return _toString.call(v) === '[object RegExp]';
 }
 exports.isRegExp = isRegExp;
-__export(__webpack_require__(5));
+__exportStar(__webpack_require__(5), exports);
 
 
 /***/ }),
@@ -143,6 +156,7 @@ __export(__webpack_require__(5));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.popTarget = exports.pushTarget = void 0;
 var uid = 0;
 var Dep = (function () {
     function Dep() {
@@ -225,6 +239,7 @@ var __spread = (this && this.__spread) || function () {
     return ar;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Component = exports.ComponentEvent = void 0;
 var render_1 = __webpack_require__(4);
 var watcher_1 = __webpack_require__(12);
 var index_1 = __webpack_require__(13);
@@ -369,7 +384,7 @@ var Component = (function () {
     Component.prototype._initComponents = function (components) {
         if (components === void 0) { components = {}; }
         for (var name_1 in components) {
-            this.__components[name_1] = VueEgret.classFactory(components[name_1]);
+            this.__components[name_1] = VueEgret.extend(components[name_1]);
         }
     };
     Component.prototype._getData = function (data) {
@@ -504,35 +519,35 @@ var Component = (function () {
         get: function () {
             return this.__refs;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "$stage", {
         get: function () {
             return this.__global.stage;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "$stageWidth", {
         get: function () {
             return this.__global.stage.width;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "$stageHeight", {
         get: function () {
             return this.__global.stage.height;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "_data", {
         get: function () {
             return this.__data;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "_props", {
@@ -542,35 +557,35 @@ var Component = (function () {
         set: function (val) {
             this.__props = val;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "_render", {
         get: function () {
             return this.__render;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "_watcher", {
         get: function () {
             return this.__watcher;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "_watchers", {
         get: function () {
             return this.__watchers;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(Component.prototype, "_components", {
         get: function () {
             return this.__components;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     return Component;
@@ -582,10 +597,14 @@ var VueEgret = (function (_super_1) {
         return _super_1.call(this, options) || this;
     }
     VueEgret.component = function (name, options) {
-        VueEgret._components[name] = VueEgret.classFactory(options);
+        if (options)
+            return VueEgret._components[name] = VueEgret.extend(options);
+        return VueEgret._components[name];
     };
-    VueEgret.classFactory = function (options) {
+    VueEgret.extend = function (options) {
         var _a;
+        if ('function' === typeof options)
+            return options;
         return _a = (function (_super_1) {
                 __extends(class_1, _super_1);
                 function class_1(parentOptions) {
@@ -602,12 +621,13 @@ var VueEgret = (function (_super_1) {
             __extends(class_2, _super_1);
             function class_2() {
                 var _this = _super_1.call(this) || this;
-                _this.addChild(new Component(options).$el);
+                _this.addChild((new (VueEgret.extend(options))).$el);
                 return _this;
             }
             return class_2;
         }(egret.DisplayObjectContainer));
     };
+    VueEgret.version = "1.3.1";
     VueEgret._components = {};
     return VueEgret;
 }(Component));
@@ -621,6 +641,7 @@ exports.default = VueEgret;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.createVNode = exports.genVNode = exports.genHandler = exports.genText = exports.genAttr = void 0;
 var REF_REG = /^(:?ref)/;
 var BIND_REG = /^(v-bind:|:)/;
 var ON_REG = /^(v-on:|@)/;
@@ -700,13 +721,47 @@ exports.createVNode = createVNode;
 
 "use strict";
 
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.installRender = void 0;
 var util_1 = __webpack_require__(0);
 var v_node_1 = __webpack_require__(3);
 var rendreList_1 = __webpack_require__(6);
 var index_1 = __webpack_require__(2);
 var dep_1 = __webpack_require__(1);
 var render_1 = __webpack_require__(7);
+function ev(data, str) {
+    var e_1, _a;
+    if (str === void 0) { str = ''; }
+    var arr = str.split('.');
+    try {
+        for (var arr_1 = __values(arr), arr_1_1 = arr_1.next(); !arr_1_1.done; arr_1_1 = arr_1.next()) {
+            var key = arr_1_1.value;
+            if (data[key])
+                data = data[key];
+            else
+                return null;
+        }
+    }
+    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+    finally {
+        try {
+            if (arr_1_1 && !arr_1_1.done && (_a = arr_1.return)) _a.call(arr_1);
+        }
+        finally { if (e_1) throw e_1.error; }
+    }
+    return data;
+}
 function installRender(target) {
     target._c = v_node_1.createVNode;
     target._n = util_1.toNumber;
@@ -858,7 +913,7 @@ var Render = (function () {
             vnode.sp = vnode.vm.$el;
         }
         else {
-            VClass = egret[vnode.tag];
+            VClass = egret[vnode.tag] || ev(window, vnode.tag);
             if (VClass)
                 vnode.sp = new VClass;
         }
@@ -928,6 +983,7 @@ exports.default = Render;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parsePath = exports.def = exports.isReserved = exports.UNICODE_REG_EXP = void 0;
 exports.UNICODE_REG_EXP = /a-zA-Z\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037D\u037F-\u1FFF\u200C-\u200D\u203F-\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD/;
 function isReserved(str) {
     var c = (str + '').charCodeAt(0);
@@ -968,6 +1024,7 @@ exports.parsePath = parsePath;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.renderList = void 0;
 var util_1 = __webpack_require__(0);
 function renderList(val, render) {
     if (Array.isArray(val) || 'string' === typeof val) {
@@ -991,6 +1048,7 @@ exports.renderList = renderList;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.astStrRender = void 0;
 var parser_1 = __webpack_require__(8);
 var v_node_1 = __webpack_require__(3);
 function astStrRender(template) {
@@ -1084,7 +1142,7 @@ var ParserFactory = (function () {
         get: function () {
             return this._root;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     return ParserFactory;
@@ -1224,6 +1282,7 @@ exports.default = ParseHtml;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getAndRemoveAttrByRegex = exports.getAndRemoveAttr = exports.parseFor = void 0;
 var FOR_ALIAS_RE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/;
 var FOR_ITERATOR_RE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/;
 var STRIP_PARENS_RE = /^\(|\)$/g;
@@ -1407,6 +1466,7 @@ exports.default = Watcher;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.observe = void 0;
 var index_1 = __webpack_require__(0);
 var array_1 = __webpack_require__(14);
 var dep_1 = __webpack_require__(1);
@@ -1536,6 +1596,7 @@ function copyAugment(target, src, keys) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.arrayKeys = exports.arrayMethods = void 0;
 var index_1 = __webpack_require__(0);
 var arrayProto = Array.prototype;
 exports.arrayMethods = Object.create(arrayProto);
@@ -1583,6 +1644,7 @@ methodsToPatch.forEach(function (method) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.validateProp = exports.checkType = exports.isSameType = void 0;
 function getType(fn) {
     var match = fn && fn.toString().match(/^\s*function (\w+)/);
     return match ? match[1] : '';

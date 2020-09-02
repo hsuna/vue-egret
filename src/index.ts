@@ -15,26 +15,22 @@ import { validateProp } from './util/props'
 
 export interface ComponentClass {
     options:ComponentOptions;
-    new (parentOptions:ComponentParentOptions);
+    new (parentOptions?:ComponentParentOptions);
 }
-export interface ComponentMap<T> {
-    [propName:string]: T;
-}
-
 export interface ComponentParentOptions {
     parent?: Component;
-    propsData?: ComponentMap<any>;
+    propsData?: Record<string, any>;
     _propsKeys?: Array<string>;
 }
 
 export interface ComponentOptions {
     template: string;
     data: Function | Object;
-    props: ComponentMap<any>;
-    computed: ComponentMap<Function>;
-    watch: ComponentMap<Function>;
-    components: ComponentMap<ComponentOptions>;
-    methods: ComponentMap<Function>;
+    props: Record<string, any>;
+    computed: Record<string, Function>;
+    watch: Record<string, Function>;
+    components: Record<string, ComponentOptions>;
+    methods: Record<string, Function>;
     beforeCreate: Function;
     created: Function;
     beforeMounted: Function;
@@ -83,9 +79,9 @@ export class Component {
     private __render: Render;
     private __watcher: Watcher;
     private __watchers: Array<Watcher> = [];
-    private __components: ComponentMap<ComponentClass> = {};
+    private __components: Record<string, ComponentClass> = {};
     private __nextTickCall: Array<Function> = [];
-    public __refs: ComponentMap<egret.DisplayObject|Component> = {};
+    public __refs: Record<string, egret.DisplayObject|Component> = {};
 
     constructor(options:ComponentOptions=<any>{}, parentOptions: ComponentParentOptions={}) {
         this.options = options;
@@ -181,9 +177,9 @@ export class Component {
             }
         }
     }
-    private _initComponents(components:ComponentMap<ComponentOptions> = {}){
+    private _initComponents(components:Record<string, ComponentOptions> = {}){
         for(const name in components){
-            this.__components[name] = VueEgret.classFactory(components[name])
+            this.__components[name] = VueEgret.extend(components[name])
         }
     }
     private _getData (data: Function): any {
@@ -392,7 +388,7 @@ export class Component {
     /**
      * 获取注册列表
      */
-    public get $refs():ComponentMap<egret.DisplayObject|Component> {
+    public get $refs():Record<string, egret.DisplayObject|Component> {
         return this.__refs;
     }
     /**
@@ -434,7 +430,7 @@ export class Component {
     public get _watchers():Array<Watcher>{
         return this.__watchers;
     }
-    public get _components():ComponentMap<ComponentClass>{
+    public get _components():Record<string, ComponentClass>{
         return this.__components;
     }
 }
@@ -445,25 +441,29 @@ export class Component {
  * @author Hsuna
  */
 export default class VueEgret extends Component {
+    /** 版本号 */
+    static version:string = process.env.VERSION
     /** 组件库缓存 */
-    static _components:ComponentMap<ComponentClass> = {}
+    static _components:Record<string, ComponentClass> = {}
     /**
      * 设置全局组件
      * @param { string } name 组件名 用于全局定义
      * @param { ComponentOptions } options 组件配置
      */
-    static component(name:string, options:ComponentOptions){
-        VueEgret._components[name] = VueEgret.classFactory(options)
+    static component(name:string, options:ComponentOptions):ComponentClass {
+        if(options) return VueEgret._components[name] = VueEgret.extend(options);
+        return VueEgret._components[name];
     }
     /**
      * 通过配置，获取组件类型
      * @param { ComponentOptions } options 
      */
-    static classFactory(options:ComponentOptions):ComponentClass {
+    static extend(options:ComponentOptions|ComponentClass):ComponentClass {
+        if('function' === typeof options) return <ComponentClass>options;
         return class extends Component {
-            static options:ComponentOptions = options; 
+            static options:ComponentOptions = <ComponentOptions>options; 
             constructor(parentOptions: ComponentParentOptions={}) {
-                super(options, parentOptions)
+                super(<ComponentOptions>options, parentOptions)
             }
         }
     }
@@ -472,11 +472,11 @@ export default class VueEgret extends Component {
      * 由于egret启动是需要实例化Main类
      * @param { ComponentOptions } options 
      */
-    static classMain(options:ComponentOptions):any {
+    static classMain(options:ComponentOptions):Function {
         return class extends egret.DisplayObjectContainer {
             constructor(){
                 super()
-                this.addChild(new Component(options).$el)
+                this.addChild((new (VueEgret.extend(options))).$el)
             }
         }
     }

@@ -1,9 +1,18 @@
 import { toNumber, toString } from "../util";
-import { createVNode, VNode, genVNode } from "./v-node";
+import { createVNode, VNode } from "./v-node";
 import { renderList } from "./rendreList";
-import VueEgret, { Component, ComponentClass, ComponentMap } from "../index";
+import VueEgret, { Component, ComponentClass } from "../index";
 import { pushTarget, popTarget } from "../observer/dep";
 import { astStrRender } from "../helpers/render";
+
+function ev (data:Record<string, any>, str:string='') {
+  let arr = str.split('.');
+  for(let key of arr) {
+    if(data[key]) data = data[key]
+    else return null;
+  }
+  return data;
+}
 
 export function installRender (target: any) {
   target._c = createVNode
@@ -197,9 +206,9 @@ export default class Render {
     pushTarget();//阻断所有更新监听
     // Component
     if(VClass){
-      const propsData: ComponentMap<any> = {};
+      const propsData: Record<string, any> = {};
       const _propsKeys: Array<string> = [];
-      const props:ComponentMap<any> = VClass.options.props;
+      const props:Record<string, any> = VClass.options.props;
       for(const key in props){
         _propsKeys.push(key);
         if(key in this._vm._props) propsData[key] = this._vm._props[key]
@@ -214,7 +223,7 @@ export default class Render {
       // 将实际显示对象关联虚拟节点
       vnode.sp = vnode.vm.$el 
     }else{
-      VClass = egret[vnode.tag]
+      VClass = egret[vnode.tag] || ev(window, vnode.tag)
       if(VClass) vnode.sp = new (<any>VClass)
     }
     if(!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`)

@@ -230,7 +230,7 @@ VueEgret.component('Graphics', {
     template: `<Sprite ref="shape"/>`
 })
 
-var Main = VueEgret.classMain({
+var Main = VueEgret.classMain(VueEgret.extend({
     data(){
         return {
             rate: 0,
@@ -257,7 +257,7 @@ var Main = VueEgret.classMain({
     >
         <TextField>{{rate}}</TextField>
     </Graphics>`
-})
+}))
 
 
 /* 
