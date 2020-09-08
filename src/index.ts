@@ -11,7 +11,7 @@ import Watcher from './observer/watcher'
 import { observe } from './observer/index'
 import { pushTarget, popTarget } from './observer/dep'
 import { noop, isPlainObject } from './util/index'
-import { validateProp } from './util/props'
+import { validateProp, normalizeProp } from './util/props'
 
 export interface ComponentClass {
     options:ComponentOptions;
@@ -19,14 +19,21 @@ export interface ComponentClass {
 }
 export interface ComponentParentOptions {
     parent?: Component;
-    propsData?: Record<string, any>;
+    propsData?: Record<string, PropData|Function>;
     _propsKeys?: Array<string>;
+}
+
+export interface PropData {
+    type: Function;
+    default?: any;
+    required?: boolean;
+    validator?: Function;
 }
 
 export interface ComponentOptions {
     template: string;
     data: Function | Object;
-    props: Record<string, any>;
+    props: Array<string>|Record<string, PropData|Function>;
     computed: Record<string, Function>;
     watch: Record<string, Function>;
     components: Record<string, ComponentOptions>;
@@ -73,9 +80,9 @@ export class Component {
     options: ComponentOptions;
 
     // private __tickHandler: ComponentMap<Function> = [];
-    private __global: any={};
-    private __data: any={};
-    private __props: any={};
+    private __global: Record<string, any>={};
+    private __data: Record<string, any>={};
+    private __props: Record<string, Array<string>|Record<string, PropData|Function>>={};
     private __render: Render;
     private __watcher: Watcher;
     private __watchers: Array<Watcher> = [];
@@ -120,9 +127,10 @@ export class Component {
         // 监听数据
         observe(this.__global)
     }
-    private _initProps(propsOptions: any={}, propsData:any={}) {
-        for(const key in propsOptions){
-            this.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(propsOptions[key], this)
+    private _initProps(propsOptions: Array<string>|Record<string, PropData|Function>={}, propsData:Record<string, PropData|Function>={}) {
+        let props:Record<string, PropData> = normalizeProp(propsOptions) // normalizeProp
+        for(const key in props){
+            this.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(props[key], this);
             Object.defineProperty(this, key, {
                 get(){
                     return this.__props[key]
@@ -412,7 +420,7 @@ export class Component {
     public get $stageHeight():number {
         return this.__global.stage.height
     }
-    public get _data():any {
+    public get $data():Record<string, any> {
         return this.__data;
     }
     public set _props(val:any) {
@@ -476,7 +484,7 @@ export default class VueEgret extends Component {
         return class extends egret.DisplayObjectContainer {
             constructor(){
                 super()
-                this.addChild((new (VueEgret.extend(options))).$el)
+                this.addChild((new (VueEgret.extend(options)) as Component).$el)
             }
         }
     }
