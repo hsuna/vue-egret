@@ -2,9 +2,20 @@ import { noop, isObject, parsePath } from '../util/index'
 
 import { Component } from '../index'
 import Dep, { pushTarget, popTarget } from './dep'
+import { traverse } from './traverse';
 
 // watcher实例的ID 每个watcher实现的ID都是唯一的
 let uid = 0
+
+export interface WatchOptions {
+    handler: Function;
+    immediate?: boolean;
+    deep?: boolean;
+    user?: boolean;
+    lazy?: boolean;
+    sync?: boolean;
+    before?: Function;
+}
 
 export default class Watcher {
     active: boolean;
@@ -21,11 +32,31 @@ export default class Watcher {
     setter: Function;
     value: any;
 
+    deep: boolean;
+    user: boolean;
+    lazy: boolean;
+    sync: boolean;
+    immediate: boolean;
+    before: Function;
+
     constructor(
         vm: Component,
         expOrFn?: string | Function,
         cb?: Function,
+        options?: WatchOptions
     ) {
+        // options
+        if (options) {
+            this.deep = !!options.deep
+            this.user = !!options.user
+            this.lazy = !!options.lazy
+            this.sync = !!options.sync
+            this.immediate = !!options.immediate
+            this.before = options.before
+        } else {
+            this.deep = this.user = this.lazy = this.sync = this.immediate = false
+        }
+
         vm._watchers.push(this)
         this.id = uid++
         this.active = true;
@@ -37,7 +68,7 @@ export default class Watcher {
         this.depIds = new Set()
         this.newDepIds = new Set()
         // 更新触发回调函数
-        this.cb = cb;
+        this.cb = cb || noop;
         this.expression = expOrFn.toString();
         if ('function' === typeof expOrFn) {
             this.getter = expOrFn
@@ -49,6 +80,14 @@ export default class Watcher {
         }
         // 在创建watcher实例时先取一次值
         this.value = this.get()
+
+        if (this.immediate) {
+            try {
+              cb.call(vm, this.value)
+            } catch (error) {
+              console.error(`callback for immediate watcher "${this.expression}"`)
+            }
+        }
     }
 
     /**
@@ -56,11 +95,20 @@ export default class Watcher {
      */
     get () {
         pushTarget(this)
-        const value = this.getter.call(this.vm, this.vm)
-        // "touch" every property so they are all tracked as
-        // dependencies for deep watching
-        popTarget()
-        this.cleanupDeps()
+        let value
+        try {
+            value = this.getter.call(this.vm, this.vm)
+        } catch(e) {
+
+        } finally {
+            // "touch" every property so they are all tracked as
+            // dependencies for deep watching
+            if (this.deep) {
+                traverse(value)
+            }
+            popTarget()
+            this.cleanupDeps()
+        }
         return value
     }
 

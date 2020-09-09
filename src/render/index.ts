@@ -31,7 +31,7 @@ export default class Render {
   /** 虚拟节点 */
   private _vnode:VNode;
   /** 渲染方法 */
-  private _render: (createVNode: (tag: string, key: string | number, data: any, children: VNode[]) => VNode) => VNode;
+  private _render: (createVNode: (tag: string, data: any, children: VNode[]) => VNode) => VNode;
   /** 新虚拟节点 */
   // private _newVnode:VNode;
   
@@ -290,7 +290,7 @@ export default class Render {
       }
     }
     // 触发销毁方法
-    if(vnode.vm) vnode.vm.$destroy()
+    // if(vnode.vm) vnode.vm.$destroy()
     // 移除各项示例挂载
     if(vnode.ref){
       delete this._vm.__refs[vnode.ref];

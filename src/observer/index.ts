@@ -109,7 +109,7 @@ export default class Observer {
  * or the existing observer if the value already has one.
  */
 export function observe (value: any): Observer {
-    if(!value || typeof value !== 'object') return;
+    if(!isObject(value)) return;
     let ob: Observer
     if (Object.prototype.hasOwnProperty.call(value, '__ob__') && value.__ob__ instanceof Observer) {
       ob = value.__ob__

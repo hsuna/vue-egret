@@ -10,7 +10,7 @@ const TEXT_REG:RegExp = /\{\{([^}]+)\}\}/g
 
 const fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/
 const simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/
-    
+
 export interface Variate {
     [varName:string] :string,
 }
@@ -18,7 +18,7 @@ export interface Variate {
 export interface VNode {
     vm?: Component;
     sp?: egret.DisplayObject;
-    key?: string | number;
+    key: any;
     tag: string;
     ref: string;
     parent?: VNode,
@@ -71,19 +71,20 @@ export function genVNode(ast: ASTNode, isCheck:boolean=true):string {
     }else if(isCheck && ast.processMap.ifConditions){
         return '(' + ast.processMap.ifConditions.map(({exp, target}:{exp:string, target:ASTNode}) => `${exp}?${genVNode(target, false)}:`).join('') + '"")';
     }else{
-        return `_c("${ast.tag}","${ast.key}",${genAttr(ast)}${ast.children.length > 0 ? `,[].concat(${ast.children.map((ast:ASTNode) => genVNode(ast))})`:''})`;
+        return `_c("${ast.tag}",${genAttr(ast)}${ast.children.length > 0 ? `,[].concat(${ast.children.map((ast:ASTNode) => genVNode(ast))})`:''})`;
     }
 }
 
-export function createVNode(tag:string, key:string|number, data:any, children:Array<VNode>=[]):VNode {
+export function createVNode(tag:string, data:any={}, children:Array<VNode>=[]):VNode {
+    if(Array.isArray(data)) children = data;
     let vnode:VNode = {
-        key,
+        key: data && data.key,
         tag,
         ref: data.ref || '',
         children: children.filter(Boolean),
-        attrs: data.attrs,
+        attrs: data.attrs || {},
         props: {},
-        on: data.on,
+        on: data.on || {},
     }
     vnode.children.forEach((child:VNode) => child.parent = vnode);
     return vnode;

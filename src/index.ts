@@ -7,11 +7,18 @@
 
 import Render from './render';
 import { VNode } from "./render/v-node";
-import Watcher from './observer/watcher'
+import Watcher, { WatchOptions } from './observer/watcher'
 import { observe } from './observer/index'
 import { pushTarget, popTarget } from './observer/dep'
 import { noop, isPlainObject } from './util/index'
 import { validateProp, normalizeProp } from './util/props'
+
+export interface PropData {
+    type: Function;
+    default?: any;
+    required?: boolean;
+    validator?: Function;
+}
 
 export interface ComponentClass {
     options:ComponentOptions;
@@ -21,13 +28,6 @@ export interface ComponentParentOptions {
     parent?: Component;
     propsData?: Record<string, PropData|Function>;
     _propsKeys?: Array<string>;
-}
-
-export interface PropData {
-    type: Function;
-    default?: any;
-    required?: boolean;
-    validator?: Function;
 }
 
 export interface ComponentOptions {
@@ -44,7 +44,7 @@ export interface ComponentOptions {
     mounted: Function;
     beforeDestroyed: Function;
     destroyed: Function;
-    render: (createVNode:(tag:string, key:string|number, data:any, children:Array<VNode>) => VNode) => VNode;
+    render: (createVNode:(tag:string, data:any, children:Array<VNode>) => VNode) => VNode;
     _parentOptions: ComponentParentOptions;
 }
 
@@ -88,6 +88,7 @@ export class Component {
     private __watchers: Array<Watcher> = [];
     private __components: Record<string, ComponentClass> = {};
     private __nextTickCall: Array<Function> = [];
+    private __isMounted: Boolean = false;
     public __refs: Record<string, egret.DisplayObject|Component> = {};
 
     constructor(options:ComponentOptions=<any>{}, parentOptions: ComponentParentOptions={}) {
@@ -106,18 +107,25 @@ export class Component {
         this._initWatch(this.options.watch)
         this._initComponents(this.options.components)
         this.$callHook('created');
-        this.$callHook('beforeMounted');
         this.__render = new Render(this)
-        this.__watcher = new Watcher(this, () => {
-            if(!this.__render) return; // 反正渲染器销毁时，进程依然回调方法
-            this.$callHook('beforeUpdate')
-            this.__render.update()
-            this.$callHook('update')
-        }, noop)
-        setTimeout(() => {
+
+        /* 添加到舞台时触发挂载 */
+        this.$el.once(egret.Event.ADDED_TO_STAGE, () => {
+            this.$callHook('beforeMount');
             this.__global.stage = this.$el.stage
+            this.__watcher = new Watcher(this, () => {
+                if(!this.__render) return; // 防止渲染器销毁时，进程依然回调方法
+                if (this.__isMounted)  this.$callHook('beforeUpdate')
+                this.__render.update()
+                if (this.__isMounted)  this.$callHook('update')
+            }, noop)
+            this.__isMounted = true;
             this.$callHook('mounted')
-        }, 1)
+        }, this.$el)
+        /* 从舞台移除时销毁该示例 */
+        this.$el.once(egret.Event.REMOVED_FROM_STAGE, () => {
+            this.$destroy()
+        }, this.$el)
     }
     /** 初始化全局参数，用于全局方便获取 */
     private _initGlobal(){
@@ -165,14 +173,13 @@ export class Component {
         }
     }
     private _initComputed(computed:any={}) {
+        let propertyDefinition;
         for(const key in computed){
             const userDef:any = computed[key] || noop
-            const getter:Function = typeof userDef === 'function' ? userDef : userDef.get
-            Object.defineProperty(this, key, {
-                get(){
-                    return getter.call(this);
-                }
-            })
+            propertyDefinition = typeof userDef === 'function' 
+                ? { get: userDef, set: noop }
+                : { get: userDef.get, set: userDef.set }
+            Object.defineProperty(this, key, propertyDefinition)
         }
     }
     private _initWatch (watch: Record<string, any>={}) {
@@ -200,7 +207,7 @@ export class Component {
             popTarget()
         }
     }
-    private _createWatcher (expOrFn: string | Function, handler: any, options?: Object) {
+    private _createWatcher (expOrFn: string | Function, handler: any, options?: WatchOptions) {
         if (isPlainObject(handler)) {
           options = handler
           handler = handler.handler
@@ -226,12 +233,12 @@ export class Component {
      * @param cb 
      * @param options 
      */
-    public $watch (expOrFn: string | Function, cb: any, options?: Object): Function {
+    public $watch (expOrFn: string | Function, cb: any, options?: WatchOptions): Function {
         if (isPlainObject(cb)) {
           return this._createWatcher(expOrFn, cb, options)
         }
-        options = options || {}
-        const watcher = new Watcher(this, expOrFn, cb)
+        options = options || <any>{}
+        const watcher = new Watcher(this, expOrFn, cb, options)
         return function unwatchFn () {
             watcher.teardown()
         }
@@ -253,6 +260,7 @@ export class Component {
      * @author Hsuna
      */
     public $destroy(){
+        this.$callHook('beforeDestroy')
         // 销毁观察器
         this.__watcher.teardown()
         this.__watcher = null
