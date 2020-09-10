@@ -89,30 +89,32 @@ export class Component {
     /** 组件配置 */
     $options: ComponentOptions;
     
-    // private __tickHandler: ComponentMap<Function> = [];
-    private __parentOptions: ComponentParentOptions;
-    private __global: Record<string, any>={};
-    private __data: Record<string, any>={};
-    private __props: Record<string, Array<string>|Record<string, PropData|Function>>={};
-    private __render: Render;
-    
-    private __watcher: Watcher;
-    private __watchers: Array<Watcher> = [];
-    private __components: Record<string, ComponentClass> = {};
     private __nextTickCall: Array<Function> = [];
 
-    private __isMounted: Boolean = false;
-    private __isBeingDestroyed: Boolean = false; 
-    private __isDestroyed: Boolean = false;
+    // private __tickHandler: ComponentMap<Function> = [];
+    private _parentOptions: ComponentParentOptions;
+    private _global: Record<string, any>={};
+    private _data: Record<string, any>={};
+    private _props: Record<string, Array<string>|Record<string, PropData|Function>>={};
+    
+
+    private _isMounted: Boolean = false;
+    private _isBeingDestroyed: Boolean = false; 
+    private _isDestroyed: Boolean = false;
+
+    public _render: Render;
+    public _watcher: Watcher;
+    public _watchers: Array<Watcher> = [];
+    public _components: Record<string, ComponentClass> = {};
 
     constructor(options:ComponentOptions=<any>{}, parentOptions: ComponentParentOptions={}) {
         this.$options = options;
-        this.__parentOptions = parentOptions;
+        this._parentOptions = parentOptions;
         this._init()
     }
 
     public _init() {
-        this.$parent = this.__parentOptions.parent;
+        this.$parent = this._parentOptions.parent;
         if(this.$parent) this.$parent.$children.push(this);
         this.$root = this.$parent ? this.$parent.$root : this;
 
@@ -120,23 +122,23 @@ export class Component {
         this.$callHook('beforeCreate');
         this._initGlobal()
         this._initData(this.$options.data)
-        this._initProps(this.$options.props, this.__parentOptions.propsData)
+        this._initProps(this.$options.props, this._parentOptions.propsData)
         this._initComputed(this.$options.computed);
         this._initWatch(this.$options.watch)
         this._initComponents(this.$options.components)
         this.$callHook('created');
-        this.__render = new Render(this)
+        this._render = new Render(this)
         /* 添加到舞台时触发挂载 */
         this.$el.once(egret.Event.ADDED_TO_STAGE, () => {
             this.$callHook('beforeMount');
-            this.__global.stage = this.$el.stage
-            this.__watcher = new Watcher(this, () => {
-                if(!this.__render) return; // 防止渲染器销毁时，进程依然回调方法
-                if (this.__isMounted)  this.$callHook('beforeUpdate')
-                this.__render.update()
-                if (this.__isMounted)  this.$callHook('update')
+            this._global.stage = this.$el.stage
+            this._watcher = new Watcher(this, () => {
+                if(!this._render) return; // 防止渲染器销毁时，进程依然回调方法
+                if (this._isMounted)  this.$callHook('beforeUpdate')
+                this._render.update()
+                if (this._isMounted)  this.$callHook('update')
             }, noop)
-            this.__isMounted = true;
+            this._isMounted = true;
             this.$callHook('mounted')
         }, this.$el)
         /* 从舞台移除时销毁该示例 */
@@ -146,19 +148,19 @@ export class Component {
     }
     /** 初始化全局参数，用于全局方便获取 */
     private _initGlobal(){
-        this.__global = {
+        this._global = {
             stage: new egret.Stage()
         }
         // 监听数据
-        observe(this.__global)
+        observe(this._global)
     }
     private _initProps(propsOptions: Array<string>|Record<string, PropData|Function>={}, propsData:Record<string, PropData|Function>={}) {
         let props:Record<string, PropData> = normalizeProp(propsOptions) // normalizeProp
         for(const key in props){
-            this.__props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(props[key], this);
+            this._props[key] = propsData.hasOwnProperty(key) ? propsData[key] : validateProp(props[key], this);
             Object.defineProperty(this, key, {
                 get(){
-                    return this.__props[key]
+                    return this._props[key]
                 },
                 set(val){
                     console.error('The props data not set!')
@@ -166,22 +168,22 @@ export class Component {
             })
         }
         // 监听数据
-        observe(this.__props)
+        observe(this._props)
     }
     private _initData(data: any) {
-        this.__data = typeof data === 'function'? this._getData(data) : data || {};
-        for(const key in this.__data){
+        this._data = typeof data === 'function'? this._getData(data) : data || {};
+        for(const key in this._data){
             Object.defineProperty(this, key, {
                 get(){
-                    return this.__data[key]
+                    return this._data[key]
                 },
                 set(val){
-                    this.__data[key] = val
+                    this._data[key] = val
                 }
             })
         }
         // 监听数据
-        observe(this.__data)
+        observe(this._data)
     }
     private _initMethods(methods:Record<string, Function> = {}) {
         // 将methods上的方法赋值到vm实例上
@@ -211,7 +213,7 @@ export class Component {
     }
     private _initComponents(components:Record<string, ComponentOptions> = {}){
         for(const name in components){
-            this.__components[name] = VueEgret.extend(components[name])
+            this._components[name] = VueEgret.extend(components[name])
         }
     }
     private _getData (data: Function): any {
@@ -288,31 +290,31 @@ export class Component {
      * @author Hsuna
      */
     public $destroy(){
-        if(this.__isBeingDestroyed) return;
+        if(this._isBeingDestroyed) return;
 
         this.$callHook('beforeDestroy')
-        this.__isBeingDestroyed = true;
+        this._isBeingDestroyed = true;
 
         // 从parent列表中移除
-        if(this.$parent && !this.$parent.__isBeingDestroyed) {
+        if(this.$parent && !this.$parent._isBeingDestroyed) {
             let index = this.$parent.$children.indexOf(this);
             if(index > -1) this.$parent.$children.splice(index, 1)
         }
 
         // 销毁观察器
-        if(this.__watcher) {
-            this.__watcher.teardown()
-            this.__watcher = null
-            this.__watchers = null;
+        if(this._watcher) {
+            this._watcher.teardown()
+            this._watcher = null
+            this._watchers = null;
         }
 
         // 销毁渲染器
-        if(this.__render) {
-            this.__render.destroy()
-            this.__render = null
+        if(this._render) {
+            this._render.destroy()
+            this._render = null
         }
 
-        this.__isDestroyed = true;
+        this._isDestroyed = true;
         
         this.$callHook('destroyed')
     }
@@ -452,39 +454,27 @@ export class Component {
      * @return { egret.Stage }
      */
     public get $stage():egret.Stage {
-        return this.__global.stage
+        return this._global.stage
     }
     /**
      * 获取舞台宽度
      * @return { number }
      */
     public get $stageWidth():number {
-        return this.__global.stage.width
+        return this._global.stage.width
     }
     /**
      * 获取舞台高度
      * @return { number }
      */
     public get $stageHeight():number {
-        return this.__global.stage.height
+        return this._global.stage.height
     }
     public get $data():Record<string, any> {
-        return this.__data;
+        return this._data;
     }
     public get $props():Record<string, any> {
-        return this.__props;
-    }
-    public get _render():Render{
-        return this.__render;
-    }
-    public get _watcher():Watcher{
-        return this.__watcher;
-    }
-    public get _watchers():Array<Watcher>{
-        return this.__watchers;
-    }
-    public get _components():Record<string, ComponentClass>{
-        return this.__components;
+        return this._props;
     }
 }
 
@@ -531,6 +521,7 @@ export default class VueEgret extends Component {
             constructor(){
                 super()
                 this.vm = new (VueEgret.extend(options));
+                // this.vm.$mount(this);
                 this.addChild(this.vm.$el)
             }
         }
