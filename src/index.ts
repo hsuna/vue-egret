@@ -42,6 +42,8 @@ export interface ComponentOptions {
     created: Function;
     beforeMounted: Function;
     mounted: Function;
+    beforeUpdate: Function;
+    update: Function;
     beforeDestroyed: Function;
     destroyed: Function;
     render: (createVNode:(tag:string, data:any, children:Array<VNode>) => VNode) => VNode;
@@ -76,39 +78,54 @@ export class ComponentEvent extends egret.Event {
 export class Component {
     /** 显示对象 */
     $el: egret.DisplayObject;
-    parentOptions: ComponentParentOptions;
-    options: ComponentOptions;
-
+    /** 根组件 */
+    $root: Component;
+    /** 父组件 */
+    $parent: Component;
+    /** 子组件集合 */
+    $children: Array<Component> = [];
+    /** 获取注册列表 */
+    $refs: Record<string, egret.DisplayObject|Component> = {};
+    /** 组件配置 */
+    $options: ComponentOptions;
+    
     // private __tickHandler: ComponentMap<Function> = [];
+    private __parentOptions: ComponentParentOptions;
     private __global: Record<string, any>={};
     private __data: Record<string, any>={};
     private __props: Record<string, Array<string>|Record<string, PropData|Function>>={};
     private __render: Render;
+    
     private __watcher: Watcher;
     private __watchers: Array<Watcher> = [];
     private __components: Record<string, ComponentClass> = {};
     private __nextTickCall: Array<Function> = [];
+
     private __isMounted: Boolean = false;
-    public __refs: Record<string, egret.DisplayObject|Component> = {};
+    private __isBeingDestroyed: Boolean = false; 
+    private __isDestroyed: Boolean = false;
 
     constructor(options:ComponentOptions=<any>{}, parentOptions: ComponentParentOptions={}) {
-        this.options = options;
-        this.parentOptions = parentOptions;
+        this.$options = options;
+        this.__parentOptions = parentOptions;
         this._init()
     }
 
     public _init() {
-        this._initMethods(this.options.methods)
-        this._initGlobal()
-        this._initData(this.options.data)
-        this._initProps(this.options.props, this.parentOptions.propsData)
-        this._initComputed(this.options.computed);
+        this.$parent = this.__parentOptions.parent;
+        if(this.$parent) this.$parent.$children.push(this);
+        this.$root = this.$parent ? this.$parent.$root : this;
+
+        this._initMethods(this.$options.methods)
         this.$callHook('beforeCreate');
-        this._initWatch(this.options.watch)
-        this._initComponents(this.options.components)
+        this._initGlobal()
+        this._initData(this.$options.data)
+        this._initProps(this.$options.props, this.__parentOptions.propsData)
+        this._initComputed(this.$options.computed);
+        this._initWatch(this.$options.watch)
+        this._initComponents(this.$options.components)
         this.$callHook('created');
         this.__render = new Render(this)
-
         /* 添加到舞台时触发挂载 */
         this.$el.once(egret.Event.ADDED_TO_STAGE, () => {
             this.$callHook('beforeMount');
@@ -246,11 +263,22 @@ export class Component {
     public $callHook(name:string, ...rest) {
         // 阻断所有数据变动
         pushTarget()
-        if('function' === typeof this.options[name]){
-            this.options[name].call(this, ...rest)
+        if('function' === typeof this.$options[name]){
+            this.$options[name].call(this, ...rest)
         }
         popTarget()
     }
+    /**
+     * 强制刷新
+     */
+    public $forceUpdate() {
+        if(this._watcher) {
+            this._watcher.update();
+        }
+    }
+    /* 
+     * 下一帧
+     */
     public $nextTick(callback:Function) {
         this.__nextTickCall.push(callback)
     }
@@ -260,14 +288,32 @@ export class Component {
      * @author Hsuna
      */
     public $destroy(){
+        if(this.__isBeingDestroyed) return;
+
         this.$callHook('beforeDestroy')
+        this.__isBeingDestroyed = true;
+
+        // 从parent列表中移除
+        if(this.$parent && !this.$parent.__isBeingDestroyed) {
+            let index = this.$parent.$children.indexOf(this);
+            if(index > -1) this.$parent.$children.splice(index, 1)
+        }
+
         // 销毁观察器
-        this.__watcher.teardown()
-        this.__watcher = null
-        this.__watchers = null;
+        if(this.__watcher) {
+            this.__watcher.teardown()
+            this.__watcher = null
+            this.__watchers = null;
+        }
+
         // 销毁渲染器
-        this.__render.destroy()
-        this.__render = null
+        if(this.__render) {
+            this.__render.destroy()
+            this.__render = null
+        }
+
+        this.__isDestroyed = true;
+        
         this.$callHook('destroyed')
     }
     /**
@@ -277,7 +323,7 @@ export class Component {
      */
     public $displayObject(ref:ComponentRef):egret.DisplayObject {
         if('string' === typeof ref){// 挂载名
-            return this.$displayObject(this.__refs[ref])
+            return this.$displayObject(this.$refs[ref])
         }else if(ref instanceof Component){// 组件
             return(ref as Component).$el
         }else if(ref instanceof egret.DisplayObject){// 显示对象本身
@@ -402,12 +448,6 @@ export class Component {
         return new Promise((resolve:(value:egret.Tween) => void) => tween.call(resolve))
     }
     /**
-     * 获取注册列表
-     */
-    public get $refs():Record<string, egret.DisplayObject|Component> {
-        return this.__refs;
-    }
-    /**
      * 获取舞台信息
      * @return { egret.Stage }
      */
@@ -431,10 +471,7 @@ export class Component {
     public get $data():Record<string, any> {
         return this.__data;
     }
-    public set _props(val:any) {
-        this.__props = val;
-    }
-    public get _props():any {
+    public get $props():Record<string, any> {
         return this.__props;
     }
     public get _render():Render{
@@ -490,9 +527,11 @@ export default class VueEgret extends Component {
      */
     static classMain(options:ComponentOptions):Function {
         return class extends egret.DisplayObjectContainer {
+            public vm: Component;
             constructor(){
                 super()
-                this.addChild((new (VueEgret.extend(options)) as Component).$el)
+                this.vm = new (VueEgret.extend(options));
+                this.addChild(this.vm.$el)
             }
         }
     }

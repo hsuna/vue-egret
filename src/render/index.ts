@@ -45,9 +45,9 @@ export default class Render {
     installRender(this._vm);
 
     this._render = 
-      'function' === typeof this._vm.options.render // 如果存在渲染器这渲染，否则渲染模板
-      ? this._vm.options.render
-      : Function.prototype.constructor(astStrRender(this._vm.options.template));
+      'function' === typeof this._vm.$options.render // 如果存在渲染器这渲染，否则渲染模板
+      ? this._vm.$options.render
+      : Function.prototype.constructor(astStrRender(this._vm.$options.template));
     this._tick();
   }
 
@@ -211,7 +211,7 @@ export default class Render {
       const props:Record<string, any> = VClass.options.props;
       for(const key in props){
         _propsKeys.push(key);
-        if(key in this._vm._props) propsData[key] = this._vm._props[key]
+        if(key in this._vm.$props) propsData[key] = this._vm.$props[key]
         if(key in vnode.attrs) propsData[key] = vnode.attrs[key]
       }
       // 创建虚拟dom节点
@@ -236,7 +236,7 @@ export default class Render {
     }
     // 实例节点
     if(vnode.ref){
-      this._vm.__refs[vnode.ref] = vnode.vm || vnode.sp
+      this._vm.$refs[vnode.ref] = vnode.vm || vnode.sp
     }
     vnode.children.forEach((child:VNode) => (vnode.sp as egret.DisplayObjectContainer).addChild(this._createDisObj(child)))
     popTarget();
@@ -251,9 +251,9 @@ export default class Render {
   private _updateDisObj(oldVNode:VNode, newVNode:VNode) {
     if(oldVNode.vm){
       // 更新继承属性
-      for(const key in oldVNode.vm._props){
-        if(key in this._vm._props) oldVNode.vm._props[key] = this._vm._props[key] // bug：1.1.6 属性优先级错误，导致继承失败
-        if(key in newVNode.attrs) oldVNode.vm._props[key] = newVNode.attrs[key]
+      for(const key in oldVNode.vm.$props){
+        if(key in this._vm.$props) oldVNode.vm.$props[key] = this._vm.$props[key] // bug：1.1.6 属性优先级错误，导致继承失败
+        if(key in newVNode.attrs) oldVNode.vm.$props[key] = newVNode.attrs[key]
       }
     }
     // 更新属性
@@ -293,7 +293,7 @@ export default class Render {
     // if(vnode.vm) vnode.vm.$destroy()
     // 移除各项示例挂载
     if(vnode.ref){
-      delete this._vm.__refs[vnode.ref];
+      delete this._vm.$refs[vnode.ref];
     }
     // 递归子对象，进行销毁
     vnode.children.forEach((vnode:VNode) => this._destroyDisObj(vnode))
