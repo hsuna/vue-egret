@@ -105,6 +105,7 @@ export class Component {
     public _render: Render;
     public _watcher: Watcher;
     public _watchers: Array<Watcher> = [];
+    public _events: Record<string, Array<Function>> = {};
     public _components: Record<string, ComponentClass> = {};
 
     constructor(options:ComponentOptions=<any>{}, parentOptions: ComponentParentOptions={}) {
@@ -242,8 +243,62 @@ export class Component {
             if('function' === typeof callback) callback()
         }
     }
-    public $emit (event: string, data:any): Component {
-        this.$el && this.$el.dispatchEvent(new ComponentEvent(event, data));
+    public $on(event:string|Array<string>, fn: Function): Component {
+        if(Array.isArray(event)) {
+            event.forEach(evt => this.$on(evt, fn));
+        } else {
+            (this._events[event] || (this._events[event] = [])).push(fn);
+        }
+        return this;
+    }
+    public $once(event:string|Array<string>, fn: Function): Component {
+        const on = (...args) => {
+          this.$off(event, on);
+          fn.apply(this, args);
+        }
+        on.fn = fn;
+        this.$on(event, on);
+        return this;
+    }
+    public $off(event:string|Array<string>, fn: Function): Component {
+        // all
+        if (!arguments.length) {
+            this._events = Object.create(null);
+            return this
+        }
+        // array of events
+        if (Array.isArray(event)) {
+            event.forEach(evt => this.$off(evt, fn));
+            return this
+        }
+        // specific event
+        const cbs:Array<Function> = this._events[event];
+        if (!cbs) {
+            return this;
+        }
+        if (!fn) {
+            this._events[event] = null;
+            return this
+        }
+        if (fn) {
+            // specific handler
+            let cb:Function;
+            let i:number = cbs.length;
+            while (i--) {
+                cb = cbs[i];
+                if (cb === fn || (<any>cb).fn === fn) {
+                    cbs.splice(i, 1);
+                    break
+                }
+            }
+        }
+        return this
+    }
+    public $emit (event: string, ...args:Array<any>): Component {
+        const cbs:Array<Function> = this._events[event];
+        if (cbs) {
+            [...cbs].forEach((cb:Function) => cb.apply(this, args))
+        }
         return this;
     }
     /**
