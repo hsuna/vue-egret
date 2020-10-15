@@ -222,17 +222,27 @@ export default class Render {
       })
       // 将实际显示对象关联虚拟节点
       vnode.sp = vnode.vm.$el 
+
+      for(const type in vnode.on){
+        vnode.vm.$on(type, vnode.on[type], this._vm)
+      }
+      for(const type in vnode.nativeOn){
+        vnode.sp.addEventListener(type, vnode.nativeOn[type], this._vm)
+      }
     }else{
       VClass = egret[vnode.tag] || ev(window, vnode.tag)
-      if(VClass) vnode.sp = new (<any>VClass)
+      if(VClass) {
+        vnode.sp = new (<any>VClass)
+
+        for(const type in vnode.on){
+          vnode.sp.addEventListener(type, vnode.on[type], this._vm)
+        }
+      }
     }
     if(!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`)
 
     for(const name in vnode.attrs){
       vnode.sp[name] = vnode.attrs[name]
-    }
-    for(const type in vnode.on){
-      vnode.sp.addEventListener(type, vnode.on[type], this._vm)
     }
     // 实例节点
     if(vnode.ref){
@@ -255,20 +265,39 @@ export default class Render {
         if(key in this._vm.$props) oldVNode.vm.$props[key] = this._vm.$props[key] // bug：1.1.6 属性优先级错误，导致继承失败
         if(key in newVNode.attrs) oldVNode.vm.$props[key] = newVNode.attrs[key]
       }
+
+      // 更新组件事件
+      for(const type in newVNode.on){
+        if(oldVNode.on[type] !== newVNode.on[type]){//事件不一样的，先销毁再重新注册
+            oldVNode.vm.$off(type, oldVNode.on[type], this._vm)
+            oldVNode.vm.$on(type, newVNode.on[type], this._vm)
+            // oldVNode.on[type] = newVNode.on[type]
+        }
+      }
+      // 更新原生事件
+      for(const type in newVNode.nativeOn){
+        if(oldVNode.nativeOn[type] !== newVNode.nativeOn[type]){//事件不一样的，先销毁再重新注册
+            oldVNode.sp.removeEventListener(type, oldVNode.nativeOn[type], this._vm)
+            oldVNode.sp.addEventListener(type, newVNode.nativeOn[type], this._vm)
+            // oldVNode.on[type] = newVNode.on[type]
+        }
+      }
+    } else {
+      // 如果是原生类，则直接更新原生事件
+      for(const type in newVNode.on){
+        if(oldVNode.on[type] !== newVNode.on[type]){//事件不一样的，先销毁再重新注册
+            oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm)
+            oldVNode.sp.addEventListener(type, newVNode.on[type], this._vm)
+            // oldVNode.on[type] = newVNode.on[type]
+        }
+      }
     }
+    
     // 更新属性
     for(const name in newVNode.attrs){
       if(oldVNode.attrs[name] !== newVNode.attrs[name]){
         oldVNode.sp[name] = newVNode.attrs[name]
         // oldVNode.attrs[name] = newVNode.attrs[name]
-      }
-    }
-    // 更新事件
-    for(const type in newVNode.on){
-      if(oldVNode.on[type] !== newVNode.on[type]){//事件不一样的，先销毁再重新注册
-          oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm)
-          oldVNode.sp.addEventListener(type, newVNode.on[type], this._vm)
-          // oldVNode.on[type] = newVNode.on[type]
       }
     }
   }
@@ -284,13 +313,18 @@ export default class Render {
     if(vnode.sp){
       // 通过获取父节点，移除显示对象
       vnode.parent && vnode.parent.sp && (vnode.parent.sp as egret.DisplayObjectContainer).removeChild(vnode.sp);
-      // 移除显示对象时间
+      // 移除组件事件
       for(const type in vnode.on){
         vnode.sp.removeEventListener(type, vnode.on[type], this._vm)
       }
+      // 移除原生事件
+      for(const type in vnode.nativeOn){
+        vnode.sp.removeEventListener(type, vnode.nativeOn[type], this._vm)
+      }
     }
-    // 触发销毁方法
-    // if(vnode.vm) vnode.vm.$destroy()
+    // 触发销毁方法，不在尺寸销毁，由vm内处理销毁
+    // if(vnode.vm) vnode.vm.$destroy() 
+
     // 移除各项示例挂载
     if(vnode.ref){
       delete this._vm.$refs[vnode.ref];

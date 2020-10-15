@@ -97,7 +97,7 @@ export class Component {
     private _data: Record<string, any>={};
     private _props: Record<string, Array<string>|Record<string, PropData|Function>>={};
     
-
+    // 状态值
     private _isMounted: Boolean = false;
     private _isBeingDestroyed: Boolean = false; 
     private _isDestroyed: Boolean = false;
@@ -243,24 +243,33 @@ export class Component {
             if('function' === typeof callback) callback()
         }
     }
-    public $on(event:string|Array<string>, fn: Function): Component {
+    public $on(event:string|Array<string>, fn: Function, thisObject?: any): Component {
         if(Array.isArray(event)) {
-            event.forEach(evt => this.$on(evt, fn));
+            event.forEach(evt => this.$on(evt, fn, thisObject));
         } else {
-            (this._events[event] || (this._events[event] = [])).push(fn);
+            const events = (this._events[event] || (this._events[event] = []));
+            if(thisObject) {
+                const on:any = (...args) => fn.apply(thisObject, args);
+                on.thisObject = thisObject;
+                on.fn = fn;
+                events.push(on)
+            } else {
+                events.push(fn);
+            }
         }
         return this;
     }
-    public $once(event:string|Array<string>, fn: Function): Component {
-        const on = (...args) => {
-          this.$off(event, on);
-          fn.apply(this, args);
+    public $once(event:string|Array<string>, fn: Function, thisObject?: any): Component {
+        const on:any = (...args) => {
+          this.$off(event, on, thisObject);
+          return fn.apply(thisObject || this, args);
         }
+        on.thisObject = thisObject;
         on.fn = fn;
         this.$on(event, on);
         return this;
     }
-    public $off(event:string|Array<string>, fn: Function): Component {
+    public $off(event:string|Array<string>, fn: Function, thisObject?: any): Component {
         // all
         if (!arguments.length) {
             this._events = Object.create(null);
@@ -268,7 +277,7 @@ export class Component {
         }
         // array of events
         if (Array.isArray(event)) {
-            event.forEach(evt => this.$off(evt, fn));
+            event.forEach(evt => this.$off(evt, fn, thisObject));
             return this
         }
         // specific event
@@ -286,7 +295,7 @@ export class Component {
             let i:number = cbs.length;
             while (i--) {
                 cb = cbs[i];
-                if (cb === fn || (<any>cb).fn === fn) {
+                if (cb === fn || ((<any>cb).fn === fn && (<any>cb).thisObject === thisObject)) {
                     cbs.splice(i, 1);
                     break
                 }
@@ -367,6 +376,11 @@ export class Component {
         if(this._render) {
             this._render.destroy()
             this._render = null
+        }
+
+        // 销毁内部事件
+        if(this._events) {
+            this._events = null
         }
 
         this._isDestroyed = true;

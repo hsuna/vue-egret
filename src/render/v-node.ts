@@ -32,17 +32,26 @@ export interface VNode {
     on: {
         [eventType:string]: Function;
     };
+    nativeOn: {
+        [eventType:string]: Function;
+    };
 }
 
 export function genAttr(ast: ASTNode):string {
-    let ref='', attrs = '', on = '';
+    let ref='', attrs = '', on = '', nativeOn = '';
     ast.attrsList.forEach((attr:ASTAttr) => {
         if(REF_REG.test(attr.name)){
             ref = /^(:)/.test(attr.name)?`${attr.value}`:`"${attr.value}"`
         }else if(BIND_REG.test(attr.name)){
-            attrs += `"${attr.name.replace(BIND_REG,'')}":_n(${attr.value}),`
+            const [name, ...modifiers] = attr.name.replace(BIND_REG,'').split('.');
+            attrs += `"${name}":_n(${attr.value}),`
         }else if(ON_REG.test(attr.name)){
-            on += `"${attr.name.replace(ON_REG,'')}":${genHandler(attr.value)},`
+            const [name, ...modifiers] = attr.name.replace(ON_REG,'').split('.');
+            if(~modifiers.indexOf('native')) {
+                nativeOn += `"${name}":${genHandler(attr.value)},`
+            } else {
+                on += `"${name}":${genHandler(attr.value)},`
+            }
         }else{
             attrs += `"${attr.name}":_n("${attr.value}"),`
         }
@@ -50,7 +59,7 @@ export function genAttr(ast: ASTNode):string {
     if(ast.text){
         attrs += `text:${genText(ast)},`
     }
-    return `{attrs:{${attrs}},on:{${on}}${ref?`,ref:${ref}`:''}}`;
+    return `{attrs:{${attrs}},on:{${on}},nativeOn:{${nativeOn}}${ref?`,ref:${ref}`:''}}`;
 }
 
 export function genText(ast: ASTNode):string {
@@ -85,6 +94,7 @@ export function createVNode(tag:string, data:any={}, children:Array<VNode>=[]):V
         attrs: data.attrs || {},
         props: {},
         on: data.on || {},
+        nativeOn: data.nativeOn || {},
     }
     vnode.children.forEach((child:VNode) => child.parent = vnode);
     return vnode;
