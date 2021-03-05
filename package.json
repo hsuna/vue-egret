@@ -5,11 +5,20 @@
   "description": "Egret MVVM",
   "main": "dist/vue.egret.js",
   "typings": "src/index.d.ts",
+  "license": "ISC",
   "scripts": {
     "start": "npm run dev",
     "dev": "webpack-dev-server --config ./build/webpack.config.js --mode=development",
     "libs": "webpack --config ./build/webpack.libs.js",
-    "build": "webpack --config ./build/webpack.config.js --mode=production"
+    "build": "webpack --config ./build/webpack.config.js --mode=production",
+    "lint": "eslint src --fix --ext .js,.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hsuna/vue-egret.git"
+  },
+  "dependencies": {
+    "husky": "4.3.8"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
@@ -18,11 +27,20 @@
     "@babel/polyfill": "^7.4.4",
     "@babel/preset-env": "^7.5.5",
     "@babel/runtime": "^7.5.5",
+    "@commitlint/cli": "^7.0.0",
+    "@commitlint/config-conventional": "^7.0.1",
+    "@types/node": "^14.14.31",
+    "@typescript-eslint/eslint-plugin": "^4.16.1",
+    "@typescript-eslint/parser": "^4.16.1",
     "autoprefixer": "^9.4.2",
     "babel-loader": "^8.0.6",
     "copy-webpack-plugin": "^5.0.4",
     "css-loader": "^2.1.1",
+    "eslint": "^7.21.0",
+    "eslint-plugin-prettier": "^3.3.1",
     "friendly-errors-webpack-plugin": "^1.7.0",
+    "lint-staged": "^10.5.4",
+    "prettier": "^2.2.1",
     "ts-loader": "^6.0.4",
     "typescript": "^3.6.2",
     "url-loader": "^1.1.2",
@@ -30,11 +48,19 @@
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.4.1"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/hsuna/vue-egret.git"
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "lint-staged",
+      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true"
+    }
   },
-  "license": "ISC",
+  "lint-staged": {
+    "*.{.js,.ts}": [
+      "eslint",
+      "git add"
+    ]
+  },
   "browserslist": [
     "last 1 version",
     "> 1%",
