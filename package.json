@@ -11,6 +11,8 @@
     "dev": "webpack-dev-server --config ./build/webpack.config.js --mode=development",
     "libs": "webpack --config ./build/webpack.libs.js",
     "build": "webpack --config ./build/webpack.config.js --mode=production",
+    "docs:dev": "vuepress dev src --temp .temp",
+    "docs:build": "vuepress build src",
     "lint": "eslint src --fix --ext .js,.ts",
     "genlog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "commit": "git-cz"
