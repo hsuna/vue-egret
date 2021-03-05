@@ -8,12 +8,14 @@
   "license": "ISC",
   "scripts": {
     "start": "npm run dev",
-    "dev": "webpack-dev-server --config ./build/webpack.config.js --mode=development",
+    "dev": "webpack-dev-server --config ./build/webpack.config.js --mode=development --progress",
     "libs": "webpack --config ./build/webpack.libs.js",
     "build": "webpack --config ./build/webpack.config.js --mode=production",
-    "docs:dev": "vuepress dev src --temp .temp",
-    "docs:build": "vuepress build src",
+    "docs:dev": "vuepress dev docs --temp .temp",
+    "docs:build": "vuepress build docs",
     "lint": "eslint src --fix --ext .js,.ts",
+    "lint:packages": "eslint packages --fix --ext .js,.ts",
+    "lint:test": "eslint test --fix --ext .js,.ts",
     "genlog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "commit": "git-cz"
   },
@@ -69,7 +71,7 @@
     }
   },
   "lint-staged": {
-    "src/**/*.{js,ts}": [
+    "{src,packages,test}/**/*.{js,ts}": [
       "eslint --fix",
       "prettier --write"
     ]
