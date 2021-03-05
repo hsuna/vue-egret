@@ -20,7 +20,8 @@
     "url": "https://github.com/hsuna/vue-egret.git"
   },
   "dependencies": {
-    "husky": "4.3.8"
+    "husky": "4.3.8",
+    "vuepress": "^1.5.4"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
