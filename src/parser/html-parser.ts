@@ -10,129 +10,109 @@
  */
 
 export interface ParseHtmlAttr {
-  name: string
-  value: any
+  name: string;
+  value: any;
 }
 
 export interface ParseHtmlOptions {
-  startElement(tagName:string, attrs:Array<ParseHtmlAttr>, unary:boolean);
-  endElement(tagName:string);
-  comment(text:string);
-  characters(text:string);
+  startElement(tagName: string, attrs: Array<ParseHtmlAttr>, unary: boolean);
+  endElement(tagName: string);
+  comment(text: string);
+  characters(text: string);
 }
 
-const START_TAG_CLOSE:RegExp = /\/\s*>/
-const START_TAG_RE:RegExp = /^<([^>\s\/]+)((\s+[^=>\s]+(\s*=\s*((\"[^"]*\")|(\'[^']*\')|[^>\s]+))?)*)\s*\/?\s*>/m
-const ATTR_RE:RegExp = /([^=\s]+)(\s*=\s*((\"([^"]*)\")|(\'([^']*)\')|[^>\s]+))?/gm
-const END_TAG_RE:RegExp = /^<\/([^>\s]+)[^>]*>/m
+const START_TAG_CLOSE = /\/\s*>/;
+const START_TAG_RE = /^<([^>\s\/]+)((\s+[^=>\s]+(\s*=\s*((\"[^"]*\")|(\'[^']*\')|[^>\s]+))?)*)\s*\/?\s*>/m;
+const ATTR_RE = /([^=\s]+)(\s*=\s*((\"([^"]*)\")|(\'([^']*)\')|[^>\s]+))?/gm;
+const END_TAG_RE = /^<\/([^>\s]+)[^>]*>/m;
 
 export default class ParseHtml {
-  options:ParseHtmlOptions;
+  options: ParseHtmlOptions;
 
-  constructor(s:string, options:ParseHtmlOptions){
+  constructor(s: string, options: ParseHtmlOptions) {
     this.options = options;
     this._parse(s);
   }
 
-  private _parse(s:string){
+  private _parse(s: string) {
     let index;
     let treatAsChars = false;
-    while (s.length > 0)
-    {
+    while (s.length > 0) {
       // Comment
-      if (s.substring(0, 4) == "<!--")
-      {
-        index = s.indexOf("-->");
-        if (index != -1)
-        {
+      if (s.substring(0, 4) == '<!--') {
+        index = s.indexOf('-->');
+        if (index != -1) {
           this.options.comment(s.substring(4, index));
           s = s.substring(index + 3);
           treatAsChars = false;
-        }
-        else
-        {
+        } else {
           treatAsChars = true;
         }
       }
-  
+
       // end tag
-      else if (s.substring(0, 2) == "</")
-      {
-        if (END_TAG_RE.test(s))
-        {
+      else if (s.substring(0, 2) == '</') {
+        if (END_TAG_RE.test(s)) {
           s = s.replace(END_TAG_RE, this.parseEndTag.bind(this));
           treatAsChars = false;
-        }
-        else
-        {
+        } else {
           treatAsChars = true;
         }
       }
       // start tag
-      else if (s.charAt(0) == "<")
-      {
-        if (START_TAG_RE.test(s))
-        {
+      else if (s.charAt(0) == '<') {
+        if (START_TAG_RE.test(s)) {
           s = s.replace(START_TAG_RE, this.parseStartTag.bind(this));
           treatAsChars = false;
-        }
-        else
-        {
+        } else {
           treatAsChars = true;
         }
       }
-  
-      if (treatAsChars)
-      {
-        index = s.indexOf("<");
-        if (index == -1)
-        {
-            this.options.characters(s);
-          s = "";
-        }
-        else
-        {
+
+      if (treatAsChars) {
+        index = s.indexOf('<');
+        if (index == -1) {
+          this.options.characters(s);
+          s = '';
+        } else {
           this.options.characters(s.substring(0, index));
           s = s.substring(index);
         }
       }
-  
+
       treatAsChars = true;
     }
   }
-  
-  parseStartTag(sTag:string, sTagName:string, sRest:string):string {
+
+  parseStartTag(sTag: string, sTagName: string, sRest: string): string {
     const attrs = this.parseAttributes(sTagName, sRest);
-    const unary:boolean = START_TAG_CLOSE.test(sTag);
+    const unary: boolean = START_TAG_CLOSE.test(sTag);
     this.options.startElement(sTagName, attrs, unary);
-    return ''
-	}
+    return '';
+  }
 
-	parseEndTag (sTag:string, sTagName:string):string {
+  parseEndTag(sTag: string, sTagName: string): string {
     this.options.endElement(sTagName);
-    return ''
-	}
+    return '';
+  }
 
-	parseAttributes (sTagName:string, sRest:string):Array<ParseHtmlAttr> {
-		const attrs:Array<ParseHtmlAttr> = [];
-		sRest.replace(ATTR_RE, (...arg):string => {
-      let attr:ParseHtmlAttr = this.parseAttribute.call(this, sTagName, ...arg)
-      if(attr.name && '/' !== attr.name) attrs.push(attr);
-      return ''
-		});
-		return attrs;
-	}
+  parseAttributes(sTagName: string, sRest: string): Array<ParseHtmlAttr> {
+    const attrs: Array<ParseHtmlAttr> = [];
+    sRest.replace(ATTR_RE, (...arg): string => {
+      const attr: ParseHtmlAttr = this.parseAttribute.call(this, sTagName, ...arg);
+      if (attr.name && '/' !== attr.name) attrs.push(attr);
+      return '';
+    });
+    return attrs;
+  }
 
-	parseAttribute (sTagName:string, sAttribute, sName):ParseHtmlAttr {
-		var value = "";
-		if (arguments[7])
-			value = arguments[8];
-		else if (arguments[5])
-			value = arguments[6];
-		else if (arguments[3])
-			value = arguments[4];
+  parseAttribute(sTagName: string, sAttribute, sName): ParseHtmlAttr {
+    let value = '';
+    if (arguments[7]) value = arguments[8];
+    else if (arguments[5]) value = arguments[6];
+    else if (arguments[3]) value = arguments[4];
 
-		var empty = !value && !arguments[3];
-		return {name: sName, value: empty ? null : value};
-	}
+    const empty = !value && !arguments[3];
+    return { name: sName, value: empty ? null : value };
+  }
 }
