@@ -1,5 +1,5 @@
-import { toNumber, toString } from '../util';
-import { createVNode, VNode } from './v-node';
+import { isUndef, toNumber, toString } from '../util';
+import { createVNode, createFnInvoker, VNode, Invoker } from './v-node';
 import { renderList } from './rendreList';
 import VueEgret, { Component, ComponentClass } from '../index';
 import { pushTarget, popTarget } from '../observer/dep';
@@ -194,6 +194,14 @@ export default class Render {
   }
 
   /**
+   * 获取虚拟节点
+   * @return { VNode }
+   */
+  private _createVNode(): VNode {
+    return this._render.call(this._vm, createVNode);
+  }
+
+  /**
    * 判断新旧节点是否一致
    * @param { VNode } oldVNode 旧节点
    * @param { VNode } newVNode 新节点
@@ -205,14 +213,6 @@ export default class Render {
       oldVNode.tag === newVNode.tag && // 类名
       oldVNode.attrs.key === newVNode.attrs.key // 属性key值，当属性使用key时，进行强制比对，特别是循环列表，进行强制替换
     );
-  }
-
-  /**
-   * 获取虚拟节点
-   * @return { VNode }
-   */
-  private _createVNode(): VNode {
-    return this._render.call(this._vm, createVNode);
   }
 
   /**
@@ -239,27 +239,28 @@ export default class Render {
         _propsKeys,
         propsData,
       });
-      // 更新属性
-      vnode.vm.$attrs = vnode.attrs;
-
       // 将实际显示对象关联虚拟节点
       vnode.sp = vnode.vm.$el;
 
       // 新增组件内部事件
       for (const type in vnode.on) {
-        vnode.vm.$on(type, vnode.on[type], this._vm);
+        vnode.on[type] = this._addInvoker(type, vnode);
       }
       // 新增原生事件
       for (const type in vnode.nativeOn) {
-        vnode.sp.addEventListener(type, vnode.nativeOn[type], this._vm);
+        vnode.nativeOn[type] = this._addInvoker(type, vnode, true);
       }
+      // 新增属性
+      vnode.vm.$attrs = vnode.attrs;
+      // 新增事件
+      vnode.vm.$listeners = vnode.on;
     } else {
       VClass = egret[vnode.tag] || ev(window, vnode.tag);
       if (VClass) {
         vnode.sp = new (<any>VClass)();
 
         for (const type in vnode.on) {
-          vnode.sp.addEventListener(type, vnode.on[type], this._vm);
+          vnode.on[type] = this._addInvoker(type, vnode);
         }
       }
     }
@@ -286,9 +287,6 @@ export default class Render {
    */
   private _updateDisObj(oldVNode: VNode, newVNode: VNode) {
     if (oldVNode.vm) {
-      // 更新属性
-      oldVNode.vm.$attrs = newVNode.attrs;
-
       // 更新继承属性
       for (const key in oldVNode.vm.$props) {
         if (key in this._vm.$props) oldVNode.vm.$props[key] = this._vm.$props[key]; // bug：1.1.6 属性优先级错误，导致继承失败
@@ -297,30 +295,40 @@ export default class Render {
 
       // 更新组件事件
       for (const type in newVNode.on) {
-        if (oldVNode.on[type] !== newVNode.on[type]) {
-          //事件不一样的，先销毁再重新注册
-          oldVNode.vm.$off(type, oldVNode.on[type], this._vm);
-          oldVNode.vm.$on(type, newVNode.on[type], this._vm);
-          // oldVNode.on[type] = newVNode.on[type]
+        oldVNode.on[type] = newVNode.on[type] = this._updateInvoker(type, oldVNode, newVNode);
+      }
+      for (const type in oldVNode.on) {
+        if (isUndef(newVNode.on[type])) {
+          this._removeInvoker(type, oldVNode);
         }
       }
       // 更新原生事件
       for (const type in newVNode.nativeOn) {
-        if (oldVNode.nativeOn[type] !== newVNode.nativeOn[type]) {
-          //事件不一样的，先销毁再重新注册
-          oldVNode.sp.removeEventListener(type, oldVNode.nativeOn[type], this._vm);
-          oldVNode.sp.addEventListener(type, newVNode.nativeOn[type], this._vm);
-          // oldVNode.on[type] = newVNode.on[type]
+        oldVNode.nativeOn[type] = newVNode.nativeOn[type] = this._updateInvoker(
+          type,
+          oldVNode,
+          newVNode,
+          true,
+        );
+      }
+      for (const type in oldVNode.nativeOn) {
+        if (isUndef(newVNode.nativeOn[type])) {
+          this._removeInvoker(type, oldVNode, true);
         }
       }
+
+      // 更新属性
+      oldVNode.vm.$attrs = newVNode.attrs;
+      // 更新事件
+      oldVNode.vm.$listeners = newVNode.on;
     } else {
       // 如果是原生类，则直接更新原生事件
       for (const type in newVNode.on) {
-        if (oldVNode.on[type] !== newVNode.on[type]) {
-          //事件不一样的，先销毁再重新注册
-          oldVNode.sp.removeEventListener(type, oldVNode.on[type], this._vm);
-          oldVNode.sp.addEventListener(type, newVNode.on[type], this._vm);
-          // oldVNode.on[type] = newVNode.on[type]
+        oldVNode.on[type] = this._updateInvoker(type, oldVNode, newVNode);
+      }
+      for (const type in oldVNode.on) {
+        if (isUndef(newVNode.on[type])) {
+          this._removeInvoker(type, oldVNode);
         }
       }
     }
@@ -329,7 +337,6 @@ export default class Render {
     for (const name in newVNode.attrs) {
       if (oldVNode.attrs[name] !== newVNode.attrs[name]) {
         oldVNode.sp[name] = newVNode.attrs[name];
-        // oldVNode.attrs[name] = newVNode.attrs[name]
       }
     }
   }
@@ -348,15 +355,19 @@ export default class Render {
         vnode.parent.sp &&
         (vnode.parent.sp as egret.DisplayObjectContainer).removeChild(vnode.sp);
       // 移除组件事件
-      for (const type in vnode.on) {
-        vnode.sp.removeEventListener(type, vnode.on[type], this._vm);
+
+      if (!vnode.vm) {
+        for (const type in vnode.on) {
+          this._removeInvoker(type, vnode, false);
+        }
       }
+
       // 移除原生事件
       for (const type in vnode.nativeOn) {
-        vnode.sp.removeEventListener(type, vnode.nativeOn[type], this._vm);
+        this._removeInvoker(type, vnode, true);
       }
     }
-    // 触发销毁方法，不在尺寸销毁，由vm内处理销毁
+    // 触发销毁方法，不在此处销毁，由vm内处理销毁
     // if(vnode.vm) vnode.vm.$destroy()
 
     // 移除各项示例挂载
@@ -366,6 +377,69 @@ export default class Render {
     // 递归子对象，进行销毁
     vnode.children.forEach((vnode: VNode) => this._destroyDisObj(vnode));
     return vnode;
+  }
+
+  /**
+   * 新增事件对象
+   * @param { string } type 事件类型
+   * @param { VNode } 虚拟节点
+   * @param { boolean } isNative 是否原生事件
+   * @return { Invoker } 事件对象
+   */
+  private _addInvoker(type: string, vnode: VNode, isNative = false): Invoker {
+    let on: Invoker = isNative ? vnode.nativeOn[type] : vnode.on[type];
+    if (isUndef(on.fns)) {
+      on = createFnInvoker(on);
+    }
+    if (!vnode.vm || isNative) {
+      vnode.sp.addEventListener(type, on, this._vm);
+    } else {
+      vnode.vm.$on(type, on);
+    }
+    return on;
+  }
+  /**
+   * 更新事件对象
+   * @param { string } type 事件类型
+   * @param { VNode } oldVNode 旧虚拟节点
+   * @param { VNode } newVNode 新虚拟节点
+   * @param { boolean } isNative 是否原生事件
+   * @return { Invoker } 事件对象
+   */
+  private _updateInvoker(
+    type: string,
+    oldVNode: VNode,
+    newVNode: VNode,
+    isNative = false,
+  ): Invoker {
+    const oldOn: Invoker = isNative ? oldVNode.nativeOn[type] : oldVNode.on[type];
+    const newOn: Invoker = isNative ? newVNode.nativeOn[type] : newVNode.on[type];
+    if (isUndef(newOn)) {
+      // TODO
+    } else if (isUndef(oldOn)) {
+      return this._addInvoker(type, newVNode, isNative);
+    } else if (newOn !== oldOn) {
+      //事件不一样的，直接替换内部执行函数
+      oldOn.fns = newOn;
+      return oldOn;
+    }
+  }
+
+  /**
+   * 移除事件对象
+   * @param { string } type 事件类型
+   * @param { VNode } 虚拟节点
+   * @param { boolean } isNative 是否原生事件
+   * @return { Invoker } 事件对象
+   */
+  private _removeInvoker(type: string, vnode: VNode, isNative = false): Invoker {
+    const on: Invoker = isNative ? vnode.nativeOn[type] : vnode.on[type];
+    if (isNative) {
+      vnode.sp.removeEventListener(type, on, this._vm);
+    } else {
+      vnode.vm.$off(type, on);
+    }
+    return on;
   }
 
   /* public get vnode():VNode{

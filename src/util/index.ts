@@ -7,6 +7,26 @@ export function noop(a?: any, b?: any, c?: any) {}
 // can we use __proto__?
 export const hasProto = '__proto__' in {};
 
+export const emptyObject = Object.freeze({});
+
+// these helpers produces better vm code in JS engines due to their
+// explicitness and function inlining
+export function isUndef(v) {
+  return v === undefined || v === null;
+}
+
+export function isDef(v) {
+  return v !== undefined && v !== null;
+}
+
+export function isTrue(v) {
+  return v === true;
+}
+
+export function isFalse(v) {
+  return v === false;
+}
+
 /**
  * Quick object check - this is primarily used to tell
  * Objects from primitive values when we know the value
@@ -50,6 +70,11 @@ export function isPlainObject(obj: any): boolean {
 
 export function isRegExp(v: any): boolean {
   return _toString.call(v) === '[object RegExp]';
+}
+
+const HOOK_RE = /^hook:/;
+export function isHook(n: string): boolean {
+  return HOOK_RE.test(n);
 }
 
 export * from './lang';

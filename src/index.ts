@@ -11,7 +11,7 @@ import { VNode } from './render/v-node';
 import Watcher, { WatchOptions } from './observer/watcher';
 import { observe } from './observer/index';
 import { pushTarget, popTarget } from './observer/dep';
-import { noop, isPlainObject } from './util/index';
+import { noop, emptyObject, isPlainObject, isHook } from './util/index';
 import { validateProp, normalizeProp } from './util/props';
 
 export interface PropData {
@@ -88,7 +88,9 @@ export class Component {
   /** 获取注册列表 */
   $refs: Record<string, egret.DisplayObject | Component> = {};
   /** 获取属性 */
-  $attrs: Record<string, string>;
+  $attrs: Record<string, string> = emptyObject;
+  /** 获取事件 */
+  $listeners: Record<string, Function> = emptyObject;
   /** 组件配置 */
   $options: ComponentOptions;
 
@@ -99,6 +101,7 @@ export class Component {
   private _global: Record<string, any> = {};
   private _data: Record<string, any> = {};
   private _props: Record<string, Array<string> | Record<string, PropData | Function>> = {};
+  private _hasHookEvent = false;
 
   // 状态值
   private _isMounted = false;
@@ -264,41 +267,39 @@ export class Component {
       if ('function' === typeof callback) callback();
     }
   }
-  public $on(event: string | Array<string>, fn: Function, thisObject?: any): Component {
+  public $on(event: string | Array<string>, fn: Function): Component {
     if (Array.isArray(event)) {
-      event.forEach((evt) => this.$on(evt, fn, thisObject));
+      event.forEach((evt) => this.$on(evt, fn));
     } else {
       const events = this._events[event] || (this._events[event] = []);
-      if (thisObject) {
-        const on: any = (...args) => fn.apply(thisObject, args);
-        on.thisObject = thisObject;
-        on.fn = fn;
-        events.push(on);
-      } else {
-        events.push(fn);
+      events.push(fn);
+      // optimize hook:event cost by using a boolean flag marked at registration
+      // instead of a hash lookup
+      if (isHook(event)) {
+        this._hasHookEvent = true;
       }
     }
     return this;
   }
-  public $once(event: string | Array<string>, fn: Function, thisObject?: any): Component {
+  public $once(event: string | Array<string>, fn: Function): Component {
     const on: any = (...args) => {
-      this.$off(event, on, thisObject);
-      return fn.apply(thisObject || this, args);
+      this.$off(event, on);
+      return fn.apply(this, args);
     };
-    on.thisObject = thisObject;
     on.fn = fn;
     this.$on(event, on);
     return this;
   }
-  public $off(event: string | Array<string>, fn: Function, thisObject?: any): Component {
+  public $off(event: string | Array<string>, fn: Function): Component {
     // all
     if (!arguments.length) {
       this._events = Object.create(null);
+      this._hasHookEvent = false;
       return this;
     }
     // array of events
     if (Array.isArray(event)) {
-      event.forEach((evt) => this.$off(evt, fn, thisObject));
+      event.forEach((evt) => this.$off(evt, fn));
       return this;
     }
     // specific event
@@ -316,7 +317,7 @@ export class Component {
       let i: number = cbs.length;
       while (i--) {
         cb = cbs[i];
-        if (cb === fn || ((<any>cb).fn === fn && (<any>cb).thisObject === thisObject)) {
+        if (cb === fn) {
           cbs.splice(i, 1);
           break;
         }
@@ -327,7 +328,7 @@ export class Component {
   public $emit(event: string, ...args: Array<any>): Component {
     const cbs: Array<Function> = this._events[event];
     if (cbs) {
-      [...cbs].forEach((cb: Function) => cb.apply(this, args));
+      [...cbs].forEach((cb: Function) => cb.apply(this.$parent, args));
     }
     return this;
   }
@@ -352,6 +353,9 @@ export class Component {
     pushTarget();
     if ('function' === typeof this.$options[name]) {
       this.$options[name].call(this, ...rest);
+    }
+    if (this._hasHookEvent) {
+      this.$emit('hook:' + name);
     }
     popTarget();
   }

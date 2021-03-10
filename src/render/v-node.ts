@@ -15,6 +15,10 @@ export interface Variate {
   [varName: string]: string;
 }
 
+export interface Invoker extends Function {
+  fns: Function | Array<Function>;
+}
+
 export interface VNode {
   vm?: Component;
   sp?: egret.DisplayObject;
@@ -23,18 +27,10 @@ export interface VNode {
   ref: string;
   parent?: VNode;
   children: Array<VNode>;
-  attrs: {
-    [propsName: string]: any;
-  };
-  props: {
-    [propsName: string]: any;
-  };
-  on: {
-    [eventType: string]: Function;
-  };
-  nativeOn: {
-    [eventType: string]: Function;
-  };
+  attrs: Record<string, any>;
+  props: Record<string, any>;
+  on: Record<string, Invoker>;
+  nativeOn: Record<string, Invoker>;
 }
 
 export function genAttr(ast: ASTNode): string {
@@ -116,4 +112,24 @@ export function createVNode(tag: string, data: any = {}, children: Array<VNode> 
   };
   vnode.children.forEach((child: VNode) => (child.parent = vnode));
   return vnode;
+}
+
+export function createFnInvoker(fns: Function | Array<Function>) {
+  const invoker: Invoker = function (...args: Array<any>) {
+    const { fns } = invoker;
+    if (Array.isArray(fns)) {
+      const cloned: Array<Function> = [...fns];
+      let fn: Function = cloned.shift();
+      while (fn) {
+        // eslint-disable-next-line prefer-spread
+        fn.apply(this, args);
+        fn = cloned.shift();
+      }
+    } else {
+      // eslint-disable-next-line prefer-spread
+      return fns.apply(this, args);
+    }
+  };
+  invoker.fns = fns;
+  return invoker;
 }
