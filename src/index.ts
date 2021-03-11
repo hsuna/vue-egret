@@ -13,6 +13,7 @@ import { observe } from './observer/index';
 import { pushTarget, popTarget } from './observer/dep';
 import { noop, emptyObject, isPlainObject, isHook } from './util/index';
 import { validateProp, normalizeProp } from './util/props';
+import { DirectiveHook, DirectiveOptions } from './directives';
 
 export interface PropData {
   type: Function;
@@ -27,18 +28,26 @@ export interface ComponentClass {
 }
 export interface ComponentParentOptions {
   parent?: Component;
+  attrs?: Record<string, any>;
+  listeners?: Record<string, Function>;
   propsData?: Record<string, PropData | Function>;
   _propsKeys?: Array<string>;
 }
 
 export interface ComponentOptions {
-  template: string;
+  // data
   data: Function | Object;
   props: Array<string> | Record<string, PropData | Function>;
+  _parentOptions: ComponentParentOptions;
   computed: Record<string, Function>;
-  watch: Record<string, Function>;
-  components: Record<string, ComponentOptions>;
   methods: Record<string, Function>;
+  watch?: Record<string, Function>;
+
+  // DisplayObject
+  template: string;
+  render: (createVNode: (tag: string, data: any, children: Array<VNode>) => VNode) => VNode;
+
+  // lifecycle
   beforeCreate: Function;
   created: Function;
   beforeMounted: Function;
@@ -47,8 +56,10 @@ export interface ComponentOptions {
   update: Function;
   beforeDestroyed: Function;
   destroyed: Function;
-  render: (createVNode: (tag: string, data: any, children: Array<VNode>) => VNode) => VNode;
-  _parentOptions: ComponentParentOptions;
+
+  // assets
+  directives?: Record<string, DirectiveOptions>;
+  components?: Record<string, ComponentOptions>;
 }
 
 /** 类型-注册信息 */
@@ -87,17 +98,12 @@ export class Component {
   $children: Array<Component> = [];
   /** 获取注册列表 */
   $refs: Record<string, egret.DisplayObject | Component> = {};
-  /** 获取属性 */
-  $attrs: Record<string, string> = emptyObject;
-  /** 获取事件 */
-  $listeners: Record<string, Function> = emptyObject;
   /** 组件配置 */
   $options: ComponentOptions;
 
   private __nextTickCall: Array<Function> = [];
 
   // private __tickHandler: ComponentMap<Function> = [];
-  private _parentOptions: ComponentParentOptions;
   private _global: Record<string, any> = {};
   private _data: Record<string, any> = {};
   private _props: Record<string, Array<string> | Record<string, PropData | Function>> = {};
@@ -113,6 +119,8 @@ export class Component {
   public _watchers: Array<Watcher> = [];
   public _events: Record<string, Array<Function>> = {};
   public _components: Record<string, ComponentClass> = {};
+  public _directives: Record<string, DirectiveOptions> = {};
+  public _parentOptions: ComponentParentOptions;
 
   constructor(options: ComponentOptions = <any>{}, parentOptions: ComponentParentOptions = {}) {
     this.$options = options;
@@ -133,8 +141,14 @@ export class Component {
     this._initComputed(this.$options.computed);
     this._initWatch(this.$options.watch);
     this._initComponents(this.$options.components);
+    this._initDirectives(this.$options.directives);
     this.$callHook('created');
     this._render = new Render(this);
+    this._initEvent();
+  }
+  private _initEvent() {
+    /* 添加到显示列表时触发挂载 */
+    this.$el.once(egret.Event.ADDED, () => this._render.inserted(), this.$el);
     /* 添加到舞台时触发挂载 */
     this.$el.once(
       egret.Event.ADDED_TO_STAGE,
@@ -157,13 +171,7 @@ export class Component {
       this.$el,
     );
     /* 从舞台移除时销毁该示例 */
-    this.$el.once(
-      egret.Event.REMOVED_FROM_STAGE,
-      () => {
-        this.$destroy();
-      },
-      this.$el,
-    );
+    this.$el.once(egret.Event.REMOVED_FROM_STAGE, () => this.$destroy(), this.$el);
   }
   /** 初始化全局参数，用于全局方便获取 */
   private _initGlobal() {
@@ -239,6 +247,11 @@ export class Component {
   private _initComponents(components: Record<string, ComponentOptions> = {}) {
     for (const name in components) {
       this._components[name] = VueEgret.extend(components[name]);
+    }
+  }
+  private _initDirectives(directives: Record<string, DirectiveOptions> = {}) {
+    for (const name in directives) {
+      this._directives[name] = directives[name];
     }
   }
   private _getData(data: Function): any {
@@ -580,6 +593,14 @@ export class Component {
   public get $props(): Record<string, any> {
     return this._props;
   }
+  /** 获取属性 */
+  public get $attrs(): Record<string, any> {
+    return this._parentOptions.attrs || emptyObject;
+  }
+  /** 获取事件 */
+  public get $listeners(): Record<string, Function> {
+    return this._parentOptions.listeners || emptyObject;
+  }
 }
 
 /**
@@ -592,6 +613,18 @@ export default class VueEgret extends Component {
   static version: string = process.env.VERSION;
   /** 组件库缓存 */
   static _components: Record<string, ComponentClass> = {};
+  /** 指令缓存 */
+  static _directives: Record<string, DirectiveOptions> = {};
+
+  /**
+   * 设置全局指令
+   */
+  static directive(name: string, definition: DirectiveOptions | DirectiveHook): DirectiveOptions {
+    if (definition)
+      return (VueEgret._directives[name] =
+        typeof definition === 'function' ? { bind: definition, update: definition } : definition);
+    return VueEgret._directives[name];
+  }
   /**
    * 设置全局组件
    * @param { string } name 组件名 用于全局定义

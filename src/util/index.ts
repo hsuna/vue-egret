@@ -57,6 +57,19 @@ export function toNumber(val: string): number | string {
 }
 
 /**
+ * Merge an Array of Objects into a single Object.
+ */
+export function toObject<T>(arr: Array<T>): Object {
+  let res = {};
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i]) {
+      res = { ...res, ...arr[i] };
+    }
+  }
+  return res;
+}
+
+/**
  * Get the raw type string of a value, e.g., [object Object].
  */
 const _toString = Object.prototype.toString;
@@ -75,6 +88,64 @@ export function isRegExp(v: any): boolean {
 const HOOK_RE = /^hook:/;
 export function isHook(n: string): boolean {
   return HOOK_RE.test(n);
+}
+
+/**
+ * Check if two values are loosely equal - that is,
+ * if they are plain objects, do they have the same shape?
+ */
+export function looseEqual(a: any, b: any): boolean {
+  if (a === b) return true;
+  const isObjectA = isObject(a);
+  const isObjectB = isObject(b);
+  if (isObjectA && isObjectB) {
+    try {
+      const isArrayA = Array.isArray(a);
+      const isArrayB = Array.isArray(b);
+      if (isArrayA && isArrayB) {
+        return a.length === b.length && a.every((e, i) => looseEqual(e, b[i]));
+      } else if (a instanceof Date && b instanceof Date) {
+        return a.getTime() === b.getTime();
+      } else if (!isArrayA && !isArrayB) {
+        const keysA = Object.keys(a);
+        const keysB = Object.keys(b);
+        return keysA.length === keysB.length && keysA.every((key) => looseEqual(a[key], b[key]));
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  } else if (!isObjectA && !isObjectB) {
+    return String(a) === String(b);
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Return the first index at which a loosely equal value can be
+ * found in the array (if value is a plain object, the array must
+ * contain an object of the same shape), or -1 if it is not present.
+ */
+export function looseIndexOf(arr: Array<any>, val: any): number {
+  for (let i = 0; i < arr.length; i++) {
+    if (looseEqual(arr[i], val)) return i;
+  }
+  return -1;
+}
+
+/**
+ * Make a map and return a function for checking if a key
+ * is in that map.
+ */
+export function makeMap(str: string, expectsLowerCase?: boolean): (key: string) => true | void {
+  const map = Object.create(null);
+  const list: Array<string> = str.split(',');
+  for (let i = 0; i < list.length; i++) {
+    map[list[i]] = true;
+  }
+  return expectsLowerCase ? (val) => map[val.toLowerCase()] : (val) => map[val];
 }
 
 export * from './lang';

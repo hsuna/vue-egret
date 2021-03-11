@@ -1,9 +1,10 @@
-import { isUndef, toNumber, toString } from '../util';
-import { createVNode, createFnInvoker, VNode, Invoker } from './v-node';
-import { renderList } from './rendreList';
-import VueEgret, { Component, ComponentClass } from '../index';
+import { isUndef, toNumber, toString, looseEqual, looseIndexOf } from '../util';
+import { createVNode, createFnInvoker, VNode, VNodeInvoker, VNodeDirective } from './v-node';
+import { renderList, bindObjectProps, bindObjectListeners } from './helpers';
+import VueEgret, { Component, ComponentClass, ComponentParentOptions } from '../index';
 import { pushTarget, popTarget } from '../observer/dep';
 import { astStrRender } from '../helpers/render';
+import { DirectiveOptions, normalizeDirectives } from '../directives';
 
 function ev(data: Record<string, any>, str = '') {
   const arr = str.split('.');
@@ -18,7 +19,11 @@ export function installRender(target: any) {
   target._c = createVNode;
   target._n = toNumber;
   target._s = toString;
+  target._q = looseEqual;
+  target._i = looseIndexOf;
   target._l = renderList;
+  target._b = bindObjectProps;
+  target._g = bindObjectListeners;
   // 返回render创建方法
   target.$createVNode = createVNode;
 }
@@ -34,11 +39,17 @@ export default class Render {
   private _vnode: VNode;
   /** 渲染方法 */
   private _render: (createVNode: (tag: string, data: any, children: VNode[]) => VNode) => VNode;
+  /** 组件库 */
+  private _components: Record<string, ComponentClass>;
+  /** 指令库 */
+  private _directives: Record<string, DirectiveOptions>;
   /** 新虚拟节点 */
   // private _newVnode:VNode;
 
   constructor(vm: Component) {
     this._vm = vm;
+    this._components = Object.assign({}, VueEgret._components, this._vm._components);
+    this._directives = Object.assign({}, VueEgret._directives, this._vm._directives);
     this._init();
   }
 
@@ -59,6 +70,11 @@ export default class Render {
       this._vnode = this._patch(this._vnode, newVnode);
       this._vm._$tick();
     }
+  }
+
+  public inserted() {
+    // 触发指令：被绑定元素插入父节点时调用
+    this._triggerDirective('inserted', this._vnode);
   }
 
   public update() {
@@ -108,11 +124,6 @@ export default class Render {
     newVNode.sp = oldVNode.sp;
     newVNode.vm = oldVNode.vm;
     this._updateDisObj(oldVNode, newVNode);
-    this._updateChildren(
-      oldVNode.children,
-      newVNode.children,
-      newVNode.sp as egret.DisplayObjectContainer,
-    );
   }
 
   /**
@@ -221,39 +232,40 @@ export default class Render {
    * @return { egret.DisplayObject } 返回新的显示对象
    */
   private _createDisObj(vnode: VNode): egret.DisplayObject {
-    let VClass: ComponentClass = this._vm._components[vnode.tag] || VueEgret._components[vnode.tag];
+    let VClass: ComponentClass = this._components[vnode.tag];
     pushTarget(); //阻断所有更新监听
     // Component
     if (VClass) {
-      const propsData: Record<string, any> = {};
-      const _propsKeys: Array<string> = [];
-      const props: Record<string, any> = VClass.options.props;
-      for (const key in props) {
-        _propsKeys.push(key);
-        if (key in this._vm.$props) propsData[key] = this._vm.$props[key];
-        if (key in vnode.attrs) propsData[key] = vnode.attrs[key];
-      }
-      // 创建虚拟dom节点
-      vnode.vm = new VClass({
+      const parentOptions: ComponentParentOptions = {
         parent: this._vm,
-        _propsKeys,
-        propsData,
-      });
+        propsData: {},
+        _propsKeys: [],
+        attrs: {},
+        listeners: {},
+      };
+      // 创建虚拟dom节点
+      vnode.vm = new VClass(parentOptions);
       // 将实际显示对象关联虚拟节点
       vnode.sp = vnode.vm.$el;
 
+      const props: Record<string, any> = VClass.options.props;
+      for (const key in props) {
+        parentOptions._propsKeys.push(key);
+        if (key in this._vm.$props) parentOptions.propsData[key] = this._vm.$props[key];
+        if (key in vnode.attrs) parentOptions.propsData[key] = vnode.attrs[key];
+      }
+      for (const key in vnode.attrs) {
+        if (!(key in parentOptions.propsData)) parentOptions.attrs[key] = vnode.attrs[key];
+      }
+
       // 新增组件内部事件
       for (const type in vnode.on) {
-        vnode.on[type] = this._addInvoker(type, vnode);
+        parentOptions.listeners[type] = vnode.on[type] = this._addInvoker(type, vnode);
       }
       // 新增原生事件
       for (const type in vnode.nativeOn) {
         vnode.nativeOn[type] = this._addInvoker(type, vnode, true);
       }
-      // 新增属性
-      vnode.vm.$attrs = vnode.attrs;
-      // 新增事件
-      vnode.vm.$listeners = vnode.on;
     } else {
       VClass = egret[vnode.tag] || ev(window, vnode.tag);
       if (VClass) {
@@ -273,9 +285,12 @@ export default class Render {
     if (vnode.ref) {
       this._vm.$refs[vnode.ref] = vnode.vm || vnode.sp;
     }
-    vnode.children.forEach((child: VNode) =>
-      (vnode.sp as egret.DisplayObjectContainer).addChild(this._createDisObj(child)),
-    );
+    // 触发指令：只调用一次，指令第一次绑定到元素时调用
+    this._triggerDirective('bind', vnode);
+
+    vnode.children.forEach((child: VNode) => {
+      (vnode.sp as egret.DisplayObjectContainer).addChild(this._createDisObj(child));
+    });
     popTarget();
     return vnode.sp;
   }
@@ -292,10 +307,17 @@ export default class Render {
         if (key in this._vm.$props) oldVNode.vm.$props[key] = this._vm.$props[key]; // bug：1.1.6 属性优先级错误，导致继承失败
         if (key in newVNode.attrs) oldVNode.vm.$props[key] = newVNode.attrs[key];
       }
-
+      const parentOptions: ComponentParentOptions = oldVNode.vm._parentOptions;
+      for (const key in newVNode.attrs) {
+        if (!(key in oldVNode.vm.$props)) parentOptions.attrs[key] = newVNode.attrs[key];
+      }
       // 更新组件事件
       for (const type in newVNode.on) {
-        oldVNode.on[type] = newVNode.on[type] = this._updateInvoker(type, oldVNode, newVNode);
+        parentOptions.listeners[type] = oldVNode.on[type] = newVNode.on[type] = this._updateInvoker(
+          type,
+          oldVNode,
+          newVNode,
+        );
       }
       for (const type in oldVNode.on) {
         if (isUndef(newVNode.on[type])) {
@@ -316,11 +338,6 @@ export default class Render {
           this._removeInvoker(type, oldVNode, true);
         }
       }
-
-      // 更新属性
-      oldVNode.vm.$attrs = newVNode.attrs;
-      // 更新事件
-      oldVNode.vm.$listeners = newVNode.on;
     } else {
       // 如果是原生类，则直接更新原生事件
       for (const type in newVNode.on) {
@@ -339,6 +356,17 @@ export default class Render {
         oldVNode.sp[name] = newVNode.attrs[name];
       }
     }
+    // 触发指令：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前
+    this._triggerDirective('update', newVNode, oldVNode);
+
+    // 更新子集
+    this._updateChildren(
+      oldVNode.children,
+      newVNode.children,
+      newVNode.sp as egret.DisplayObjectContainer,
+    );
+    // 触发指令：指令所在组件的 VNode 及其子 VNode 全部更新后调用。
+    this._triggerDirective('componentUpdated', newVNode, oldVNode);
   }
 
   /**
@@ -350,6 +378,9 @@ export default class Render {
     if (vnode.vm) vnode.vm.$callHook('beforeDestroyed');
 
     if (vnode.sp) {
+      // 触发指令
+      this._triggerDirective('unbind', vnode);
+
       // 通过获取父节点，移除显示对象
       vnode.parent &&
         vnode.parent.sp &&
@@ -384,10 +415,11 @@ export default class Render {
    * @param { string } type 事件类型
    * @param { VNode } 虚拟节点
    * @param { boolean } isNative 是否原生事件
-   * @return { Invoker } 事件对象
+   * @return { VNodeInvoker } 事件对象
    */
-  private _addInvoker(type: string, vnode: VNode, isNative = false): Invoker {
-    let on: Invoker = isNative ? vnode.nativeOn[type] : vnode.on[type];
+  private _addInvoker(type: string, vnode: VNode, isNative = false): VNodeInvoker {
+    const prefix: string = isNative ? 'nativeOn' : 'on';
+    let on: VNodeInvoker = vnode[prefix][type];
     if (isUndef(on.fns)) {
       on = createFnInvoker(on);
     }
@@ -404,16 +436,17 @@ export default class Render {
    * @param { VNode } oldVNode 旧虚拟节点
    * @param { VNode } newVNode 新虚拟节点
    * @param { boolean } isNative 是否原生事件
-   * @return { Invoker } 事件对象
+   * @return { VNodeInvoker } 事件对象
    */
   private _updateInvoker(
     type: string,
     oldVNode: VNode,
     newVNode: VNode,
     isNative = false,
-  ): Invoker {
-    const oldOn: Invoker = isNative ? oldVNode.nativeOn[type] : oldVNode.on[type];
-    const newOn: Invoker = isNative ? newVNode.nativeOn[type] : newVNode.on[type];
+  ): VNodeInvoker {
+    const prefix: string = isNative ? 'nativeOn' : 'on';
+    const oldOn: VNodeInvoker = oldVNode[prefix][type];
+    const newOn: VNodeInvoker = newVNode[prefix][type];
     if (isUndef(newOn)) {
       // TODO
     } else if (isUndef(oldOn)) {
@@ -430,16 +463,43 @@ export default class Render {
    * @param { string } type 事件类型
    * @param { VNode } 虚拟节点
    * @param { boolean } isNative 是否原生事件
-   * @return { Invoker } 事件对象
+   * @return { VNodeInvoker } 事件对象
    */
-  private _removeInvoker(type: string, vnode: VNode, isNative = false): Invoker {
-    const on: Invoker = isNative ? vnode.nativeOn[type] : vnode.on[type];
+  private _removeInvoker(type: string, vnode: VNode, isNative = false): VNodeInvoker {
+    const on: VNodeInvoker = isNative ? vnode.nativeOn[type] : vnode.on[type];
     if (isNative) {
       vnode.sp.removeEventListener(type, on, this._vm);
     } else {
       vnode.vm.$off(type, on);
     }
     return on;
+  }
+
+  /**
+   * 触发指令
+   * @param { string } hook 钩子函数：bind | inserted | update | componentUpdated | unbind
+   * @param { VNode } vnode 虚拟节点
+   * @param { VNode } oldVnode 旧虚拟节点
+   */
+  private _triggerDirective(hook: string, vnode: VNode, oldVnode?: VNode) {
+    if (vnode.directives) {
+      const oldDir: Record<string, VNodeDirective> =
+        oldVnode && normalizeDirectives(oldVnode.directives);
+      for (const dir of vnode.directives) {
+        const directive: DirectiveOptions = this._directives[dir.name];
+        if (directive && directive[hook]) {
+          const binding: VNodeDirective = { ...dir };
+          if (oldDir) {
+            if ('value' in oldDir[dir.name]) binding['oldValue'] = oldDir[dir.name].value;
+            if ('arg' in oldDir[dir.name]) binding['oldArg'] = oldDir[dir.arg].value;
+          }
+          directive[hook].apply(
+            this._vm,
+            [vnode.sp, binding].concat(Array.prototype.slice.call(arguments, 1)),
+          );
+        }
+      }
+    }
   }
 
   /* public get vnode():VNode{
