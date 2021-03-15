@@ -38,5 +38,9 @@ export default {
       }
     },
   },
-  template: `<Sprite ref="shape"/>`,
+  template: `<Sprite 
+    ref="shape" 
+    v-bind="$attrs"
+    v-on="$listeners"
+  ></Sprite>`,
 };
