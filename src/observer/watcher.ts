@@ -95,6 +95,7 @@ export default class Watcher {
       value = this.getter.call(this.vm, this.vm);
     } catch (e) {
       // TODO
+      console.log(e);
     } finally {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching

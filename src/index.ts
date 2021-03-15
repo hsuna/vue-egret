@@ -259,6 +259,7 @@ export class Component {
     try {
       return data.call(this, this);
     } catch (e) {
+      console.log(e);
       return {};
     } finally {
       popTarget();

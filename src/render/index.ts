@@ -66,8 +66,8 @@ export default class Render {
 
   private _tick() {
     if (this._vm) {
-      const newVnode: VNode = this._createVNode();
-      this._vnode = this._patch(this._vnode, newVnode);
+      const newVNode: VNode = this._createVNode();
+      this._vnode = this._patch(this._vnode, newVNode);
       this._vm._$tick();
     }
   }
@@ -222,7 +222,7 @@ export default class Render {
     return (
       oldVNode.key === newVNode.key && // VM实例时生成的key值
       oldVNode.tag === newVNode.tag && // 类名
-      oldVNode.attrs.key === newVNode.attrs.key // 属性key值，当属性使用key时，进行强制比对，特别是循环列表，进行强制替换
+      (oldVNode.attrs || {}).key === (newVNode.attrs || {}).key // 属性key值，当属性使用key时，进行强制比对，特别是循环列表，进行强制替换
     );
   }
 
@@ -243,11 +243,6 @@ export default class Render {
         attrs: {},
         listeners: {},
       };
-      // 创建虚拟dom节点
-      vnode.vm = new VClass(parentOptions);
-      // 将实际显示对象关联虚拟节点
-      vnode.sp = vnode.vm.$el;
-
       const props: Record<string, any> = VClass.options.props;
       for (const key in props) {
         parentOptions._propsKeys.push(key);
@@ -257,6 +252,10 @@ export default class Render {
       for (const key in vnode.attrs) {
         if (!(key in parentOptions.propsData)) parentOptions.attrs[key] = vnode.attrs[key];
       }
+      // 创建虚拟dom节点
+      vnode.vm = new VClass(parentOptions);
+      // 将实际显示对象关联虚拟节点
+      vnode.sp = vnode.vm.$el;
 
       // 新增组件内部事件
       for (const type in vnode.on) {
@@ -274,13 +273,14 @@ export default class Render {
         for (const type in vnode.on) {
           vnode.on[type] = this._addInvoker(type, vnode);
         }
+
+        for (const name in vnode.attrs) {
+          vnode.sp[name] = vnode.attrs[name];
+        }
       }
     }
     if (!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`);
 
-    for (const name in vnode.attrs) {
-      vnode.sp[name] = vnode.attrs[name];
-    }
     // 实例节点
     if (vnode.ref) {
       this._vm.$refs[vnode.ref] = vnode.vm || vnode.sp;
@@ -348,14 +348,14 @@ export default class Render {
           this._removeInvoker(type, oldVNode);
         }
       }
-    }
-
-    // 更新属性
-    for (const name in newVNode.attrs) {
-      if (oldVNode.attrs[name] !== newVNode.attrs[name]) {
-        oldVNode.sp[name] = newVNode.attrs[name];
+      // 更新属性
+      for (const name in newVNode.attrs) {
+        if (oldVNode.attrs[name] !== newVNode.attrs[name]) {
+          oldVNode.sp[name] = newVNode.attrs[name];
+        }
       }
     }
+
     // 触发指令：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前
     this._triggerDirective('update', newVNode, oldVNode);
 
@@ -467,7 +467,8 @@ export default class Render {
    */
   private _removeInvoker(type: string, vnode: VNode, isNative = false): VNodeInvoker {
     const on: VNodeInvoker = isNative ? vnode.nativeOn[type] : vnode.on[type];
-    if (isNative) {
+
+    if (!vnode.vm || isNative) {
       vnode.sp.removeEventListener(type, on, this._vm);
     } else {
       vnode.vm.$off(type, on);

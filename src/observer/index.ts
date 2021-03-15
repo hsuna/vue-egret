@@ -89,6 +89,7 @@ export default class Observer {
           }
         } catch (e) {
           // TODO
+          console.log(e);
         }
 
         // #7981: for accessor properties without setter

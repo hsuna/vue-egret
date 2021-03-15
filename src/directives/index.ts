@@ -1,6 +1,7 @@
 import on from './on';
 import bind from './bind';
-import { AstData, VNode, VNodeDirective } from 'src/render/v-node';
+import { AstData } from 'src/render/util';
+import { VNode, VNodeDirective } from 'src/render/v-node';
 
 export type DirectiveHook = (sp: egret.DisplayObject, dir: VNodeDirective, vnode: VNode) => void;
 
