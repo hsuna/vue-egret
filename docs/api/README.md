@@ -72,7 +72,7 @@ var Main = VueEgret.classMain({
 
 ```javascript
 // 创建构造器
-var Profile = Vue.extend({
+var Profile = VueEgret.extend({
     data(){
         return {
             text: 'Hello Word!!!'
@@ -90,7 +90,7 @@ var Profile = Vue.extend({
 
 // 创建 Profile 实例，并添加到显示对象。
 var container = new egret.DisplayObjectContainer();
-container.addChild((new Profile()).$el)
+new Profile().$mount(container);
 ```
 
 ### VueEgret.set
@@ -254,7 +254,7 @@ VueEgret.component('my-component', {
 })
 
 // 对象语法，提供默认值
-Vue.component('my-component', {
+VueEgret.component('my-component', {
   props: {
     // 检测类型
     height: Number,
@@ -846,16 +846,291 @@ vm.$emit('test', 'hi', 'hi2') // 多个参数
 
 ### vm.$mount
 
+`VueEgret` 实例化后是处于“未挂载”状态，需要使用 vm.$mount() 手动地挂载一个未挂载的实例。
+
+这个方法返回实例自身，因而可以链式调用其它实例方法。
+
+- 参数：
+  - `{ egret.DisplayObjectContainer } parent` 挂载对象
+  
+- 返回：
+  - `{ Component }` vm 实例自身
+
+- 用法：
+
+```javascript
+var MyComponent = VueEgret.extend({
+  template: `<TextField textColor="#00FFFF" x="11" y="12">test</TextField>`
+})
+
+var container = new egret.DisplayObjectContainer();
+// 创建并挂载到 container
+new MyComponent().$mount(container)
+
+// 或者
+var component = new MyComponent().$mount()
+container.addChild(component.$el);
+```
+
 ### vm.$forceUpdate
+
+迫使 `VueEgret` 实例重新渲染。注意它仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
+
+- 用法：
+
+```javascript
+vm.$forceUpdate();
+```
 
 ### vm.$nextTick
 
+将回调延迟到下次 `Node` 更新循环之后执行。在修改数据之后立即使用它，然后等待 `Node` 更新。
+
+- 参数：
+  - `{ Function } callback`
+
+- 返回: `{ Promise }`
+
+- 用法：
+
+```javascript
+vm.$nextTick(function(){
+  // TODO;
+});
+
+vm.$nextTick().then(function(){
+  // TODO;
+});
+```
+
+> 如果没有提供回调且在支持 Promise 的环境中，则返回一个 Promise。
+
 ### vm.$destroy
 
+完全销毁一个实例。清理它与其它实例的连接，解绑它的全部指令及事件监听器。
+
+触发 `beforeDestroy` 和 `destroyed` 的钩子。
+
+- 用法：
+
+```javascript
+vm.$destroy();
+```
+
+> 在大多数场景中你不应该调用这个方法。最好使用 `v-if` 和 `v-for` 指令以数据驱动的方式控制子组件的生命周期。
+
 ## 指令
+
+### v-if
+
+根据表达式的值的 `truthy` 来有条件地渲染元素。在切换时元素及它的数据绑定 / 组件被销毁并重建。
+
+- 预期：`any`
+
+- 用法：
+
+```javascript
+ <TextField v-if="val < 5">v-if</TextField>
+```
+
+> 当和 v-if 一起使用时，v-for 的优先级比 v-if 更高。
+
+### v-else
+
+为 `v-if` 或者 `v-else-if` 添加“else 块”。
+
+- 预期：不需要表达式，但前一兄弟元素必须有 `v-if` 或 `v-else-if`。
+
+- 用法：
+
+```javascript
+<TextField v-if="val < 5">v-if</TextField>
+<TextField v-else>v-else</TextField>
+```
+
+### v-else-if
+
+表示 `v-if` 的“else if 块”。可以链式调用。
+
+- 预期：`any`，前一兄弟元素必须有 v-if 或 v-else-if。
+
+- 用法：
+
+```javascript
+<TextField v-if="val < 5">v-if</TextField>
+<TextField v-else-if="val < 10">v-else-if</TextField>
+<TextField v-else>v-else</TextField>
+```
+
+### v-for
+
+基于源数据多次渲染元素或模板块。此指令之值，必须使用特定语法 alias in expression，为当前遍历的元素提供别名。
+
+- 预期：`Array | Object | number | string | Iterable`
+
+- 用法：
+
+```javascript
+<Sprite v-for="item in items" :y="item*20"></Sprite>
+```
+
+另外也可以为数组索引指定别名 (或者用于对象的键)：
+
+```javascript
+<Sprite v-for="(item, index) in items"></Sprite>
+<Sprite v-for="(val, key) in object"></Sprite>
+<Sprite v-for="(val, name, index) in object"></Sprite>
+```
+
+`v-for` 的默认行为会尝试原地修改元素而不是移动它们。要强制其重新排序元素，你需要用特殊 `attribute key` 来提供一个排序提示：
+
+```javascript
+<Sprite v-for="item in items" :key="item.id"></Sprite>
+```
+
+> 当和 v-if 一起使用时，v-for 的优先级比 v-if 更高。
+
+### v-bind
+
+动态地绑定一个或多个 `attribute`，或一个组件 `prop` 到表达式。
+
+在绑定 `prop` 时，`prop` 必须在子组件中声明。可以用修饰符指定不同的绑定类型。
+
+没有参数时，可以绑定到一个包含键值对的对象。
+
+- 缩写：`:`
+- 预期：`any (with argument) | Object (without argument)`
+- 参数：`attrOrProp (optional)`
+- 修饰符：
+  - `.sync` - 同步语法糖，会扩展成一个更新父组件绑定值的 `v-on` 侦听器。
+
+- 用法：
+
+```javascript
+<!-- 绑定一个 attribute -->
+<TextField :text="text"></TextField>
+
+<!-- 动态 attribute 名 -->
+<TextField v-bind:[key]="value"></TextField>
+
+<!-- 内联字符串拼接 -->
+<TextField :text="'test:' + text"></TextField>
+
+<!-- 绑定一个全是 attribute 的对象 -->
+<TextField v-bind="{ text: text }"></TextField>
+
+<!-- 通过 $attrs 将父组件的 attrs 一起传给子组件 -->
+<child-component v-bind="$attrs"></child-component>
+
+<!-- 通过 .sync 修饰符 -->
+<TextField v-bind:text.sync="text"></TextField>
+// => <TextField v-bind:text="text" @update:text="$event => text = $event;"></TextField>
+```
+
+### v-on
+
+绑定事件监听器。事件类型由参数指定。表达式可以是一个方法的名字或一个内联语句，如果没有修饰符也可以省略。
+
+用在普通显示对象上时，只能监听原生事件。用在自定义元素组件上时，也可以监听子组件触发的自定义事件。
+
+在监听原生事件时，方法以事件为唯一的参数。如果使用内联语句，语句可以访问一个 `$event property：v-on:click="handle('ok', $event)"`。
+
+- 缩写：`@`
+- 预期：`Function | Inline Statement | Object`
+- 参数：`event`
+- 修饰符：
+  - `.stop` - 调用 event.stopPropagation()。
+  - `.prevent` - 调用 event.preventDefault()。
+  - `.capture` - 添加事件侦听器时使用 capture 模式。
+  - `.self` - 只当事件是从侦听器绑定的元素本身触发时才触发回调。
+  - `.native` - 监听组件根元素的原生事件。
+  - `.once` - 只触发一次回调。
+
+- 用法：
+
+```javascript
+<!-- 方法处理器 -->
+<Sprite v-on:touchTap="doThis"></Sprite>
+
+<!-- 动态事件 -->
+<Sprite v-on:[event]="doThis"></Sprite>
+
+<!-- 内联语句 -->
+<Sprite v-on:touchTap="doThat('hello', $event)"></Sprite>
+
+<!-- 缩写 -->
+<Sprite @touchTap="doThis"></Sprite>
+
+<!-- 动态事件缩写 -->
+<Sprite @[event]="doThis"></Sprite>
+
+<!-- 停止冒泡 -->
+<Sprite @touchTap.stop="doThis"></Sprite>
+
+<!-- 阻止默认行为 -->
+<Sprite @touchTap.prevent="doThis"></Sprite>
+
+<!-- 阻止默认行为，没有表达式 -->
+<Sprite @touchTap.prevent></Sprite>
+
+<!--  串联修饰符 -->
+<Sprite @touchTap.stop.prevent="doThis"></Sprite>
+
+<!-- 点击回调只会触发一次 -->
+<Sprite v-on:touchTap.once="doThis"></Sprite>
+
+<!-- 对象语法 -->
+<Sprite v-on="{ touchBegin: doThis, touchEnd: doThat }"></Sprite>
+```
+
+在子组件上监听自定义事件 (当子组件触发“my-event”时将调用事件处理器)：
+
+```javascript
+<my-component @my-event="handleThis"></my-component>
+
+<!-- 内联语句 -->
+<my-component @my-event="handleThis(123, $event)"></my-component>
+
+<!-- 组件中的原生事件 -->
+<my-component @touchTap.native="onTouchTap"></my-component>
+```
 
 ## 特殊 attribute
 
 ### key
 
+- 预期：`number | string | symbol`
+
+`key` 的特殊 attribute 主要用在 VueEgret 的虚拟节点 算法，在新旧 nodes 对比时辨识 VNodes。如果不使用 key，VueEgret 会使用一种最大限度减少动态元素并且尽可能的尝试就地修改/复用相同类型元素的算法。而使用 key 时，它会基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素。
+
+有相同父元素的子元素必须有**独特的 key**。重复的 key 会造成渲染错误。
+
+最常见的用例是结合 v-for：
+
+```javascript
+<Sprite v-for="item in items" :key="item.id"></Sprite>
+```
+
+它也可以用于强制替换元素/组件而不是重复使用它。
+
 ### ref
+
+- 预期：`string`
+
+ref 被用来给显示对象或子组件注册引用信息。引用信息将会注册在父组件的 `$refs` 对象上。如果在普通的 DisplayObject 对象上使用，引用指向的就是 DisplayObject 对象；如果用在子组件上，引用就指向组件实例：
+
+```javascript
+<!-- `vm.$refs.sp` will be the DisplayObject node -->
+<Sprite ref="sp"></Sprite>
+
+<!-- `vm.$refs.child` will be the child component instance -->
+<child-component ref="child"></child-component>
+```
+
+当 `v-for` 用于元素或组件的时候，引用信息将是包含 DisplayObject 对象或组件实例的数组。
+
+> 关于 ref 注册时间的重要说明：因为 ref 本身是作为渲染结果被创建的，在初始渲染的时候你不能访问它们 - 它们还不存在！`$refs` 也不是响应式的，因此你不应该试图用它在模板中做数据绑定。
+
+## 内置的组件
+
+### component
