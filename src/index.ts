@@ -9,9 +9,9 @@ import Render from './render';
 import { VNode } from './render/v-node';
 
 import Watcher, { WatchOptions } from './observer/watcher';
-import { observe } from './observer/index';
+import { del, observe, set } from './observer/index';
 import { pushTarget, popTarget } from './observer/dep';
-import { noop, emptyObject, isPlainObject, isHook } from './util/index';
+import { noop, emptyObject, isPlainObject, isHook, hasOwn } from './util/index';
 import { validateProp, normalizeProp } from './util/props';
 import { DirectiveHook, DirectiveOptions } from './directives';
 
@@ -101,6 +101,12 @@ export class Component {
   /** 组件配置 */
   $options: ComponentOptions;
 
+  // 全局方法
+  /** 设置对象的 property */
+  $set = set;
+  /** 删除对象的 property */
+  $delete = del;
+
   private __nextTickCall: Array<Function> = [];
 
   // private __tickHandler: ComponentMap<Function> = [];
@@ -114,6 +120,7 @@ export class Component {
   private _isBeingDestroyed = false;
   private _isDestroyed = false;
 
+  public _isVue = true;
   public _render: Render;
   public _watcher: Watcher;
   public _watchers: Array<Watcher> = [];
@@ -179,7 +186,7 @@ export class Component {
       stage: new egret.Stage(),
     };
     // 监听数据
-    observe(this._global);
+    observe(this._global, true);
   }
   private _initProps(
     propsOptions: Array<string> | Record<string, PropData | Function> = {},
@@ -187,9 +194,7 @@ export class Component {
   ) {
     const props: Record<string, PropData> = normalizeProp(propsOptions); // normalizeProp
     for (const key in props) {
-      this._props[key] = Object.prototype.hasOwnProperty.call(propsData, key)
-        ? propsData[key]
-        : validateProp(props[key], this);
+      this._props[key] = hasOwn(propsData, key) ? propsData[key] : validateProp(props[key], this);
       Object.defineProperty(this, key, {
         get() {
           return this._props[key];
@@ -200,7 +205,7 @@ export class Component {
       });
     }
     // 监听数据
-    observe(this._props);
+    observe(this._props, true);
   }
   private _initData(data: any) {
     this._data = typeof data === 'function' ? this._getData(data) : data || {};
@@ -215,7 +220,7 @@ export class Component {
       });
     }
     // 监听数据
-    observe(this._data);
+    observe(this._data, true);
   }
   private _initMethods(methods: Record<string, Function> = {}) {
     // 将methods上的方法赋值到vm实例上
@@ -616,16 +621,9 @@ export default class VueEgret extends Component {
   static _components: Record<string, ComponentClass> = {};
   /** 指令缓存 */
   static _directives: Record<string, DirectiveOptions> = {};
+  static set = set;
+  static delete = del;
 
-  /**
-   * 设置全局指令
-   */
-  static directive(name: string, definition: DirectiveOptions | DirectiveHook): DirectiveOptions {
-    if (definition)
-      return (VueEgret._directives[name] =
-        typeof definition === 'function' ? { bind: definition, update: definition } : definition);
-    return VueEgret._directives[name];
-  }
   /**
    * 设置全局组件
    * @param { string } name 组件名 用于全局定义
@@ -634,6 +632,15 @@ export default class VueEgret extends Component {
   static component(name: string, options: ComponentOptions): ComponentClass {
     if (options) return (VueEgret._components[name] = VueEgret.extend(options));
     return VueEgret._components[name];
+  }
+  /**
+   * 设置全局指令
+   */
+  static directive(name: string, definition: DirectiveOptions | DirectiveHook): DirectiveOptions {
+    if (definition)
+      return (VueEgret._directives[name] =
+        typeof definition === 'function' ? { bind: definition, update: definition } : definition);
+    return VueEgret._directives[name];
   }
   /**
    * 通过配置，获取组件类型

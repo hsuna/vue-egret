@@ -43,10 +43,7 @@ export function createVNode(tag: string, data: any = {}, children: Array<VNode> 
   return vnode;
 }
 
-export function createFnInvoker(
-  fns: Function | Array<Function>,
-  thisObject: any = null,
-): VNodeInvoker {
+export function createFnInvoker(fns: Function | Array<Function>, thisObject?: any): VNodeInvoker {
   const invoker: VNodeInvoker = function (...args: Array<any>) {
     const { fns } = invoker;
     if (Array.isArray(fns)) {

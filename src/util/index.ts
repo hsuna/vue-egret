@@ -37,6 +37,19 @@ export function isObject(obj: any): boolean {
 }
 
 /**
+ * Check if value is primitive.
+ */
+export function isPrimitive(value: any): boolean {
+  return (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    // $flow-disable-line
+    typeof value === 'symbol' ||
+    typeof value === 'boolean'
+  );
+}
+
+/**
  * Convert a value to a string that is actually rendered.
  */
 export function toString(val: any): string {
@@ -85,9 +98,29 @@ export function isRegExp(v: any): boolean {
   return _toString.call(v) === '[object RegExp]';
 }
 
+/**
+ * Check if val is a valid array index.
+ */
+export function isValidArrayIndex(val: any): boolean {
+  const n = parseFloat(String(val));
+  return n >= 0 && Math.floor(n) === n && isFinite(val);
+}
+
+export function isPromise(val: any): boolean {
+  return isDef(val) && typeof val.then === 'function' && typeof val.catch === 'function';
+}
+
 const HOOK_RE = /^hook:/;
 export function isHook(n: string): boolean {
   return HOOK_RE.test(n);
+}
+
+/**
+ * Check whether an object has the property.
+ */
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+export function hasOwn(obj: Object | Array<any>, key: string): boolean {
+  return hasOwnProperty.call(obj, key);
 }
 
 /**
