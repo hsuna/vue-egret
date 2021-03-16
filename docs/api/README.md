@@ -732,9 +732,9 @@ var unwatch = vm.$watch(
 这是全局 `VueEgret.set` 的别名。
 
 - 参数：
-  - `{Object | Array} target`
-  - `{string | number} propertyName/index`
-  - `{any} value`
+  - `{ Object | Array } target`
+  - `{ string | number } propertyName/index`
+  - `{ any } value`
 
 - 返回：
   - `{ any } value` 设置的值
@@ -750,8 +750,8 @@ vm.$set(vm.myObject, 'newProperty', 'hi');
 这是全局 `VueEgret.delete` 的别名。
 
 - 参数：
-  - `{Object | Array} target`
-  - `{string | number} propertyName/index`
+  - `{ Object | Array } target`
+  - `{ string | number } propertyName/index`
 
 - 用法：
 
@@ -763,13 +763,84 @@ vm.$delete(vm.myObject, 'oldProperty');
 
 ### vm.$on
 
+监听当前实例上的自定义事件。事件可以由 `vm.$emit` 触发。回调函数会接收所有传入事件触发函数的额外参数。
 
+- 参数：
+  - `{ string | Array<string> } event`
+  - `{ Function } callback`
+
+- 用法：
+
+```javascript
+vm.$on('test', function (msg) {
+  console.log(msg)
+})
+vm.$emit('test', 'hi')
+// => "hi"
+```
 
 ### vm.$once
 
+监听一个自定义事件，但是只触发一次。一旦触发之后，监听器就会被移除。
+
+- 参数：
+  - `{ string } event`
+  - `{ Function } callback`
+
+- 用法：
+
+```javascript
+vm.$once('test', function (msg) {
+  console.log(msg)
+})
+vm.$emit('test', 'hi')
+// => "hi"
+vm.$emit('test', 'hi')
+// => 不响应
+```
+
 ### vm.$off
 
+移除自定义事件监听器。
+
+1. 如果没有提供参数，则移除所有的事件监听器；
+
+2. 如果只提供了事件，则移除该事件所有的监听器；
+
+3. 如果同时提供了事件与回调，则只移除这个回调的监听器。
+
+- 参数：
+  - `{ string | Array<string> } event`
+  - `{ Function } callback`
+
+- 用法：
+
+```javascript
+let handler = function (msg) {
+  console.log(msg)
+}
+vm.$on('test', handler)
+vm.$emit('test', 'hi')
+// => "hi"
+vm.$off('test', handler)
+vm.$emit('test', 'hi')
+// => 不响应
+```
+
 ### vm.$emit
+
+触发当前实例上的事件。附加参数都会传给监听器回调。
+
+- 参数：
+  - `{ string } eventName`
+  - `[...args]`
+
+- 用法：
+
+```javascript
+vm.$emit('test', 'hi')
+vm.$emit('test', 'hi', 'hi2') // 多个参数
+```
 
 ## 实例方法 / 生命周期
 
