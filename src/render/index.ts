@@ -68,7 +68,6 @@ export default class Render {
     if (this._vm) {
       const newVNode: VNode = this._createVNode();
       this._vnode = this._patch(this._vnode, newVNode);
-      this._vm._$tick();
     }
   }
 

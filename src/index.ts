@@ -152,6 +152,7 @@ export class Component {
     this.$callHook('created');
     this._render = new Render(this);
     this._initEvent();
+    this._tick();
   }
   private _initEvent() {
     /* 添加到显示列表时触发挂载 */
@@ -168,6 +169,7 @@ export class Component {
             if (!this._render) return; // 防止渲染器销毁时，进程依然回调方法
             if (this._isMounted) this.$callHook('beforeUpdate');
             this._render.update();
+            this._tick();
             if (this._isMounted) this.$callHook('update');
           },
           noop,
@@ -280,7 +282,7 @@ export class Component {
     }
     return this.$watch(expOrFn, handler, options);
   }
-  public _$tick() {
+  private _tick() {
     while (this.__nextTickCall.length > 0) {
       const callback: Function = this.__nextTickCall.shift();
       if ('function' === typeof callback) callback();
@@ -390,7 +392,23 @@ export class Component {
    * 下一帧
    */
   public $nextTick(callback: Function) {
-    this.__nextTickCall.push(callback);
+    if (callback) {
+      this.__nextTickCall.push(callback);
+    } else {
+      return new Promise((resolve) => this.__nextTickCall.push(resolve));
+    }
+  }
+
+  /**
+   * 挂载
+   * @param { egret.DisplayObjectContainer } parent 挂载对象
+   * @return { Component }
+   */
+  public $mount(parent: egret.DisplayObjectContainer) {
+    if (parent instanceof egret.DisplayObjectContainer && this.$el) {
+      parent.addChild(this.$el);
+    }
+    return this;
   }
   /**
    * 销毁
@@ -666,8 +684,7 @@ export default class VueEgret extends Component {
       constructor() {
         super();
         this.vm = new (VueEgret.extend(options))();
-        // this.vm.$mount(this);
-        this.addChild(this.vm.$el);
+        this.vm.$mount(this);
       }
     };
   }
