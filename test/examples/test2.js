@@ -14,11 +14,11 @@ export default {
   },
   methods: {
     onTouchTap() {
-      this.text;
+      this.text += '2';
     },
   },
   template: `<Sprite>
         <TextField>{{text}}</TextField>
-        <MyLabel :text.sync="text"></MyLabel>
+        <MyLabel :text.sync="text" @touchTap.native="onTouchTap"></MyLabel>
     </Sprite>`,
 };
