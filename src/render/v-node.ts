@@ -43,7 +43,10 @@ export function createVNode(tag: string, data: any = {}, children: Array<VNode> 
   return vnode;
 }
 
-export function createFnInvoker(fns: Function | Array<Function>): VNodeInvoker {
+export function createFnInvoker(
+  fns: Function | Array<Function>,
+  thisObject: any = null,
+): VNodeInvoker {
   const invoker: VNodeInvoker = function (...args: Array<any>) {
     const { fns } = invoker;
     if (Array.isArray(fns)) {
@@ -51,12 +54,12 @@ export function createFnInvoker(fns: Function | Array<Function>): VNodeInvoker {
       let fn: Function = cloned.shift();
       while (fn) {
         // eslint-disable-next-line prefer-spread
-        fn.apply(this, args);
+        fn.apply(thisObject || this, args);
         fn = cloned.shift();
       }
     } else {
       // eslint-disable-next-line prefer-spread
-      return fns.apply(this, args);
+      return fns.apply(thisObject || this, args);
     }
   };
   invoker.fns = fns;

@@ -421,7 +421,7 @@ export default class Render {
     const prefix: string = isNative ? 'nativeOn' : 'on';
     let on: VNodeInvoker = vnode[prefix][type];
     if (isUndef(on.fns)) {
-      on = createFnInvoker(on);
+      on = createFnInvoker(on, this._vm);
     }
     if (!vnode.vm || isNative) {
       vnode.sp.addEventListener(type, on, this._vm);
