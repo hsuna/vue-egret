@@ -1,7 +1,7 @@
-import { isUndef, toNumber, toString, looseEqual, looseIndexOf } from '../util';
+import VueEgret, { Component, ComponentClass, ComponentParentOptions } from '../index';
+import { isUndef, toNumber, toString, looseEqual, looseIndexOf, hasOwn } from '../util';
 import { createVNode, createFnInvoker, VNode, VNodeInvoker, VNodeDirective } from './v-node';
 import { renderList, bindObjectProps, bindObjectListeners } from './helpers';
-import VueEgret, { Component, ComponentClass, ComponentParentOptions } from '../index';
 import { pushTarget, popTarget } from '../observer/dep';
 import { astStrRender } from '../helpers/render';
 import { DirectiveOptions, normalizeDirectives } from '../directives';
@@ -28,6 +28,7 @@ export function installRender(target: any) {
   target.$createVNode = createVNode;
 }
 
+const DEFAULT_ATTR = '__VUE_EGRET_DEFAULT__';
 /**
  * 渲染器
  * @author Hsuna
@@ -245,11 +246,11 @@ export default class Render {
       const props: Record<string, any> = VClass.options.props;
       for (const key in props) {
         parentOptions._propsKeys.push(key);
-        if (key in this._vm.$props) parentOptions.propsData[key] = this._vm.$props[key];
-        if (key in vnode.attrs) parentOptions.propsData[key] = vnode.attrs[key];
+        if (hasOwn(this._vm.$props, key)) parentOptions.propsData[key] = this._vm.$props[key];
+        if (hasOwn(vnode.attrs, key)) parentOptions.propsData[key] = vnode.attrs[key];
       }
       for (const key in vnode.attrs) {
-        if (!(key in parentOptions.propsData)) parentOptions.attrs[key] = vnode.attrs[key];
+        if (!hasOwn(parentOptions.propsData, key)) parentOptions.attrs[key] = vnode.attrs[key];
       }
       // 创建虚拟dom节点
       vnode.vm = new VClass(parentOptions);
@@ -268,12 +269,14 @@ export default class Render {
       VClass = egret[vnode.tag] || ev(window, vnode.tag);
       if (VClass) {
         vnode.sp = new (<any>VClass)();
+        vnode.sp[DEFAULT_ATTR] = {};
 
         for (const type in vnode.on) {
           vnode.on[type] = this._addInvoker(type, vnode);
         }
 
         for (const name in vnode.attrs) {
+          vnode.sp[DEFAULT_ATTR][name] = vnode.sp[name];
           vnode.sp[name] = vnode.attrs[name];
         }
       }
@@ -303,12 +306,12 @@ export default class Render {
     if (oldVNode.vm) {
       // 更新继承属性
       for (const key in oldVNode.vm.$props) {
-        if (key in this._vm.$props) oldVNode.vm.$props[key] = this._vm.$props[key]; // bug：1.1.6 属性优先级错误，导致继承失败
-        if (key in newVNode.attrs) oldVNode.vm.$props[key] = newVNode.attrs[key];
+        if (hasOwn(this._vm.$props, key)) oldVNode.vm.$props[key] = this._vm.$props[key]; // bug：1.1.6 属性优先级错误，导致继承失败
+        if (hasOwn(newVNode.attrs, key)) oldVNode.vm.$props[key] = newVNode.attrs[key];
       }
       const parentOptions: ComponentParentOptions = oldVNode.vm._parentOptions;
       for (const key in newVNode.attrs) {
-        if (!(key in oldVNode.vm.$props)) parentOptions.attrs[key] = newVNode.attrs[key];
+        if (!hasOwn(oldVNode.vm.$props, key)) parentOptions.attrs[key] = newVNode.attrs[key];
       }
       // 更新组件事件
       for (const type in newVNode.on) {
@@ -350,7 +353,15 @@ export default class Render {
       // 更新属性
       for (const name in newVNode.attrs) {
         if (oldVNode.attrs[name] !== newVNode.attrs[name]) {
+          if (!hasOwn(oldVNode.sp[DEFAULT_ATTR], name)) {
+            oldVNode.sp[DEFAULT_ATTR][name] = oldVNode.sp[name];
+          }
           oldVNode.sp[name] = newVNode.attrs[name];
+        }
+      }
+      for (const name in oldVNode.attrs) {
+        if (isUndef(newVNode.attrs[name])) {
+          oldVNode.sp[name] = oldVNode.sp[DEFAULT_ATTR][name];
         }
       }
     }
@@ -490,8 +501,8 @@ export default class Render {
         if (directive && directive[hook]) {
           const binding: VNodeDirective = { ...dir };
           if (oldDir) {
-            if ('value' in oldDir[dir.name]) binding['oldValue'] = oldDir[dir.name].value;
-            if ('arg' in oldDir[dir.name]) binding['oldArg'] = oldDir[dir.arg].value;
+            if (hasOwn(oldDir[dir.name], 'value')) binding['oldValue'] = oldDir[dir.name].value;
+            if (hasOwn(oldDir[dir.name], 'arg')) binding['oldArg'] = oldDir[dir.arg].value;
           }
           directive[hook].apply(
             this._vm,

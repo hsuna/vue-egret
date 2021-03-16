@@ -84,11 +84,12 @@ export default class ParserFactory implements ParseHtmlOptions {
         const curTarget: ASTNode = parent.children[parent.children.length - 1];
         if (curTarget) {
           processMap = curTarget.processMap;
-          processMap.ifConditions.push({ exp, target: this._target });
         }
       }
     } else {
       processMap = this._target.processMap;
+    }
+    if (processMap) {
       if (!processMap.ifConditions) processMap.ifConditions = [];
       processMap.ifConditions.push({ exp, target: this._target });
     }
