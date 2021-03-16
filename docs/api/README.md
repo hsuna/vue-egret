@@ -93,6 +93,42 @@ var container = new egret.DisplayObjectContainer();
 container.addChild((new Profile()).$el)
 ```
 
+### VueEgret.set
+
+向响应式对象中添加一个 property，并确保这个新 property 同样是响应式的，且触发视图更新。它必须用于向响应式对象上添加新 property，因为 `VueEgret` 无法探测普通的新增 property (比如 `this.myObject.newProperty = 'hi'`)
+
+- 参数：
+  - `{Object | Array} target`
+  - `{string | number} propertyName/index`
+  - `{any} value`
+
+- 返回：
+  - `{ any } value` 设置的值
+
+- 用法：
+
+```javascript
+VueEgret.set(this.myObject, 'newProperty', 'hi');
+```
+
+> 注意对象不能是 `VueEgret` 实例，或者 `VueEgret` 实例的根数据对象。
+
+### VueEgret.delete
+
+删除对象的 property。如果对象是响应式的，确保删除能触发更新视图。这个方法主要用于避开 `VueEgret` 不能检测到 property 被删除的限制，但是你应该很少会使用它。
+
+- 参数：
+  - `{Object | Array} target`
+  - `{string | number} propertyName/index`
+
+- 用法：
+
+```javascript
+VueEgret.delete(this.myObject, 'oldProperty');
+```
+
+> 目标对象不能是 `VueEgret` 实例，或者 `VueEgret` 实例的根数据对象。
+
 ### VueEgret.component
 
 注册或获取全局组件。注册还会自动使用给定的 `name` 设置组件的名称
@@ -114,6 +150,37 @@ VueEgret.component('my-component', { /* ... */ })
 
 // 获取注册的组件 (始终返回构造器)
 var MyComponent = VueEgret.component('my-component')
+```
+
+### VueEgret.directive
+
+注册或获取全局指令。
+
+- 参数：
+  - `{ String } name`
+  - `{ DirectiveOptions | DirectiveHook } definition`
+- 返回：
+  - `{ DirectiveOptions }`
+
+- 用法：
+
+```javascript
+// 注册
+VueEgret.directive('my-directive', {
+  bind: function () {},
+  inserted: function () {},
+  update: function () {},
+  componentUpdated: function () {},
+  unbind: function () {}
+})
+
+// 注册 (指令函数)
+VueEgret.directive('my-directive', function () {
+  // 这里将会被 `bind` 和 `update` 调用
+})
+
+// 获取注册的指令
+var MyDirective = VueEgret.directive('my-directive')
 ```
 
 ### VueEgret.version
@@ -541,23 +608,162 @@ var vm = new VueEgret({
 
 ### vm.$refs
 
-- 类型：`Object`
+- 类型：`{ [key: string]: string }`
 
 - 说明：
 
 一个对象，持有注册过 `ref attribute` 的所有显示对象和组件实例。
 
+### vm.$attrs
+
+- 类型：`{ [key: string]: string }`
+
+- 说明：
+
+一个对象，持有注册过 `ref attribute` 的所有显示对象和组件实例。
+
+### vm.$listeners
+
+- 类型：`{ [key: string]: Function | Array<Function> }`
+
+- 说明：
+
+包含了父作用域中的 (不含 `.native` 修饰器的) v-on 事件监听器。它可以通过 v-on="$listeners" 传入内部组件——在创建更高层次的组件时非常有用。
+
 ## 实例方法 / 数据
 
 ### vm.$watch
 
+- 参数：
+  - `{ string | Function } expOrFn`
+  - `{ Function | Object } callback`
+  - `{ Object } [options]`
+
+- 返回值：`{ Function } unwatch`
+
+- 说明：
+
+观察 `VueEgret` 实例上的一个表达式或者一个函数计算结果的变化。回调函数得到的参数为新值和旧值。表达式只接受简单的键路径。对于更复杂的表达式，用一个函数取代。
+
+> 注意：在变更 (不是替换) 对象或数组时，旧值将与新值相同，因为它们的引用指向同一个对象/数组。`VueEgret` 不会保留变更之前值的副本。
+
+```javascript
+// 键路径
+vm.$watch('a.b.c', function (newVal, oldVal) {
+  // 做点什么
+})
+
+// 函数
+vm.$watch(
+  function () {
+    // 表达式 `this.a + this.b` 每次得出一个不同的结果时
+    // 处理函数都会被调用。
+    // 这就像监听一个未被定义的计算属性
+    return this.a + this.b
+  },
+  function (newVal, oldVal) {
+    // 做点什么
+  }
+)
+```
+
+`vm.$watch` 返回一个取消观察函数，用来停止触发回调：
+
+```javascript
+var unwatch = vm.$watch('a', cb)
+// 之后取消观察
+unwatch()
+```
+
+- 选项：deep
+
+为了发现对象内部值的变化，可以在选项参数中指定 `deep: true`。注意监听数组的变更不需要这么做。
+
+```javascript
+vm.$watch('someObject', callback, {
+  deep: true
+})
+vm.someObject.nestedValue = 123
+// callback is fired
+```
+
+- 选项：immediate
+
+在选项参数中指定 `immediate: true` 将立即以表达式的当前值触发回调：
+
+```javascript
+vm.$watch('a', callback, {
+  immediate: true
+})
+// 立即以 `a` 的当前值触发回调
+```
+
+注意在带有 `immediate` 选项时，你不能在第一次回调时取消侦听给定的 property。
+
+```javascript
+// 这会导致报错
+var unwatch = vm.$watch(
+  'value',
+  function () {
+    doSomething()
+    unwatch()
+  },
+  { immediate: true }
+)
+```
+
+如果你仍然希望在回调内部调用一个取消侦听的函数，你应该先检查其函数的可用性：
+
+```javascript
+var unwatch = vm.$watch(
+  'value',
+  function () {
+    doSomething()
+    if (unwatch) {
+      unwatch()
+    }
+  },
+  { immediate: true }
+)
+```
+
 ### vm.$set
 
+这是全局 `VueEgret.set` 的别名。
+
+- 参数：
+  - `{Object | Array} target`
+  - `{string | number} propertyName/index`
+  - `{any} value`
+
+- 返回：
+  - `{ any } value` 设置的值
+
+- 用法：
+
+```javascript
+vm.$set(vm.myObject, 'newProperty', 'hi');
+```
+
 ### vm.$delete
+
+这是全局 `VueEgret.delete` 的别名。
+
+- 参数：
+  - `{Object | Array} target`
+  - `{string | number} propertyName/index`
+
+- 用法：
+
+```javascript
+vm.$delete(vm.myObject, 'oldProperty');
+```
 
 ## 实例方法 / 事件
 
 ### vm.$on
+
+
 
 ### vm.$once
 
