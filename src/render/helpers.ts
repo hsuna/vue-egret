@@ -54,6 +54,13 @@ export function bindObjectListeners(data: VNode, value: any): VNode {
   return data;
 }
 
+// helper to dynamically append modifier runtime markers to event names.
+// ensure only append when value is already string, otherwise it will be cast
+// to string and cause the type check to miss.
+export function prependModifier(value: any, symbol: string): any {
+  return typeof value === 'string' ? symbol + value : value;
+}
+
 /**
  * 列表渲染
  * @author Hsuna

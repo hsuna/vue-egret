@@ -181,4 +181,15 @@ export function makeMap(str: string, expectsLowerCase?: boolean): (key: string) 
   return expectsLowerCase ? (val) => map[val.toLowerCase()] : (val) => map[val];
 }
 
+/**
+ * Create a cached version of a pure function.
+ */
+export function cached<T>(fn: (str: string) => T): (str: string) => T {
+  const cache: Record<string, T> = {};
+  return function cachedFn(str: string): T {
+    const hit: T = cache[str];
+    return hit || (cache[str] = fn(str));
+  };
+}
+
 export * from './lang';

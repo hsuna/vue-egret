@@ -1,4 +1,4 @@
-import { AstData, delComma, parseModel, parserAttrList } from './util';
+import { AstData, delComma, parseModel, parseAttrList } from './util';
 import { ForParseResult } from 'src/helpers';
 import { ASTNode } from './ast-node';
 import { VNodeDirective } from './v-node';
@@ -7,10 +7,11 @@ import { debounce } from 'src/util/helper';
 
 const textRE = /\{\{([^}]+)\}\}/g; // {{text}}
 const fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
+const fnInvokeRE = /\([^)]*?\);*$/;
 const simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/;
 
 export function genData(ast: ASTNode): string {
-  const data: AstData = parserAttrList(ast);
+  const data: AstData = parseAttrList(ast);
 
   let str = '{';
   // directives first.
@@ -79,20 +80,69 @@ export function genProps(dirs: Array<VNodeDirective>): string {
 export function genHandlers(dirs: Array<VNodeDirective>): string {
   let res = '';
   dirs.forEach((dir: VNodeDirective) => {
-    if ('sync' == dir.name) {
-      res += `["update:"+${dir.arg}]:${genHandler(genSync(dir.expression))},`;
-    } else {
-      res += `${dir.rawArg || dir.arg}:${genHandler(dir.expression)},`;
+    const isSync: boolean = 'sync' == dir.name;
+    let isDynamic = false;
+    let name = dir.arg;
+    if (isSync) {
+      name = `_p(${name}, "update:")`;
+      isDynamic = true;
     }
+    // check modifier
+    if (dir.modifiers) {
+      if (dir.modifiers.capture) {
+        name = `_p(${name}, "!")`;
+        isDynamic = true;
+      }
+      if (dir.modifiers.once) {
+        name = `_p(${name}, "~")`;
+        isDynamic = true;
+      }
+    }
+    if (isDynamic) {
+      name = `[${name}]`;
+    }
+    res += `${name}:${genHandler(dir, isSync)},`;
   });
   return res ? `{${delComma(res)}}` : '';
 }
 
-export function genHandler(exp: string): string {
-  if (simplePathRE.test(exp) || fnExpRE.test(exp)) {
-    return exp;
+const genGuard = (condition: string) => `if(${condition})return null;`;
+const modifierCode: Record<string, string> = {
+  stop: '$event.stopPropagation();',
+  prevent: '$event.preventDefault();',
+  self: genGuard(`$event.target !== $event.currentTarget`),
+};
+
+export function genHandler(dir: VNodeDirective, isSync?: boolean): string {
+  const expression = (isSync ? genSync(dir.expression) : dir.expression) || '';
+  const isMethodPath = simplePathRE.test(expression); // @touchTap="doSomething"
+  const isFunctionExpression = fnExpRE.test(expression); // @touchTap="() => {}" or @touchTap="function(){}"
+  const isFunctionInvocation = simplePathRE.test(expression.replace(fnInvokeRE, '')); // @touchTap="doSomething($event)"
+
+  // 在没有修饰符的情况下
+  if (!dir.modifiers) {
+    if (isMethodPath || isFunctionExpression) {
+      return expression;
+    }
+
+    return `function($event){${isFunctionInvocation ? `return ${expression}` : expression}}`;
+  } else {
+    let code = '';
+    for (const key in dir.modifiers) {
+      if (modifierCode[key]) {
+        code += modifierCode[key];
+      }
+    }
+    const handlerCode = isMethodPath
+      ? `return ${expression}($event)`
+      : isFunctionExpression
+      ? `return (${expression})($event)`
+      : isFunctionInvocation
+      ? `return ${expression}`
+      : expression;
+
+    return `function($event){${code}${handlerCode}}`;
   }
-  return `function($event){${exp}}`;
 }
 
 export function genDirectives(dirs: Array<VNodeDirective>, astData: AstData): string {

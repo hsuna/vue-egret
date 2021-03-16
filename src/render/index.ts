@@ -1,10 +1,11 @@
 import VueEgret, { Component, ComponentClass, ComponentParentOptions } from '../index';
 import { isUndef, toNumber, toString, looseEqual, looseIndexOf, hasOwn } from '../util';
 import { createVNode, createFnInvoker, VNode, VNodeInvoker, VNodeDirective } from './v-node';
-import { renderList, bindObjectProps, bindObjectListeners } from './helpers';
+import { renderList, bindObjectProps, bindObjectListeners, prependModifier } from './helpers';
 import { pushTarget, popTarget } from '../observer/dep';
 import { astStrRender } from '../helpers/render';
 import { DirectiveOptions, normalizeDirectives } from '../directives';
+import { EventParseResult, parseEvent } from './util';
 
 function ev(data: Record<string, any>, str = '') {
   const arr = str.split('.');
@@ -24,6 +25,7 @@ export function installRender(target: any) {
   target._l = renderList;
   target._b = bindObjectProps;
   target._g = bindObjectListeners;
+  target._p = prependModifier;
   // 返回render创建方法
   target.$createVNode = createVNode;
 }
@@ -429,14 +431,15 @@ export default class Render {
    */
   private _addInvoker(type: string, vnode: VNode, isNative = false): VNodeInvoker {
     const prefix: string = isNative ? 'nativeOn' : 'on';
+    const event: EventParseResult = parseEvent(type);
     let on: VNodeInvoker = vnode[prefix][type];
     if (isUndef(on.fns)) {
       on = createFnInvoker(on, this._vm);
     }
     if (!vnode.vm || isNative) {
-      vnode.sp.addEventListener(type, on, this._vm);
+      vnode.sp[event.once ? 'once' : 'addEventListener'](event.name, on, this._vm, event.capture);
     } else {
-      vnode.vm.$on(type, on);
+      vnode.vm[event.once ? '$once' : '$on'](event.name, on);
     }
     return on;
   }
@@ -477,11 +480,12 @@ export default class Render {
    */
   private _removeInvoker(type: string, vnode: VNode, isNative = false): VNodeInvoker {
     const on: VNodeInvoker = isNative ? vnode.nativeOn[type] : vnode.on[type];
+    const event: EventParseResult = parseEvent(type);
 
     if (!vnode.vm || isNative) {
-      vnode.sp.removeEventListener(type, on, this._vm);
+      vnode.sp.removeEventListener(event.name, on, this._vm, event.capture);
     } else {
-      vnode.vm.$off(type, on);
+      vnode.vm.$off(event.name, on);
     }
     return on;
   }

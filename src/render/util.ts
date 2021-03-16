@@ -1,3 +1,4 @@
+import { cached } from 'src/util';
 import { ASTAttr, ASTNode } from './ast-node';
 import { genAttrValue } from './gen';
 import { VNodeDirective } from './v-node';
@@ -13,6 +14,12 @@ export type ModelParseResult = {
   key: string;
 };
 
+export type EventParseResult = {
+  name: string;
+  once: boolean;
+  capture: boolean;
+};
+
 export interface AstData {
   key: any;
   tag: string;
@@ -26,7 +33,7 @@ export interface AstData {
 
 export const delComma = (str: string): string => str.replace(/,$/, '');
 
-export function parserAttrList(ast: ASTNode): AstData {
+export function parseAttrList(ast: ASTNode): AstData {
   const astData: AstData = {
     tag: ast.tag,
     key: '',
@@ -41,7 +48,7 @@ export function parserAttrList(ast: ASTNode): AstData {
     if (SUGAR_REG.test(attr.name)) {
       astData[attr.name.replace(SUGAR_REG, '$1')] = genAttrValue(attr.name, attr.value);
     } else if (DIR_REG.test(attr.name)) {
-      const dir: VNodeDirective = parserDirective(attr.name, attr.value);
+      const dir: VNodeDirective = parseDirective(attr.name, attr.value);
       if (BIND_REG.test(attr.name)) {
         astData.attrs.push(dir);
         if (dir.modifiers && dir.modifiers.sync) {
@@ -77,7 +84,7 @@ export function parserAttrList(ast: ASTNode): AstData {
   return astData;
 }
 
-export function parserDirective(directive: string, expression: string): VNodeDirective {
+export function parseDirective(directive: string, expression: string): VNodeDirective {
   let name = '',
     arg = '',
     modifiers: Array<string> = [];
@@ -97,6 +104,20 @@ export function parserDirective(directive: string, expression: string): VNodeDir
     modifiers: modifiers.reduce((o, k) => Object.assign(o, { [k]: true }), {}), // ['foo', 'bar'] => {foo: true, bar: true}
   };
 }
+
+export const parseEvent: (name: string) => EventParseResult = cached<EventParseResult>(
+  (name: string) => {
+    const once = name.charAt(0) === '~'; // Prefixed last, checked first
+    name = once ? name.slice(1) : name;
+    const capture = name.charAt(0) === '!';
+    name = capture ? name.slice(1) : name;
+    return {
+      name,
+      once,
+      capture,
+    };
+  },
+);
 
 export function parseModel(val: string): ModelParseResult {
   // eslint-disable-next-line prefer-const
