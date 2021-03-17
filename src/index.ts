@@ -14,6 +14,7 @@ import { pushTarget, popTarget } from './observer/dep';
 import { noop, emptyObject, isPlainObject, isHook, hasOwn } from './util/index';
 import { validateProp, normalizeProp } from './util/props';
 import { DirectiveHook, DirectiveOptions } from './directives';
+import { nextTick } from './util/next-tick';
 
 export type TArray<T> = T | Array<T>;
 
@@ -109,8 +110,8 @@ export class Component {
   $set = set;
   /** 删除对象的 property */
   $delete = del;
-
-  private __nextTickCall: Array<Function> = [];
+  /** */
+  $nextTick = nextTick;
 
   // private __tickHandler: ComponentMap<Function> = [];
   private _global: Record<string, any> = {};
@@ -119,11 +120,11 @@ export class Component {
   private _hasHookEvent = false;
 
   // 状态值
-  private _isMounted = false;
-  private _isBeingDestroyed = false;
-  private _isDestroyed = false;
-
   public _isVue = true;
+  public _isMounted = false;
+  public _isBeingDestroyed = false;
+  public _isDestroyed = false;
+
   public _render: Render;
   public _watcher: Watcher;
   public _watchers: Array<Watcher> = [];
@@ -155,7 +156,6 @@ export class Component {
     this.$callHook('created');
     this._render = new Render(this);
     this._initEvent();
-    this._tick();
   }
   private _initEvent() {
     /* 添加到显示列表时触发挂载 */
@@ -172,8 +172,6 @@ export class Component {
             if (!this._render) return; // 防止渲染器销毁时，进程依然回调方法
             if (this._isMounted) this.$callHook('beforeUpdate');
             this._render.update();
-            this._tick();
-            if (this._isMounted) this.$callHook('update');
           },
           noop,
         );
@@ -285,12 +283,6 @@ export class Component {
     }
     return this.$watch(expOrFn, handler, options);
   }
-  private _tick() {
-    while (this.__nextTickCall.length > 0) {
-      const callback: Function = this.__nextTickCall.shift();
-      if ('function' === typeof callback) callback();
-    }
-  }
   public $on(event: TArray<string>, fn: Function): Component {
     if (Array.isArray(event)) {
       event.forEach((evt) => this.$on(evt, fn));
@@ -389,16 +381,6 @@ export class Component {
   public $forceUpdate() {
     if (this._watcher) {
       this._watcher.update();
-    }
-  }
-  /*
-   * 下一帧
-   */
-  public $nextTick(callback: Function) {
-    if (callback) {
-      this.__nextTickCall.push(callback);
-    } else {
-      return new Promise((resolve) => this.__nextTickCall.push(resolve));
     }
   }
 
@@ -651,6 +633,7 @@ export default class VueEgret extends Component {
   static _directives: Record<string, DirectiveOptions> = {};
   static set = set;
   static delete = del;
+  static nextTick = nextTick;
 
   /**
    * 设置全局组件

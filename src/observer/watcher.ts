@@ -3,6 +3,7 @@ import { noop, isObject, parsePath } from '../util/index';
 import { Component } from '../index';
 import Dep, { pushTarget, popTarget } from './dep';
 import { traverse } from './traverse';
+import { queueWatcher } from './scheduler';
 
 // watcher实例的ID 每个watcher实现的ID都是唯一的
 let uid = 0;
@@ -36,6 +37,7 @@ export default class Watcher {
   user: boolean;
   lazy: boolean;
   sync: boolean;
+  dirty: boolean;
   immediate: boolean;
   before: Function;
 
@@ -55,6 +57,7 @@ export default class Watcher {
     vm._watchers.push(this);
     this.id = uid++;
     this.active = true;
+    this.dirty = this.lazy; // for lazy watchers
     this.vm = vm;
     // 存放dep实例
     this.deps = [];
@@ -64,6 +67,8 @@ export default class Watcher {
     this.newDepIds = new Set();
     // 更新触发回调函数
     this.cb = cb || noop;
+
+    // parse expression for getter
     this.expression = expOrFn.toString();
     if ('function' === typeof expOrFn) {
       this.getter = expOrFn;
@@ -73,8 +78,8 @@ export default class Watcher {
         this.getter = noop;
       }
     }
-    // 在创建watcher实例时先取一次值
-    this.value = this.get();
+    // 如果非懒加载在创建watcher实例时先取一次值
+    this.value = this.lazy ? undefined : this.get();
 
     if (this.immediate) {
       try {
@@ -149,7 +154,13 @@ export default class Watcher {
    */
   update() {
     /* istanbul ignore else */
-    this.run();
+    if (this.lazy) {
+      this.dirty = true;
+    } else if (this.sync) {
+      this.run();
+    } else {
+      queueWatcher(this);
+    }
   }
 
   /**
@@ -172,6 +183,15 @@ export default class Watcher {
       this.value = value;
       this.cb.call(this.vm, value, oldValue);
     }
+  }
+
+  /**
+   * Evaluate the value of the watcher.
+   * This only gets called for lazy watchers.
+   */
+  evaluate() {
+    this.value = this.get();
+    this.dirty = false;
   }
 
   /**
