@@ -15,6 +15,7 @@ import { noop, emptyObject, isPlainObject, isHook, hasOwn } from './util/index';
 import { validateProp, normalizeProp } from './util/props';
 import { DirectiveHook, DirectiveOptions } from './directives';
 import { nextTick } from './util/next-tick';
+import { tween } from './util/tween';
 
 export type TArray<T> = T | Array<T>;
 
@@ -110,8 +111,10 @@ export class Component {
   $set = set;
   /** 删除对象的 property */
   $delete = del;
-  /** */
+  /** 回调延迟到下次更新 */
   $nextTick = nextTick;
+  /** Tween方法 */
+  $tween = tween;
 
   // private __tickHandler: ComponentMap<Function> = [];
   private _global: Record<string, any> = {};
@@ -537,51 +540,7 @@ export class Component {
     disObj && disObj.localToGlobal(stateX, stateY, resultPoint);
     return resultPoint;
   }
-  /**
-   * 获取Tween对象
-   * @description 用于检测egret.Tween是否被安装，且空值时，返回this的Tween
-   * @author Hsuna
-   * @param {egret.Tween} tween 可选，若不为Tween类型，则返回egret.Tween.get(this, ...arguments)
-   * @return {egret.Tween}
-   */
-  public $tween(tween?: egret.Tween): egret.Tween {
-    if ('Tween' in egret)
-      return tween instanceof egret.Tween ? tween : egret.Tween.get(this, ...arguments);
-    else throw 'The egret.Tween.js not import!!!';
-  }
-  /**
-   * 简单运动动画
-   * @description 仅适用于to函数，复杂的动画效果请使用原egret.Tween结合$tweenPromise实现
-   * @author Hsuna
-   * @param { any } props 对象的属性集合
-   * @param { number } duration 持续时间
-   * @param { Function } ease 缓动算法
-   * @return {Promise<egret.Tween>}
-   */
-  public $tweenTo(props: any, duration?: number, ease?: Function): Promise<egret.Tween> {
-    return this.$tweenPromise(this.$tween().to(props, duration, ease));
-  }
-  /**
-   * 简单等待动画
-   * @description 仅适用于wait函数，复杂的动画效果请使用原egret.Tween结合$tweenPromise实现
-   * @author Hsuna
-   * @param { number } duration 持续时间
-   * @param { boolean } passive 等待期间属性是否会更新
-   * @return {Promise<egret.Tween>}
-   */
-  public $tweenWait(duration: number, passive?: boolean): Promise<egret.Tween> {
-    return this.$tweenPromise(this.$tween().wait(duration, passive));
-  }
-  /**
-   * 动画Promise包装
-   * @description 将Tween.call包装为Promise的方式
-   * @author Hsuna
-   * @param {egret.Tween} tween
-   * @return {Promise<egret.Tween>}
-   */
-  public $tweenPromise(tween: egret.Tween): Promise<egret.Tween> {
-    return new Promise((resolve: (value: egret.Tween) => void) => tween.call(resolve));
-  }
+
   /**
    * 获取舞台信息
    * @return { egret.Stage }
@@ -634,6 +593,7 @@ export default class VueEgret extends Component {
   static set = set;
   static delete = del;
   static nextTick = nextTick;
+  static tween = tween;
 
   /**
    * 设置全局组件
