@@ -1,4 +1,4 @@
-import VueEgret, { Component, ComponentClass, ComponentParentOptions } from '../index';
+import VueEgret, { Component, ComponentClass, ComponentParentOptions, RefData } from '../index';
 import { isUndef, toNumber, toString, looseEqual, looseIndexOf, hasOwn } from '../util';
 import { createVNode, createFnInvoker, VNode, VNodeInvoker, VNodeDirective } from './v-node';
 import { renderList, bindObjectProps, bindObjectListeners, prependModifier } from './helpers';
@@ -287,7 +287,17 @@ export default class Render {
 
     // 实例节点
     if (vnode.ref) {
-      this._vm.$refs[vnode.ref] = vnode.vm || vnode.sp;
+      const refs = this._vm.$refs;
+      const ref: RefData = vnode.vm || vnode.sp;
+      if (vnode.refInFor) {
+        if (!Array.isArray(refs[vnode.ref])) {
+          refs[vnode.ref] = [ref];
+        } else if ((refs[vnode.ref] as Array<RefData>).indexOf(ref) < 0) {
+          (refs[vnode.ref] as Array<RefData>).push(ref);
+        }
+      } else {
+        refs[vnode.ref] = ref;
+      }
     }
     // 触发指令：只调用一次，指令第一次绑定到元素时调用
     this._triggerDirective('bind', vnode);

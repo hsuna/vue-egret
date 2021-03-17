@@ -1,10 +1,8 @@
 import { cached } from 'src/util';
 import { ASTAttr, ASTNode } from './ast-node';
-import { genAttrValue } from './gen';
 import { VNodeDirective } from './v-node';
 
 export const DIR_REG = /^v-|^@|^:|^#/; // v-foo=
-export const SUGAR_REG = /^(:?(key|ref))/; // key= | ref=
 export const BIND_REG = /^(v-bind:|:)/; // v-bind:foo | :foo
 export const ON_REG = /^(v-on:|@)/; // v-on:type | @type
 export const DYNAMIC_ARG_RE = /^\[.*\]$/; // v-on:[arg]
@@ -24,6 +22,7 @@ export interface AstData {
   key: any;
   tag: string;
   ref: string;
+  refInFor: boolean;
   attrs: Array<VNodeDirective>;
   on: Array<VNodeDirective>;
   nativeOn: Array<VNodeDirective>;
@@ -31,13 +30,12 @@ export interface AstData {
   wrapDir?: Array<Function>;
 }
 
-export const delComma = (str: string): string => str.replace(/,$/, '');
-
 export function parseAttrList(ast: ASTNode): AstData {
   const astData: AstData = {
     tag: ast.tag,
-    key: '',
-    ref: '',
+    key: ast.key,
+    ref: ast.ref,
+    refInFor: false,
     attrs: [],
     on: [],
     nativeOn: [],
@@ -45,9 +43,7 @@ export function parseAttrList(ast: ASTNode): AstData {
     wrapDir: [],
   };
   ast.attrsList.forEach((attr: ASTAttr) => {
-    if (SUGAR_REG.test(attr.name)) {
-      astData[attr.name.replace(SUGAR_REG, '$1')] = genAttrValue(attr.name, attr.value);
-    } else if (DIR_REG.test(attr.name)) {
+    if (DIR_REG.test(attr.name)) {
       const dir: VNodeDirective = parseDirective(attr.name, attr.value);
       if (BIND_REG.test(attr.name)) {
         astData.attrs.push(dir);
@@ -80,6 +76,9 @@ export function parseAttrList(ast: ASTNode): AstData {
       arg: `"text"`,
       expression: ast.text,
     });
+  }
+  if (ast.ref) {
+    astData.refInFor = checkInFor(ast);
   }
   return astData;
 }
@@ -196,4 +195,15 @@ export function parseModel(val: string): ModelParseResult {
     exp: val.slice(0, expressionPos),
     key: val.slice(expressionPos + 1, expressionEndPos),
   };
+}
+
+function checkInFor(ast: ASTNode): boolean {
+  let parent: ASTNode = ast;
+  while (parent) {
+    if (parent.for !== undefined) {
+      return true;
+    }
+    parent = parent.parent;
+  }
+  return false;
 }

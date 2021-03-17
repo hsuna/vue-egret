@@ -1,14 +1,15 @@
-import { AstData, delComma, parseModel, parseAttrList } from './util';
+import { AstData, parseModel, parseAttrList } from './util';
 import { ForParseResult } from 'src/helpers';
 import { ASTNode } from './ast-node';
 import { VNodeDirective } from './v-node';
 import baseDirectives, { DirectiveFunction } from '../directives/index';
-import { debounce } from 'src/util/helper';
 
 const textRE = /\{\{([^}]+)\}\}/g; // {{text}}
 const fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
 const fnInvokeRE = /\([^)]*?\);*$/;
 const simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/;
+
+const delComma = (str: string): string => str.replace(/,$/, '');
 
 export function genData(ast: ASTNode): string {
   const data: AstData = parseAttrList(ast);
@@ -26,6 +27,10 @@ export function genData(ast: ASTNode): string {
   if (data.ref) {
     str += `ref:${data.ref},`;
   }
+  if (data.refInFor) {
+    str += `refInFor:true,`;
+  }
+
   // attributes
   if (data.attrs && data.attrs.length) {
     str += `attrs:${genProps(data.attrs)},`;
@@ -55,10 +60,6 @@ export function genSync(expression: string): string {
   } else {
     return `$set(${res.exp}, ${res.key}, $event)`;
   }
-}
-
-export function genAttrValue(name: string, value: string): string {
-  return /^(:)/.test(name) ? `${value}` : `"${value}"`;
 }
 
 export function genText(text: string): string {
@@ -163,15 +164,15 @@ export function genDirectives(dirs: Array<VNodeDirective>, astData: AstData): st
 }
 
 export function genVNode(ast: ASTNode, isCheck = true): string {
-  const forRes: ForParseResult = ast.processMap.for;
+  const forRes: ForParseResult = ast.for;
   if (isCheck && forRes && forRes.for) {
     return `_l((${forRes.for}), function(${[forRes.alias, forRes.iterator1, forRes.iterator2]
       .filter(Boolean)
       .join(',')}){return ${genVNode(ast, false)}})`;
-  } else if (isCheck && ast.processMap.ifConditions) {
+  } else if (isCheck && ast.ifConditions) {
     return (
       '(' +
-      ast.processMap.ifConditions
+      ast.ifConditions
         .map(
           ({ exp, target }: { exp: string; target: ASTNode }) =>
             `${exp}?${genVNode(target, false)}:`,

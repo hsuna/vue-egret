@@ -30,7 +30,15 @@ export function parseFor(exp: string): ForParseResult {
   return res;
 }
 
-export function getAndRemoveAttr(node: ASTNode, name: string): any {
+export function getBindingAttr(node: ASTNode, name: string): string {
+  const dynamicValue =
+    getAndRemoveAttr(node, ':' + name) || getAndRemoveAttr(node, 'v-bind:' + name);
+  if (dynamicValue != null) return dynamicValue;
+  const staticValue = getAndRemoveAttr(node, name);
+  if (staticValue != null) return JSON.stringify(staticValue);
+}
+
+export function getAndRemoveAttr(node: ASTNode, name: string): string {
   const val = node.attrsMap[name];
   const list = node.attrsList;
   for (let i = 0, l = list.length; i < l; i++) {

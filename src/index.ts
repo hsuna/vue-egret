@@ -15,6 +15,8 @@ import { noop, emptyObject, isPlainObject, isHook, hasOwn } from './util/index';
 import { validateProp, normalizeProp } from './util/props';
 import { DirectiveHook, DirectiveOptions } from './directives';
 
+export type TArray<T> = T | Array<T>;
+
 export interface PropData {
   type: Function;
   default?: any;
@@ -63,7 +65,8 @@ export interface ComponentOptions {
 }
 
 /** 类型-注册信息 */
-export type ComponentRef = string | Component | egret.DisplayObject;
+export type RefData = Component | egret.DisplayObject;
+export type ComponentRef = string | RefData;
 
 /** 组件矩形 */
 export interface ComponentRect {
@@ -97,7 +100,7 @@ export class Component {
   /** 子组件集合 */
   $children: Array<Component> = [];
   /** 获取注册列表 */
-  $refs: Record<string, egret.DisplayObject | Component> = {};
+  $refs: Record<string, TArray<RefData>> = {};
   /** 组件配置 */
   $options: ComponentOptions;
 
@@ -288,7 +291,7 @@ export class Component {
       if ('function' === typeof callback) callback();
     }
   }
-  public $on(event: string | Array<string>, fn: Function): Component {
+  public $on(event: TArray<string>, fn: Function): Component {
     if (Array.isArray(event)) {
       event.forEach((evt) => this.$on(evt, fn));
     } else {
@@ -302,7 +305,7 @@ export class Component {
     }
     return this;
   }
-  public $once(event: string | Array<string>, fn: Function): Component {
+  public $once(event: TArray<string>, fn: Function): Component {
     const on: any = (...args) => {
       this.$off(event, on);
       return fn.apply(this, args);
@@ -311,7 +314,7 @@ export class Component {
     this.$on(event, on);
     return this;
   }
-  public $off(event: string | Array<string>, fn: Function): Component {
+  public $off(event: TArray<string>, fn: Function): Component {
     // all
     if (!arguments.length) {
       this._events = Object.create(null);
@@ -452,12 +455,19 @@ export class Component {
   /**
    * 通过挂载名或者组件，获取实际的显示对象
    * @param { ComponentRef } ref 显示对象名
-   * @return { egret.DisplayObject }
+   * @param { boolean } isAll 是否返回全部，如果选是，则返回数组对象
+   * @return { TArray<egret.DisplayObject> }
    */
-  public $displayObject(ref: ComponentRef): egret.DisplayObject {
+  public $displayObject(ref: ComponentRef, isAll?: boolean): TArray<egret.DisplayObject> {
     if ('string' === typeof ref) {
       // 挂载名
-      return this.$displayObject(this.$refs[ref]);
+      const refs = this.$refs[ref];
+      if (Array.isArray(refs)) {
+        if (isAll)
+          return refs.map((ref: RefData) => this.$displayObject(ref) as egret.DisplayObject);
+        return this.$displayObject(refs[0]);
+      }
+      return this.$displayObject(refs);
     } else if (ref instanceof Component) {
       // 组件
       return (ref as Component).$el;
@@ -476,8 +486,8 @@ export class Component {
    * @return { boolean }
    */
   public $hitTest(ref1: ComponentRef, ref2: ComponentRef): boolean {
-    const disObj1: egret.DisplayObject = this.$displayObject(ref1);
-    const disObj2: egret.DisplayObject = this.$displayObject(ref2);
+    const disObj1 = this.$displayObject(ref1) as egret.DisplayObject;
+    const disObj2 = this.$displayObject(ref2) as egret.DisplayObject;
     if (!disObj1 || !disObj2) return true;
     const rect1: egret.Rectangle = disObj1.getBounds();
     const rect2: egret.Rectangle = disObj2.getBounds();
@@ -516,7 +526,7 @@ export class Component {
    * @return { boolean }
    */
   public $hitTestPoint(ref: ComponentRef, x: number, y: number, shapeFlag?: boolean): boolean {
-    const disObj: egret.DisplayObject = this.$displayObject(ref);
+    const disObj = this.$displayObject(ref) as egret.DisplayObject;
     return disObj ? disObj.hitTestPoint(x, y, shapeFlag) : false;
   }
   /**
@@ -527,8 +537,8 @@ export class Component {
    * @return { egret.Point } 本地坐标
    */
   public $globalToLocal(ref: ComponentRef, stateX: number, stateY: number): egret.Point {
-    const disObj: egret.DisplayObject = this.$displayObject(ref);
-    const resultPoint: egret.Point = new egret.Point(stateX, stateY);
+    const disObj = this.$displayObject(ref) as egret.DisplayObject;
+    const resultPoint = new egret.Point(stateX, stateY);
     disObj && disObj.globalToLocal(stateX, stateY, resultPoint);
     return resultPoint;
   }
@@ -540,8 +550,8 @@ export class Component {
    * @return { egret.Point } 全局坐标
    */
   public $localToGlobal(ref: ComponentRef, stateX: number, stateY: number): egret.Point {
-    const disObj: egret.DisplayObject = this.$displayObject(ref);
-    const resultPoint: egret.Point = new egret.Point(stateX, stateY);
+    const disObj = this.$displayObject(ref) as egret.DisplayObject;
+    const resultPoint = new egret.Point(stateX, stateY);
     disObj && disObj.localToGlobal(stateX, stateY, resultPoint);
     return resultPoint;
   }

@@ -7,18 +7,20 @@ export interface ASTAttr {
   dynamic?: boolean;
 }
 export interface ASTNode {
+  key?: string;
+  ref?: string;
   tag: string;
   text: string;
   attrsList: Array<ASTAttr>;
   attrsMap: Object;
-  processMap: {
-    [propsName: string]: any;
-    for?: ForParseResult;
-    ifConditions?: Array<{
-      exp: string;
-      target: ASTNode;
-    }>;
-  };
+  for?: ForParseResult;
+  if?: string;
+  elseif?: string;
+  else?: boolean;
+  ifConditions?: Array<{
+    exp: string | boolean;
+    target: ASTNode;
+  }>;
   children: Array<ASTNode>;
   parent: ASTNode;
 }
@@ -40,7 +42,6 @@ export default function createASTNode(
     text: '',
     attrsList: attrs,
     attrsMap: attrs.reduce((m, i) => Object.assign(m, { [i.name]: i.value }), {}), // 将属性列表映射为属性键对
-    processMap: {},
     parent,
     children: [],
   };

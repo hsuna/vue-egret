@@ -1,5 +1,5 @@
 import ParseHtml, { ParseHtmlAttr, ParseHtmlOptions } from './html-parser';
-import { parseFor, getAndRemoveAttr } from '../helpers/index';
+import { parseFor, getAndRemoveAttr, getBindingAttr } from '../helpers/index';
 import createASTNode, { ASTNode } from '../render/ast-node';
 
 /**
@@ -34,22 +34,17 @@ export default class ParserFactory implements ParseHtmlOptions {
   }
 
   endElement(tagName: string) {
-    let exp: any;
-    if ((exp = getAndRemoveAttr(this._target, 'v-for')))
-      this._target.processMap.for = parseFor(exp);
-    if ((exp = getAndRemoveAttr(this._target, 'v-if')))
-      this._target.processMap.if = this.addIfConditions(exp);
+    let exp: string;
+    if ((exp = getBindingAttr(this._target, 'key'))) this._target.key = exp;
+    if ((exp = getBindingAttr(this._target, 'ref'))) this._target.ref = exp;
+    if ((exp = getAndRemoveAttr(this._target, 'v-for'))) this._target.for = parseFor(exp);
+    if ((exp = getAndRemoveAttr(this._target, 'v-if'))) this._target.if = this.addIfConditions(exp);
     else if ((exp = getAndRemoveAttr(this._target, 'v-else-if')))
-      this._target.processMap.elseif = this.addIfConditions(exp, true);
+      this._target.elseif = this.addIfConditions(exp, true);
     else if ('undefined' !== typeof (exp = getAndRemoveAttr(this._target, 'v-else')))
-      this._target.processMap.else = this.addIfConditions(true, true);
+      this._target.else = this.addIfConditions(true, true);
 
-    if (
-      this._parent &&
-      this._target !== this._root &&
-      !this._target.processMap.elseif &&
-      !this._target.processMap.else
-    ) {
+    if (this._parent && this._target !== this._root && !this._target.elseif && !this._target.else) {
       this._parent.children.push(this._target);
     }
     this._target = this._parent;
@@ -76,22 +71,22 @@ export default class ParserFactory implements ParseHtmlOptions {
    * @param exp
    * @param prev 前置
    */
-  addIfConditions(exp: any, prev = false): any {
-    let processMap;
+  addIfConditions<T extends string | boolean>(exp: T, prev = false): T {
+    let target: ASTNode;
     if (prev) {
       const parent: ASTNode = this._target.parent;
       if (parent) {
         const curTarget: ASTNode = parent.children[parent.children.length - 1];
         if (curTarget) {
-          processMap = curTarget.processMap;
+          target = curTarget;
         }
       }
     } else {
-      processMap = this._target.processMap;
+      target = this._target;
     }
-    if (processMap) {
-      if (!processMap.ifConditions) processMap.ifConditions = [];
-      processMap.ifConditions.push({ exp, target: this._target });
+    if (target) {
+      if (!target.ifConditions) target.ifConditions = [];
+      target.ifConditions.push({ exp, target: this._target });
     }
     return exp;
   }

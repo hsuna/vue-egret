@@ -1,8 +1,8 @@
 /** 虚拟树 */
-import { Component } from '../index';
+import { Component, TArray } from '../index';
 
 export interface VNodeInvoker extends Function {
-  fns: Function | Array<Function>;
+  fns: TArray<Function>;
 }
 
 export type VNodeModifiers = Record<string, boolean>;
@@ -22,7 +22,8 @@ export interface VNode {
   sp?: egret.DisplayObject;
   key: any;
   tag: string;
-  ref: string;
+  ref?: string;
+  refInFor?: boolean;
   parent?: VNode;
   children: Array<VNode>;
   props?: Record<string, any>;
@@ -43,7 +44,7 @@ export function createVNode(tag: string, data: any = {}, children: Array<VNode> 
   return vnode;
 }
 
-export function createFnInvoker(fns: Function | Array<Function>, thisObject?: any): VNodeInvoker {
+export function createFnInvoker(fns: TArray<Function>, thisObject?: any): VNodeInvoker {
   const invoker: VNodeInvoker = function (...args: Array<any>) {
     const { fns } = invoker;
     if (Array.isArray(fns)) {
