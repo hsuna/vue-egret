@@ -14,20 +14,20 @@ sidebar: auto
 
 ```javascript
 var vm = new VueEgret({
-    data(){
-        return {
-            text: 'Hello Word!!!'
-        }
+  data() {
+    return {
+      text: 'Hello Word!!!',
+    };
+  },
+  methods: {
+    onTextClick() {
+      this.text = 'Text is Click';
     },
-    methods: {
-        onTextClick(){
-            this.text = 'Text is Click'
-        }
-    },
-    template: `<Sprite touchEnabled="true" @touchTap="onTextClick">
+  },
+  template: `<Sprite touchEnabled="true" @touchTap="onTextClick">
         <TextField textColor="#00FFFF" x="11" y="12">{{text}}</TextField>
-    </Sprite>`
-})
+    </Sprite>`,
+});
 ```
 
 ### VueEgret.classMain
@@ -37,26 +37,27 @@ var vm = new VueEgret({
 - 参数：
   - `{ ComponentOptions } options`
 - 返回：
+
   - `{ Class<DisplayObjectContainer> }`
 
 - 用法：
 
 ```javascript
 var Main = VueEgret.classMain({
-    data(){
-        return {
-            text: 'Hello Word!!!'
-        }
+  data() {
+    return {
+      text: 'Hello Word!!!',
+    };
+  },
+  methods: {
+    onTextClick() {
+      this.text = 'Text is Click';
     },
-    methods: {
-        onTextClick(){
-            this.text = 'Text is Click'
-        }
-    },
-    template: `<Sprite touchEnabled="true" @touchTap="onTextClick">
+  },
+  template: `<Sprite touchEnabled="true" @touchTap="onTextClick">
         <TextField textColor="#00FFFF" x="11" y="12">{{text}}</TextField>
-    </Sprite>`
-})
+    </Sprite>`,
+});
 ```
 
 ### VueEgret.extend
@@ -66,6 +67,7 @@ var Main = VueEgret.classMain({
 - 参数：
   - `{ ComponentOptions|ComponentClass } options`
 - 返回：
+
   - `{ ComponentClass }`
 
 - 用法：
@@ -73,36 +75,62 @@ var Main = VueEgret.classMain({
 ```javascript
 // 创建构造器
 var Profile = VueEgret.extend({
-    data(){
-        return {
-            text: 'Hello Word!!!'
-        }
+  data() {
+    return {
+      text: 'Hello Word!!!',
+    };
+  },
+  methods: {
+    onTextClick() {
+      this.text = 'Text is Click';
     },
-    methods: {
-        onTextClick(){
-            this.text = 'Text is Click'
-        }
-    },
-    template: `<Sprite touchEnabled="true" @touchTap="onTextClick">
+  },
+  template: `<Sprite touchEnabled="true" @touchTap="onTextClick">
         <TextField textColor="#00FFFF" x="11" y="12">{{text}}</TextField>
-    </Sprite>`
-})
+    </Sprite>`,
+});
 
 // 创建 Profile 实例，并添加到显示对象。
 var container = new egret.DisplayObjectContainer();
 new Profile().$mount(container);
 ```
 
+### VueEgret.nextTick
+
+将回调延迟到下次 `Node` 更新循环之后执行。在修改数据之后立即使用它，然后等待 `Node` 更新。
+
+- 参数：
+
+  - `{ Function } callback`
+
+- 返回: `{ Promise }`
+
+- 用法：
+
+```javascript
+VueEgret.nextTick(function () {
+  // TODO;
+});
+
+VueEgret.nextTick().then(function () {
+  // TODO;
+});
+```
+
+> 如果没有提供回调且在支持 Promise 的环境中，则返回一个 Promise。
+
 ### VueEgret.set
 
 向响应式对象中添加一个 property，并确保这个新 property 同样是响应式的，且触发视图更新。它必须用于向响应式对象上添加新 property，因为 `VueEgret` 无法探测普通的新增 property (比如 `this.myObject.newProperty = 'hi'`)
 
 - 参数：
+
   - `{Object | Array} target`
   - `{string | number} propertyName/index`
   - `{any} value`
 
 - 返回：
+
   - `{ any } value` 设置的值
 
 - 用法：
@@ -118,6 +146,7 @@ VueEgret.set(this.myObject, 'newProperty', 'hi');
 删除对象的 property。如果对象是响应式的，确保删除能触发更新视图。这个方法主要用于避开 `VueEgret` 不能检测到 property 被删除的限制，但是你应该很少会使用它。
 
 - 参数：
+
   - `{Object | Array} target`
   - `{string | number} propertyName/index`
 
@@ -137,19 +166,20 @@ VueEgret.delete(this.myObject, 'oldProperty');
   - `{ String } name`
   - `{ ComponentOptions } options`
 - 返回：
+
   - `{ ComponentClass }`
 
 - 用法：
 
 ```javascript
 // 注册组件，传入一个扩展过的构造器
-VueEgret.component('my-component', VueEgret.extend({ /* ... */ }))
+VueEgret.component('my-component', VueEgret.extend({/* ... */}));
 
 // 注册组件，传入一个选项对象 (自动调用 VueEgret.extend)
-VueEgret.component('my-component', { /* ... */ })
+VueEgret.component('my-component', {/* ... */});
 
 // 获取注册的组件 (始终返回构造器)
-var MyComponent = VueEgret.component('my-component')
+var MyComponent = VueEgret.component('my-component');
 ```
 
 ### VueEgret.directive
@@ -160,6 +190,7 @@ var MyComponent = VueEgret.component('my-component')
   - `{ String } name`
   - `{ DirectiveOptions | DirectiveHook } definition`
 - 返回：
+
   - `{ DirectiveOptions }`
 
 - 用法：
@@ -172,15 +203,15 @@ VueEgret.directive('my-directive', {
   update: function () {},
   componentUpdated: function () {},
   unbind: function () {}
-})
+});
 
 // 注册 (指令函数)
 VueEgret.directive('my-directive', function () {
   // 这里将会被 `bind` 和 `update` 调用
-})
+});
 
 // 获取注册的指令
-var MyDirective = VueEgret.directive('my-directive')
+var MyDirective = VueEgret.directive('my-directive');
 ```
 
 ### VueEgret.version
@@ -191,7 +222,7 @@ var MyDirective = VueEgret.directive('my-directive')
 
 ```javascript
 var version = VueEgret.version;
-console.log(version)
+console.log(version);
 ```
 
 ## 选项 / 数据
@@ -216,19 +247,19 @@ console.log(version)
 
 ```javascript
 var vm = new VueEgret({
-    data: {
-        a: 1
-    }
+  data: {
+    a: 1
+  }
 });
-vm.a // => 1
-vm.$data.a === data // => 1
+vm.a; // => 1
+vm.$data.a === data; // => 1
 
 // VueEgret.extend()或VueEgret.component() 中 data 必须是函数
 var Component = VueEgret.extend({
   data: function () {
-    return { a: 1 }
+    return { a: 1 };
   }
-})
+});
 ```
 
 ### props
@@ -250,8 +281,8 @@ var Component = VueEgret.extend({
 ```javascript
 // 简单语法
 VueEgret.component('my-component', {
-  props: ['size', 'height']
-})
+  props: ['size', 'height'],
+});
 
 // 对象语法，提供默认值
 VueEgret.component('my-component', {
@@ -262,9 +293,9 @@ VueEgret.component('my-component', {
     age: {
       type: Number,
       default: 0,
-    }
-  }
-})
+    },
+  },
+});
 ```
 
 ### computed
@@ -279,28 +310,28 @@ VueEgret.component('my-component', {
 
 ```javascript
 var vm = new VueEgret({
-    data: {
-        a: 1,
-        b: 2,
+  data: {
+    a: 1,
+    b: 2,
+  },
+  computed: {
+    sum: function () {
+      return this.a + this.b;
     },
-    computed: {
-        sum: function() {
-            return this.a + this.b;
-        },
-        plus: {
-            get: function() {
-                return this.a + 1;
-            },
-            set: function(v) {
-                this.a = v - 1;
-            }
-        }
-    }
+    plus: {
+      get: function () {
+        return this.a + 1;
+      },
+      set: function (v) {
+        this.a = v - 1;
+      },
+    },
+  },
 });
-vm.plus // => 2
+vm.plus; // => 2
 vm.plus = 3;
-vm.a    // => 2
-vm.sum  // => 4
+vm.a; // => 2
+vm.sum; // => 4
 ```
 
 ### methods
@@ -317,17 +348,17 @@ vm.sum  // => 4
 
 ```javascript
 var vm = new VueEgret({
-    data: {
-        a: 1
-    },
-    methods: {
-        plus: function () {
-        this.a++
-        }
+  data: {
+    a: 1
+  },
+  methods: {
+    plus: function () {
+      this.a++;
     }
-})
-vm.plus()
-vm.a        // 2
+  }
+});
+vm.plus();
+vm.a; // 2
 ```
 
 ### watch
@@ -344,46 +375,48 @@ vm.a        // 2
 
 ```javascript
 var vm = new VueEgret({
-    data: {
-        a: 1,
-        b: 2,
-        c: 3,
-        d: 4,
-        e: {
-            f: {
-                g: 5
-            }
-        }
+  data: {
+    a: 1,
+    b: 2,
+    c: 3,
+    d: 4,
+    e: {
+      f: {
+        g: 5,
+      },
     },
-    watch: {
-        a: function (val, oldVal) {
-            console.log('new: %s, old: %s', val, oldVal)
-        },
-        // 方法名
-        b: 'someMethod',
-        // 该回调会在任何被侦听的对象的 property 改变时被调用，不论其被嵌套多深
-        c: {
-            handler: function (val, oldVal) { /* ... */ },
-            deep: true
-        },
-        // 该回调将会在侦听开始之后被立即调用
-        d: {
-            handler: 'someMethod',
-            immediate: true
-        },
-        // 你可以传入回调数组，它们会被逐一调用
-        e: [
-            'handle1',
-            function handle2 (val, oldVal) { /* ... */ },
-            {
-                handler: function handle3 (val, oldVal) { /* ... */ },
-                /* ... */
-            }
-        ],
-        // watch vm.e.f's value: {g: 5}
-        'e.f': function (val, oldVal) { /* ... */ }
-  }
-})
+  },
+  watch: {
+    a: function (val, oldVal) {
+      console.log('new: %s, old: %s', val, oldVal);
+    },
+    // 方法名
+    b: 'someMethod',
+    // 该回调会在任何被侦听的对象的 property 改变时被调用，不论其被嵌套多深
+    c: {
+      handler: function (val, oldVal) { /* ... */ },
+      deep: true,
+    },
+    // 该回调将会在侦听开始之后被立即调用
+    d: {
+      handler: 'someMethod',
+      immediate: true,
+    },
+    // 你可以传入回调数组，它们会被逐一调用
+    e: [
+      'handle1',
+      function handle2(val, oldVal) {
+        /* ... */
+      },
+      {
+        handler: function handle3(val, oldVal) { /* ... */ },
+        /* ... */
+      },
+    ],
+    // watch vm.e.f's value: {g: 5}
+    'e.f': function (val, oldVal) { /* ... */ },
+  },
+});
 ```
 
 ## 选项 / 渲染
@@ -402,10 +435,10 @@ var vm = new VueEgret({
 
 ```javascript
 var vm = new VueEgret({
-    template: `<Sprite>
+  template: `<Sprite>
         <TextField touchEnabled="true" textColor="#00FFFF" x="100" y="100">123</TextField>
     </Sprite>`
-})
+});
 ```
 
 ### render
@@ -422,19 +455,19 @@ var vm = new VueEgret({
 
 ```javascript
 var vm = new VueEgret({
-    render: function(h) {
-        return h('Sprite', [
-            h('TextField', {
-                attrs: {
-                    textColor: "#00FFFF",
-                    x: 100,
-                    y: 100,
-                    text: "xxxxx"
-                }
-            })
-        ])
-    }
-})
+  render: function (h) {
+    return h('Sprite', [
+      h('TextField', {
+        attrs: {
+          textColor: '#00FFFF',
+          x: 100,
+          y: 100,
+          text: 'xxxxx',
+        },
+      }),
+    ]);
+  },
+});
 ```
 
 ## 选项 / 生命周期钩子
@@ -577,9 +610,9 @@ updated: function () {
 var vm = new VueEgret({
   customOption: 'foo',
   created: function () {
-    console.log(this.$options.customOption) // => 'foo'
-  }
-})
+    console.log(this.$options.customOption); // => 'foo'
+  },
+});
 ```
 
 ### vm.$parent
@@ -630,11 +663,36 @@ var vm = new VueEgret({
 
 包含了父作用域中的 (不含 `.native` 修饰器的) v-on 事件监听器。它可以通过 v-on="$listeners" 传入内部组件——在创建更高层次的组件时非常有用。
 
+### vm.$stage
+
+- 类型：`{ egret.Stage }`
+
+- 说明：
+
+获取舞台对象，详细看[`egret.Stage`](http://developer.egret.com/cn/apidoc/index/name/egret.Stage)
+
+### vm.$stageWidth
+
+- 类型：`{ number }`
+
+- 说明：
+
+获取舞台的当前宽度，详细看[`egret.Stage`](http://developer.egret.com/cn/apidoc/index/name/egret.Stage#stageWidth)
+
+### vm.$stageHeight
+
+- 类型：`{ number }`
+
+- 说明：
+
+获取舞台的当前高度，详细看[`egret.Stage`](http://developer.egret.com/cn/apidoc/index/name/egret.Stage#stageHeight)
+
 ## 实例方法 / 数据
 
 ### vm.$watch
 
 - 参数：
+
   - `{ string | Function } expOrFn`
   - `{ Function | Object } callback`
   - `{ Object } [options]`
@@ -651,7 +709,7 @@ var vm = new VueEgret({
 // 键路径
 vm.$watch('a.b.c', function (newVal, oldVal) {
   // 做点什么
-})
+});
 
 // 函数
 vm.$watch(
@@ -659,20 +717,20 @@ vm.$watch(
     // 表达式 `this.a + this.b` 每次得出一个不同的结果时
     // 处理函数都会被调用。
     // 这就像监听一个未被定义的计算属性
-    return this.a + this.b
+    return this.a + this.b;
   },
   function (newVal, oldVal) {
     // 做点什么
-  }
-)
+  },
+);
 ```
 
 `vm.$watch` 返回一个取消观察函数，用来停止触发回调：
 
 ```javascript
-var unwatch = vm.$watch('a', cb)
+var unwatch = vm.$watch('a', cb);
 // 之后取消观察
-unwatch()
+unwatch();
 ```
 
 - 选项：deep
@@ -681,9 +739,9 @@ unwatch()
 
 ```javascript
 vm.$watch('someObject', callback, {
-  deep: true
-})
-vm.someObject.nestedValue = 123
+  deep: true,
+});
+vm.someObject.nestedValue = 123;
 // callback is fired
 ```
 
@@ -693,8 +751,8 @@ vm.someObject.nestedValue = 123
 
 ```javascript
 vm.$watch('a', callback, {
-  immediate: true
-})
+  immediate: true,
+});
 // 立即以 `a` 的当前值触发回调
 ```
 
@@ -705,11 +763,11 @@ vm.$watch('a', callback, {
 var unwatch = vm.$watch(
   'value',
   function () {
-    doSomething()
-    unwatch()
+    doSomething();
+    unwatch();
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 ```
 
 如果你仍然希望在回调内部调用一个取消侦听的函数，你应该先检查其函数的可用性：
@@ -718,13 +776,13 @@ var unwatch = vm.$watch(
 var unwatch = vm.$watch(
   'value',
   function () {
-    doSomething()
+    doSomething();
     if (unwatch) {
-      unwatch()
+      unwatch();
     }
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 ```
 
 ### vm.$set
@@ -732,11 +790,13 @@ var unwatch = vm.$watch(
 这是全局 `VueEgret.set` 的别名。
 
 - 参数：
+
   - `{ Object | Array } target`
   - `{ string | number } propertyName/index`
   - `{ any } value`
 
 - 返回：
+
   - `{ any } value` 设置的值
 
 - 用法：
@@ -750,6 +810,7 @@ vm.$set(vm.myObject, 'newProperty', 'hi');
 这是全局 `VueEgret.delete` 的别名。
 
 - 参数：
+
   - `{ Object | Array } target`
   - `{ string | number } propertyName/index`
 
@@ -766,6 +827,7 @@ vm.$delete(vm.myObject, 'oldProperty');
 监听当前实例上的自定义事件。事件可以由 `vm.$emit` 触发。回调函数会接收所有传入事件触发函数的额外参数。
 
 - 参数：
+
   - `{ string | Array<string> } event`
   - `{ Function } callback`
 
@@ -773,9 +835,9 @@ vm.$delete(vm.myObject, 'oldProperty');
 
 ```javascript
 vm.$on('test', function (msg) {
-  console.log(msg)
-})
-vm.$emit('test', 'hi')
+  console.log(msg);
+});
+vm.$emit('test', 'hi');
 // => "hi"
 ```
 
@@ -784,6 +846,7 @@ vm.$emit('test', 'hi')
 监听一个自定义事件，但是只触发一次。一旦触发之后，监听器就会被移除。
 
 - 参数：
+
   - `{ string } event`
   - `{ Function } callback`
 
@@ -791,11 +854,11 @@ vm.$emit('test', 'hi')
 
 ```javascript
 vm.$once('test', function (msg) {
-  console.log(msg)
-})
-vm.$emit('test', 'hi')
+  console.log(msg);
+});
+vm.$emit('test', 'hi');
 // => "hi"
-vm.$emit('test', 'hi')
+vm.$emit('test', 'hi');
 // => 不响应
 ```
 
@@ -810,6 +873,7 @@ vm.$emit('test', 'hi')
 3. 如果同时提供了事件与回调，则只移除这个回调的监听器。
 
 - 参数：
+
   - `{ string | Array<string> } event`
   - `{ Function } callback`
 
@@ -817,13 +881,13 @@ vm.$emit('test', 'hi')
 
 ```javascript
 let handler = function (msg) {
-  console.log(msg)
-}
-vm.$on('test', handler)
-vm.$emit('test', 'hi')
+  console.log(msg);
+};
+vm.$on('test', handler);
+vm.$emit('test', 'hi');
 // => "hi"
-vm.$off('test', handler)
-vm.$emit('test', 'hi')
+vm.$off('test', handler);
+vm.$emit('test', 'hi');
 // => 不响应
 ```
 
@@ -832,14 +896,15 @@ vm.$emit('test', 'hi')
 触发当前实例上的事件。附加参数都会传给监听器回调。
 
 - 参数：
+
   - `{ string } eventName`
   - `[...args]`
 
 - 用法：
 
 ```javascript
-vm.$emit('test', 'hi')
-vm.$emit('test', 'hi', 'hi2') // 多个参数
+vm.$emit('test', 'hi');
+vm.$emit('test', 'hi', 'hi2'); // 多个参数
 ```
 
 ## 实例方法 / 生命周期
@@ -852,23 +917,23 @@ vm.$emit('test', 'hi', 'hi2') // 多个参数
 
 - 参数：
   - `{ egret.DisplayObjectContainer } parent` 挂载对象
-  
 - 返回：
+
   - `{ Component }` vm 实例自身
 
 - 用法：
 
 ```javascript
 var MyComponent = VueEgret.extend({
-  template: `<TextField textColor="#00FFFF" x="11" y="12">test</TextField>`
-})
+  template: `<TextField textColor="#00FFFF" x="11" y="12">test</TextField>`,
+});
 
 var container = new egret.DisplayObjectContainer();
 // 创建并挂载到 container
-new MyComponent().$mount(container)
+new MyComponent().$mount(container);
 
 // 或者
-var component = new MyComponent().$mount()
+var component = new MyComponent().$mount();
 container.addChild(component.$el);
 ```
 
@@ -887,6 +952,7 @@ vm.$forceUpdate();
 将回调延迟到下次 `Node` 更新循环之后执行。在修改数据之后立即使用它，然后等待 `Node` 更新。
 
 - 参数：
+
   - `{ Function } callback`
 
 - 返回: `{ Promise }`
@@ -894,18 +960,18 @@ vm.$forceUpdate();
 - 用法：
 
 ```javascript
-vm.$nextTick(function(){
+vm.$nextTick(function () {
   // TODO;
 });
 
-vm.$nextTick().then(function(){
+vm.$nextTick().then(function () {
   // TODO;
 });
 ```
 
 > 如果没有提供回调且在支持 Promise 的环境中，则返回一个 Promise。
 
-### vm.$destroy
+### vm.$destroy()
 
 完全销毁一个实例。清理它与其它实例的连接，解绑它的全部指令及事件监听器。
 
@@ -919,6 +985,178 @@ vm.$destroy();
 
 > 在大多数场景中你不应该调用这个方法。最好使用 `v-if` 和 `v-for` 指令以数据驱动的方式控制子组件的生命周期。
 
+## 实例方法/功能
+
+### vm.$tween
+
+Tween 缓动动画，详细见[`egret.Tween`](http://developer.egret.com/cn/apidoc/index/name/egret.Tween)，返回一个 `Promise`
+
+- 参数：
+
+  - `{ Array<TweenData> } params` 运动参数
+  - `{ Component | egret.DisplayObject } target` 运动对象，默认是实例本身
+
+- 返回: `{ Promise<egret.Tween> }`
+
+- 用法：
+
+TweenData 主要有`set`，`to`，`wait`三种动作：
+
+- set：将指定对象的属性修改为指定的值，详细见[`egret.tween.Set`](http://developer.egret.com/cn/apidoc/index/name/egret.tween.Set)
+- to: 根据时间，缓动的将指定对象的属性修改为指定值，详细见[`egret.tween.To`](http://developer.egret.com/cn/apidoc/index/name/egret.tween.To)
+- wait: 等待指定毫秒后执行下一个动画，详细见[`egret.tween.Wait`](http://developer.egret.com/cn/apidoc/index/name/egret.tween.Wait)
+
+```javascript
+/* 传入ref name */
+vm.$tween([
+  ['set', { x: 100 }],
+  ['to', { value: 100 }, 3000, egret.Ease.quadOut],
+  ['wait', 1000],
+]).then(() => {
+  // 动作执行完成
+});
+```
+
+### vm.$displayObject
+
+根据传入的值获取实际的显示对象，如果传入的是个字符串，则会做为 ref 获取组件的显示对象，如果的是一个组件实例，这获取该实例的显示对象，如果传入是显示对象，则返回显示对象本身，否则返回 null
+
+- 参数：
+
+  - `{ string | Component | egret.DisplayObject } ref1` 显示对象
+  - `{ boolean } isAll` 如果设置为 true 时，返回$refs 引用的所有显示对象数组，否则返回第一个显示对象
+
+- 返回: `{ egret.DisplayObject | Array<egret.DisplayObject> }`
+
+- 用法：
+
+```javascript
+/* 传入ref name */
+vm.$displayObject('refName'); // vm.$refs[refName] |  vm.$refs[refName][0]
+vm.$displayObject('refName', true); // vm.$refs[refName]
+
+/* 传入Component */
+vm.$displayObject(vm); // vm.$el
+```
+
+### vm.$hitTest
+
+用于检测两个显示对象间是否存在碰撞，这里不做精确碰撞像素检测，只是根据显示对象的测量边界进行检测判断。
+
+- 参数：
+
+  - `{ string | Component | egret.DisplayObject } ref1` 显示对象 1
+  - `{ string | Component | egret.DisplayObject } ref2` 显示对象 2
+
+- 返回: `{ boolean }`
+
+- 用法：
+
+```javascript
+/* 传入ref name */
+vm.$hitTest('refName1', 'refName2';
+
+/* 传入Component */
+vm.$hitTest(VueEgret.extend({ /* ... */ }), 'refName2');
+
+/* 传入DisplayObject */
+vm.$hitTest(vm.$el, 'refName1');
+```
+
+### vm.$hitTestPiont
+
+计算显示对象，以确定它是否与 x 和 y 参数指定的点重叠或相交。x 和 y 参数指定舞台的坐标空间中的点，而不是包含显示对象的显示对象容器中的点（除非显示对象容器是舞台）。注意，不要在大量物体中使用精确碰撞像素检测，这回带来巨大的性能开销
+
+- 参数：
+
+  - `{ string | Component | egret.DisplayObject } ref` 显示对象
+  - `{ number } x` 测试坐标 x
+  - `{ number } y` 测试坐标 y
+  - `{ boolean } shapeFlag` 检查对象 (true) 的实际像素，还是检查边框 (false) 的实际像素。
+
+- 返回: `{ boolean }`
+
+- 用法：
+
+```javascript
+/* 传入ref name */
+vm.$hitTestPiont('refName', 0, 0);
+
+/* 传入Component */
+vm.$hitTestPiont(
+  VueEgret.extend({
+    /* ... */
+  }),
+  0,
+  0,
+);
+
+/* 传入DisplayObject */
+vm.$hitTestPiont(vm.$el, 0, 0);
+```
+
+### vm.$globalToLocal
+
+将从舞台（全局）坐标转换为显示对象的（本地）坐标。
+
+- 参数：
+
+  - `{ string | Component | egret.DisplayObject } ref` 显示对象
+  - `{ number } stateX` 舞台坐标 x
+  - `{ number } stateY` 舞台坐标 y
+
+- 返回: `{ egret.Point }`
+
+- 用法：
+
+```javascript
+/* 传入ref name */
+vm.$globalToLocal('refName', 0, 0);
+
+/* 传入Component */
+vm.$globalToLocal(
+  VueEgret.extend({
+    /* ... */
+  }),
+  0,
+  0,
+);
+
+/* 传入DisplayObject */
+vm.$globalToLocal(vm.$el, 0, 0);
+```
+
+### vm.$localToGlobal
+
+将从舞台（全局）坐标转换为显示对象的（本地）坐标。
+
+- 参数：
+
+  - `{ string | Component | egret.DisplayObject } ref` 显示对象
+  - `{ number } localY` 本地坐标 x
+  - `{ number } localY` 本地坐标 y
+
+- 返回: `{ egret.Point }`
+
+- 用法：
+
+```javascript
+/* 传入ref name */
+vm.$localToGlobal('refName', 0, 0);
+
+/* 传入Component */
+vm.$localToGlobal(
+  VueEgret.extend({
+    /* ... */
+  }),
+  0,
+  0,
+);
+
+/* 传入DisplayObject */
+vm.$localToGlobal(vm.$el, 0, 0);
+```
+
 ## 指令
 
 ### v-if
@@ -930,7 +1168,7 @@ vm.$destroy();
 - 用法：
 
 ```javascript
- <TextField v-if="val < 5">v-if</TextField>
+<TextField v-if="val < 5">v-if</TextField>
 ```
 
 > 当和 v-if 一起使用时，v-for 的优先级比 v-if 更高。
@@ -1002,6 +1240,7 @@ vm.$destroy();
 - 预期：`any (with argument) | Object (without argument)`
 - 参数：`attrOrProp (optional)`
 - 修饰符：
+
   - `.sync` - 同步语法糖，会扩展成一个更新父组件绑定值的 `v-on` 侦听器。
 
 - 用法：
@@ -1039,6 +1278,7 @@ vm.$destroy();
 - 预期：`Function | Inline Statement | Object`
 - 参数：`event`
 - 修饰符：
+
   - `.stop` - 调用 event.stopPropagation()。
   - `.prevent` - 调用 event.preventDefault()。
   - `.capture` - 添加事件侦听器时使用 capture 模式。
@@ -1099,11 +1339,13 @@ vm.$destroy();
 
 ### key
 
-- 预期：`number | string | symbol`
-
 `key` 的特殊 attribute 主要用在 VueEgret 的虚拟节点 算法，在新旧 nodes 对比时辨识 VNodes。如果不使用 key，VueEgret 会使用一种最大限度减少动态元素并且尽可能的尝试就地修改/复用相同类型元素的算法。而使用 key 时，它会基于 key 的变化重新排列元素顺序，并且会移除 key 不存在的元素。
 
 有相同父元素的子元素必须有**独特的 key**。重复的 key 会造成渲染错误。
+
+- 预期：`number | string | symbol`
+
+- 用法：
 
 最常见的用例是结合 v-for：
 
@@ -1115,9 +1357,11 @@ vm.$destroy();
 
 ### ref
 
+ref 被用来给显示对象或子组件注册引用信息。引用信息将会注册在父组件的 `$refs` 对象上。如果在普通的 DisplayObject 对象上使用，引用指向的就是 DisplayObject 对象；如果用在子组件上，引用就指向组件实例：
+
 - 预期：`string`
 
-ref 被用来给显示对象或子组件注册引用信息。引用信息将会注册在父组件的 `$refs` 对象上。如果在普通的 DisplayObject 对象上使用，引用指向的就是 DisplayObject 对象；如果用在子组件上，引用就指向组件实例：
+- 用法：
 
 ```javascript
 <!-- `vm.$refs.sp` will be the DisplayObject node -->
@@ -1131,6 +1375,32 @@ ref 被用来给显示对象或子组件注册引用信息。引用信息将会�
 
 > 关于 ref 注册时间的重要说明：因为 ref 本身是作为渲染结果被创建的，在初始渲染的时候你不能访问它们 - 它们还不存在！`$refs` 也不是响应式的，因此你不应该试图用它在模板中做数据绑定。
 
+### is
+
+用于动态组件。
+
+- 预期：`string`
+
+- 用法：
+
+```javascript
+<!-- 当 `currentView` 改变时，组件也跟着改变 -->
+<component v-bind:is="currentView"></component>
+```
+
 ## 内置的组件
 
 ### component
+
+- Props：
+
+  - is - string
+
+- 用法：
+
+渲染一个“元组件”为动态组件。依 is 的值，来决定哪个组件被渲染。
+
+```javascript
+<!-- 动态组件由 vm 实例的 `componentId` property 控制 -->
+<component :is="componentId"></component>
+```
