@@ -481,26 +481,6 @@ export class Component {
     return rect1.intersects(rect2);
   }
   /**
-   * 矩形碰撞检测
-   * @description 用于检测两个矩形对象间是否存在碰撞
-   * @author Hsuna
-   * @param { ComponentRect } rect1 矩形对象1
-   * @param { ComponentRect } rect2 矩形对象2
-   * @return { boolean }
-   */
-  public $hitTestRect(rect1: ComponentRect, rect2: ComponentRect): boolean {
-    if (!rect1 || !rect2) return true;
-    rect1 =
-      rect1 instanceof egret.Rectangle
-        ? rect1
-        : new egret.Rectangle(rect1.x, rect1.y, rect1.width, rect1.height);
-    rect2 =
-      rect2 instanceof egret.Rectangle
-        ? rect2
-        : new egret.Rectangle(rect2.x, rect2.y, rect2.width, rect2.height);
-    return (rect1 as egret.Rectangle).intersects(rect2 as egret.Rectangle);
-  }
-  /**
    * 坐标点碰撞检测
    * @description 用于检测坐标点是否在对象内
    * @author Hsuna
@@ -530,14 +510,14 @@ export class Component {
   /**
    * 将本地坐标转化为全局坐标
    * @param { ComponentRef } ref 显示对象
-   * @param { number } stateX  本地坐标X
-   * @param { number } stateY  本地坐标Y
+   * @param { number } localX  本地坐标X
+   * @param { number } localY  本地坐标Y
    * @return { egret.Point } 全局坐标
    */
-  public $localToGlobal(ref: ComponentRef, stateX: number, stateY: number): egret.Point {
+  public $localToGlobal(ref: ComponentRef, localX: number, localY: number): egret.Point {
     const disObj = this.$displayObject(ref) as egret.DisplayObject;
-    const resultPoint = new egret.Point(stateX, stateY);
-    disObj && disObj.localToGlobal(stateX, stateY, resultPoint);
+    const resultPoint = new egret.Point(localX, localY);
+    disObj && disObj.localToGlobal(localX, localY, resultPoint);
     return resultPoint;
   }
 
@@ -553,14 +533,14 @@ export class Component {
    * @return { number }
    */
   public get $stageWidth(): number {
-    return this._global.stage.width;
+    return this._global.stage.stageWidth;
   }
   /**
    * 获取舞台高度
    * @return { number }
    */
   public get $stageHeight(): number {
-    return this._global.stage.height;
+    return this._global.stage.stageHeight;
   }
   public get $data(): Record<string, any> {
     return this._data;
@@ -593,7 +573,6 @@ export default class VueEgret extends Component {
   static set = set;
   static delete = del;
   static nextTick = nextTick;
-  static tween = tween;
 
   /**
    * 设置全局组件

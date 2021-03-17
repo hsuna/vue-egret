@@ -15,7 +15,7 @@ export interface TweenData extends Array<any> {
  * - egret.Tween.to: ['to', :props, :duration?, :ease?]
  * - egret.Tween.wait: ['wait', :duration, :passive?]
  * @param { RefData } target 可选，运动对象
- * @return {egret.Tween}
+ * @return { Promise<egret.Tween> }
  */
 export function tween(params: Array<TweenData> = [], target?: RefData): Promise<egret.Tween> {
   if ('Tween' in egret) {
