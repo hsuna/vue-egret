@@ -35,6 +35,7 @@ export default class ParserFactory implements ParseHtmlOptions {
 
   endElement(tagName: string) {
     let exp: string;
+    if ((exp = getBindingAttr(this._target, 'is'))) this._target.component = exp;
     if ((exp = getBindingAttr(this._target, 'key'))) this._target.key = exp;
     if ((exp = getBindingAttr(this._target, 'ref'))) this._target.ref = exp;
     if ((exp = getAndRemoveAttr(this._target, 'v-for'))) this._target.for = parseFor(exp);

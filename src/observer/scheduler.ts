@@ -1,5 +1,5 @@
-import { nextTick } from 'src/util/next-tick';
 import { Component } from '..';
+import { nextTick } from 'src/util/next-tick';
 import Watcher from './watcher';
 
 export const MAX_UPDATE_COUNT = 100;

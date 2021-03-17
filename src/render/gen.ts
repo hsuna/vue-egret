@@ -181,7 +181,7 @@ export function genVNode(ast: ASTNode, isCheck = true): string {
       '"")'
     );
   } else {
-    return `_c("${ast.tag}",${genData(ast)}${
+    return `_c(${ast.component || `"${ast.tag}"`},${genData(ast)}${
       ast.children.length > 0
         ? `,[].concat(${ast.children.map((ast: ASTNode) => genVNode(ast))})`
         : ''

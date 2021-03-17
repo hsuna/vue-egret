@@ -9,6 +9,7 @@ export interface ASTAttr {
 export interface ASTNode {
   key?: string;
   ref?: string;
+  component?: string;
   tag: string;
   text: string;
   attrsList: Array<ASTAttr>;
