@@ -22,7 +22,8 @@ export default {
     },
   },
   template: `<Sprite touchEnabled="true" @touchTap="onTouchTap">
-        <TextField v-for="item in items" ref="text">{{item+text}}</TextField>
-        <MyLabel v-for="item in items" ref="label">{{item+text}}</MyLabel>
+        <TextField v-for="item in items" ref="text" y="0">{{item+text}}</TextField>
+        <MyLabel v-for="item in items" ref="label" y="50">{{item+text}}</MyLabel>
+        <Component is="TextField" y="100">{{text}}</Component>
     </Sprite>`,
 };
