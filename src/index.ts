@@ -1,5 +1,5 @@
 /*
- * vue-egret 1.2.2
+ * vue-egret
  * @author Hsuna
  */
 ///<reference path="../types/egret.d.ts" />
@@ -28,7 +28,7 @@ export interface PropData {
 
 export interface ComponentClass {
   options: ComponentOptions;
-  new (parentOptions?: ComponentParentOptions);
+  new (parentOptions?: ComponentParentOptions): Component;
 }
 export interface ComponentParentOptions {
   parent?: Component;
@@ -76,14 +76,6 @@ export interface ComponentRect {
   y: number;
   width: number;
   height: number;
-}
-
-export class ComponentEvent extends egret.Event {
-  public data: any;
-  constructor(type: string, data: any, bubbles = false, cancelable = false) {
-    super(type, bubbles, cancelable);
-    this.data = data;
-  }
 }
 
 /**
@@ -231,7 +223,7 @@ export class Component {
   private _initMethods(methods: Record<string, Function> = {}) {
     // 将methods上的方法赋值到vm实例上
     for (const e in methods) {
-      this[e] = methods[e];
+      (this as any)[e] = methods[e];
     }
   }
   private _initComputed(computed: any = {}) {
@@ -282,7 +274,7 @@ export class Component {
       handler = handler.handler;
     }
     if (typeof handler === 'string') {
-      handler = this[handler];
+      handler = (this as any)[handler];
     }
     return this.$watch(expOrFn, handler, options);
   }
@@ -301,7 +293,7 @@ export class Component {
     return this;
   }
   public $once(event: TArray<string>, fn: Function): Component {
-    const on: any = (...args) => {
+    const on: any = (...args: any[]) => {
       this.$off(event, on);
       return fn.apply(this, args);
     };
@@ -367,11 +359,11 @@ export class Component {
       watcher.teardown();
     };
   }
-  public $callHook(name: string, ...rest) {
+  public $callHook(name: string, ...rest: any[]) {
     // 阻断所有数据变动
     pushTarget();
-    if ('function' === typeof this.$options[name]) {
-      this.$options[name].call(this, ...rest);
+    if ('function' === typeof (this.$options as any)[name]) {
+      (this.$options as any)[name].call(this, ...rest);
     }
     if (this._hasHookEvent) {
       this.$emit('hook:' + name);

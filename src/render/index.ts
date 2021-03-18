@@ -268,18 +268,18 @@ export default class Render {
         vnode.nativeOn[type] = this._addInvoker(type, vnode, true);
       }
     } else {
-      VClass = egret[vnode.tag] || ev(window, vnode.tag);
+      VClass = (egret as any)[vnode.tag] || ev(window, vnode.tag);
       if (VClass) {
         vnode.sp = new (<any>VClass)();
-        vnode.sp[DEFAULT_ATTR] = {};
+        (vnode.sp as any)[DEFAULT_ATTR] = {};
 
         for (const type in vnode.on) {
           vnode.on[type] = this._addInvoker(type, vnode);
         }
 
         for (const name in vnode.attrs) {
-          vnode.sp[DEFAULT_ATTR][name] = vnode.sp[name];
-          vnode.sp[name] = vnode.attrs[name];
+          (vnode.sp as any)[DEFAULT_ATTR][name] = (vnode.sp as any)[name];
+          (vnode.sp as any)[name] = vnode.attrs[name];
         }
       }
     }
@@ -365,15 +365,15 @@ export default class Render {
       // 更新属性
       for (const name in newVNode.attrs) {
         if (oldVNode.attrs[name] !== newVNode.attrs[name]) {
-          if (!hasOwn(oldVNode.sp[DEFAULT_ATTR], name)) {
-            oldVNode.sp[DEFAULT_ATTR][name] = oldVNode.sp[name];
+          if (!hasOwn((oldVNode.sp as any)[DEFAULT_ATTR], name)) {
+            (oldVNode.sp as any)[DEFAULT_ATTR][name] = (oldVNode.sp as any)[name];
           }
-          oldVNode.sp[name] = newVNode.attrs[name];
+          (oldVNode.sp as any)[name] = newVNode.attrs[name];
         }
       }
       for (const name in oldVNode.attrs) {
         if (isUndef(newVNode.attrs[name])) {
-          oldVNode.sp[name] = oldVNode.sp[DEFAULT_ATTR][name];
+          (oldVNode.sp as any)[name] = (oldVNode.sp as any)[DEFAULT_ATTR][name];
         }
       }
     }
@@ -442,7 +442,7 @@ export default class Render {
   private _addInvoker(type: string, vnode: VNode, isNative = false): VNodeInvoker {
     const prefix: string = isNative ? 'nativeOn' : 'on';
     const event: EventParseResult = parseEvent(type);
-    let on: VNodeInvoker = vnode[prefix][type];
+    let on: VNodeInvoker = (vnode as any)[prefix][type];
     if (isUndef(on.fns)) {
       on = createFnInvoker(on, this._vm);
     }
@@ -468,8 +468,8 @@ export default class Render {
     isNative = false,
   ): VNodeInvoker {
     const prefix: string = isNative ? 'nativeOn' : 'on';
-    const oldOn: VNodeInvoker = oldVNode[prefix][type];
-    const newOn: VNodeInvoker = newVNode[prefix][type];
+    const oldOn: VNodeInvoker = (oldVNode as any)[prefix][type];
+    const newOn: VNodeInvoker = (newVNode as any)[prefix][type];
     if (isUndef(newOn)) {
       // TODO
     } else if (isUndef(oldOn)) {
@@ -512,13 +512,13 @@ export default class Render {
         oldVnode && normalizeDirectives(oldVnode.directives);
       for (const dir of vnode.directives) {
         const directive: DirectiveOptions = this._directives[dir.name];
-        if (directive && directive[hook]) {
+        if (directive && (directive as any)[hook]) {
           const binding: VNodeDirective = { ...dir };
           if (oldDir) {
             if (hasOwn(oldDir[dir.name], 'value')) binding['oldValue'] = oldDir[dir.name].value;
             if (hasOwn(oldDir[dir.name], 'arg')) binding['oldArg'] = oldDir[dir.arg].value;
           }
-          directive[hook].apply(
+          (directive as any)[hook].apply(
             this._vm,
             [vnode.sp, binding].concat(Array.prototype.slice.call(arguments, 1)),
           );

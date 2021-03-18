@@ -13,6 +13,7 @@ export interface VNodeDirective {
   value?: any;
   oldValue?: any;
   arg?: string;
+  oldArg?: string;
   rawArg?: string;
   modifiers?: VNodeModifiers;
 }

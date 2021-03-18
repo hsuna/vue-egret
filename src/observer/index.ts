@@ -68,7 +68,7 @@ export function defineReactive(obj: Object, key: string, val?: any) {
   const getter = property && property.get;
   const setter = property && property.set;
   if ((!getter || setter) && arguments.length === 2) {
-    val = obj[key];
+    val = (obj as any)[key];
   }
   let childOb = observe(val);
   Object.defineProperty(obj, key, {
@@ -157,7 +157,7 @@ export function set(target: Array<any> | Object, key: string | number, val: any)
     return val;
   }
   if (key in target && !(key in Object.prototype)) {
-    target[key] = val;
+    (target as any)[key] = val;
     return val;
   }
   const ob = (target as any).__ob__;
@@ -168,7 +168,7 @@ export function set(target: Array<any> | Object, key: string | number, val: any)
     return val;
   }
   if (!ob) {
-    target[key] = val;
+    (target as any)[key] = val;
     return val;
   }
   defineReactive(ob.value, key as string, val);
@@ -194,7 +194,7 @@ export function del(target: Array<any> | Object, key: string | number) {
   if (!hasOwn(target, key as string)) {
     return;
   }
-  delete target[key];
+  delete (target as any)[key];
   if (!ob) {
     return;
   }
@@ -218,7 +218,7 @@ function dependArray(arr: Array<any>) {
  * Augment a target Object or Array by intercepting
  * the prototype chain using __proto__
  */
-function protoAugment(target, src: Object) {
+function protoAugment(target: any, src: Object) {
   /* eslint-disable no-proto */
   target.__proto__ = src;
   /* eslint-enable no-proto */
@@ -232,6 +232,6 @@ function protoAugment(target, src: Object) {
 function copyAugment(target: Object, src: Object, keys: Array<string>) {
   for (let i = 0, l = keys.length; i < l; i++) {
     const key = keys[i];
-    def(target, key, src[key]);
+    def(target, key, (src as any)[key]);
   }
 }

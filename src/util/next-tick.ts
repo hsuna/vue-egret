@@ -1,7 +1,7 @@
 import { noop } from '.';
 import { isIOS } from './env';
 
-const callbacks = [];
+const callbacks: Array<Function> = [];
 let pending = false;
 
 function flushCallbacks() {
@@ -36,7 +36,7 @@ const timerFunc = () => {
 };
 
 export function nextTick(cb?: Function, ctx?: Object) {
-  let _resolve;
+  let _resolve: Function;
   callbacks.push(() => {
     if (cb) {
       try {

@@ -28,7 +28,7 @@ export function bindObjectProps(data: VNode, value: Record<string, any>, isSync?
 
         if (isSync) {
           const on: Record<string, VNodeInvoker> = data.on || (data.on = {});
-          on[`update:${key}`] = createFnInvoker(function ($event) {
+          on[`update:${key}`] = createFnInvoker(function ($event: any) {
             value[key] = $event;
           });
         }
@@ -74,7 +74,7 @@ export function renderList<T>(val: any, render: Function): Array<T> {
   } else if ('number' === typeof val) {
     return Array.from({ length: val }).map((v, i) => render(i + 1, i));
   } else if (isObject(val)) {
-    return [].map.call(val, (k, i) => render(val[k], k, i));
+    return ([] as any).map.call(val, (k: string | number, i: any) => render(val[k], k, i));
   }
   return [];
 }

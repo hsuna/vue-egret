@@ -16,8 +16,8 @@ const methodsToPatch = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 're
  */
 methodsToPatch.forEach(function (method) {
   // cache original method
-  const original = arrayProto[method];
-  def(arrayMethods, method, function mutator(...args) {
+  const original = (arrayProto as any)[method];
+  def(arrayMethods, method, function mutator(...args: any[]) {
     const result = original.apply(this, args);
     const ob = this.__ob__;
     let inserted;

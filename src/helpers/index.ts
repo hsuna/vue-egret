@@ -39,7 +39,7 @@ export function getBindingAttr(node: ASTNode, name: string): string {
 }
 
 export function getAndRemoveAttr(node: ASTNode, name: string): string {
-  const val = node.attrsMap[name];
+  const val = (node.attrsMap as any)[name];
   const list = node.attrsList;
   for (let i = 0, l = list.length; i < l; i++) {
     if (list[i].name === name) {

@@ -120,7 +120,7 @@ export const parseEvent: (name: string) => EventParseResult = cached<EventParseR
 
 export function parseModel(val: string): ModelParseResult {
   // eslint-disable-next-line prefer-const
-  let len, str, chr, index, expressionPos, expressionEndPos;
+  let len: number, str: string, chr: string, index: number, expressionPos, expressionEndPos;
 
   function next(): number {
     return str.charCodeAt(++index);

@@ -11,19 +11,19 @@ export const emptyObject = Object.freeze({});
 
 // these helpers produces better vm code in JS engines due to their
 // explicitness and function inlining
-export function isUndef(v) {
+export function isUndef(v: any) {
   return v === undefined || v === null;
 }
 
-export function isDef(v) {
+export function isDef(v: any) {
   return v !== undefined && v !== null;
 }
 
-export function isTrue(v) {
+export function isTrue(v: any) {
   return v === true;
 }
 
-export function isFalse(v) {
+export function isFalse(v: any) {
   return v === false;
 }
 
@@ -136,7 +136,7 @@ export function looseEqual(a: any, b: any): boolean {
       const isArrayA = Array.isArray(a);
       const isArrayB = Array.isArray(b);
       if (isArrayA && isArrayB) {
-        return a.length === b.length && a.every((e, i) => looseEqual(e, b[i]));
+        return a.length === b.length && a.every((e: any, i: number) => looseEqual(e, b[i]));
       } else if (a instanceof Date && b instanceof Date) {
         return a.getTime() === b.getTime();
       } else if (!isArrayA && !isArrayB) {

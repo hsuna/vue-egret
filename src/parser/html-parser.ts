@@ -15,10 +15,10 @@ export interface ParseHtmlAttr {
 }
 
 export interface ParseHtmlOptions {
-  startElement(tagName: string, attrs: Array<ParseHtmlAttr>, unary: boolean);
-  endElement(tagName: string);
-  comment(text: string);
-  characters(text: string);
+  startElement(tagName: string, attrs: Array<ParseHtmlAttr>, unary: boolean): void;
+  endElement(tagName: string): void;
+  comment(text: string): void;
+  characters(text: string): void;
 }
 
 const START_TAG_CLOSE = /\/\s*>/;
@@ -98,7 +98,7 @@ export default class ParseHtml {
 
   parseAttributes(sTagName: string, sRest: string): Array<ParseHtmlAttr> {
     const attrs: Array<ParseHtmlAttr> = [];
-    sRest.replace(ATTR_RE, (...arg): string => {
+    sRest.replace(ATTR_RE, (...arg: [string, string]): string => {
       const attr: ParseHtmlAttr = this.parseAttribute.call(this, sTagName, ...arg);
       if (attr.name && '/' !== attr.name) attrs.push(attr);
       return '';
@@ -106,7 +106,7 @@ export default class ParseHtml {
     return attrs;
   }
 
-  parseAttribute(sTagName: string, sAttribute, sName): ParseHtmlAttr {
+  parseAttribute(sTagName: string, sAttribute: string, sName: string): ParseHtmlAttr {
     let value = '';
     if (arguments[7]) value = arguments[8];
     else if (arguments[5]) value = arguments[6];

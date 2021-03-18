@@ -77,7 +77,7 @@ export interface Debounce {
 export function debounce(func: Function, wait: number, immediate = false): Debounce {
   let timeout: any, result: any;
 
-  const later: Function = function (context, args) {
+  const later: Function = function (context: any, args: any) {
     //清除计时器
     timeout = null;
     if (args) result = func.apply(context, args);

@@ -69,7 +69,7 @@ function flushSchedulerQueue() {
   callUpdatedHooks(updatedQueue);
 }
 
-function callUpdatedHooks(queue) {
+function callUpdatedHooks(queue: string | any[]) {
   let i = queue.length;
   while (i--) {
     const watcher = queue[i];

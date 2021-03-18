@@ -150,7 +150,7 @@ export function genDirectives(dirs: Array<VNodeDirective>, astData: AstData): st
   let res = '';
   dirs.forEach((dir: VNodeDirective) => {
     let needRuntime = true;
-    const gen: DirectiveFunction = baseDirectives[dir.name];
+    const gen: DirectiveFunction = (baseDirectives as any)[dir.name];
     if (gen) {
       needRuntime = !!gen(astData, dir);
     }
@@ -172,12 +172,7 @@ export function genVNode(ast: ASTNode, isCheck = true): string {
   } else if (isCheck && ast.ifConditions) {
     return (
       '(' +
-      ast.ifConditions
-        .map(
-          ({ exp, target }: { exp: string; target: ASTNode }) =>
-            `${exp}?${genVNode(target, false)}:`,
-        )
-        .join('') +
+      ast.ifConditions.map(({ exp, target }) => `${exp}?${genVNode(target, false)}:`).join('') +
       '"")'
     );
   } else {

@@ -41,7 +41,7 @@ export default class Dep {
 // This is globally unique because only one watcher
 // can be evaluated at a time.
 Dep.target = null;
-const targetStack = [];
+const targetStack: Watcher[] = [];
 
 export function pushTarget(target?: Watcher) {
   targetStack.push(target);
