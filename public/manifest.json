@@ -5,7 +5,7 @@
 		"lib/tween.min.js"
 	],
 	"game": [
-		"js/vue.egret.js",
+		"js/vue-egret.js",
 		"js/main.js"
 	]
 }
