@@ -1,4 +1,5 @@
 module.exports = {
+  base: '/vue-egret/',
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#title
    */
