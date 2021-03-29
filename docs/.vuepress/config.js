@@ -3,20 +3,21 @@ module.exports = {
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#title
    */
-    title: 'VueEgret',
+  title: 'VueEgret',
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#description
    */
-    description: '关于Egret引擎的Vue框架',
+  description: '关于Egret引擎的Vue框架',
   /**
    * Extra tags to be injected to the page HTML `<head>`
    *
    * ref：https://v1.vuepress.vuejs.org/config/#head
    */
   head: [
+    ['link', { rel: 'icon', href: '/img/logo.png' }],
     ['meta', { name: 'theme-color', content: '#3eaf7c' }],
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
-    ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }]
+    ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
   ],
 
   /**
@@ -24,7 +25,7 @@ module.exports = {
    *
    * ref：https://v1.vuepress.vuejs.org/theme/default-theme-config.html
    */
-    themeConfig: {
+  themeConfig: {
     repo: '',
     editLinks: false,
     docsDir: '',
@@ -45,36 +46,25 @@ module.exports = {
       },
       {
         text: 'Github',
-        link: 'https://github.com/hsuna/vue-egret'
-      }
+        link: 'https://github.com/hsuna/vue-egret',
+      },
     ],
     sidebar: {
       '/guide/': [
         {
           title: '',
           collapsable: false,
-          children: [
-            '',
-            'using-vue',
-          ]
         },
         {
-            title: '使用文档',
-            collapsable: false,
-            children: [
-              '',
-              'using-vue',
-            ]
-        }
+          title: '使用文档',
+          collapsable: false,
+        },
       ],
-    }
-            },
+    },
+  },
 
   /**
    * Apply plugins，ref：https://v1.vuepress.vuejs.org/zh/plugin/
    */
-  plugins: [
-    '@vuepress/plugin-back-to-top',
-    '@vuepress/plugin-medium-zoom',
-  ]
-}
+  plugins: ['@vuepress/plugin-back-to-top', '@vuepress/plugin-medium-zoom'],
+};

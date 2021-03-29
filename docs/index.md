@@ -1,5 +1,6 @@
 ---
 home: true
+heroImage: ./img/logo.png
 tagline: 
 actionText: 快速上手 →
 actionLink: /guide/
