@@ -14,7 +14,6 @@ module.exports = {
    * ref：https://v1.vuepress.vuejs.org/config/#head
    */
   head: [
-    ['link', { rel: 'icon', href: '/img/logo.png' }],
     ['meta', { name: 'theme-color', content: '#3eaf7c' }],
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
@@ -41,8 +40,8 @@ module.exports = {
         link: '/api/',
       },
       {
-        text: '组件',
-        link: '/api/',
+        text: '工具',
+        link: '/tools/',
       },
       {
         text: 'Github',
@@ -52,12 +51,14 @@ module.exports = {
     sidebar: {
       '/guide/': [
         {
-          title: '',
+          title: '指南',
           collapsable: false,
+          children: ['main'],
         },
         {
-          title: '使用文档',
+          title: '深入',
           collapsable: false,
+          children: ['deep'],
         },
       ],
     },
