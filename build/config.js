@@ -9,8 +9,8 @@ const mode = process.env.NODE_ENV
 
 const banner = `/*!
   * vue-egret.js v${version}
-  * Copyright (c) 2020-${new Date().getFullYear()} Hsuna
-  * Released code under the ICU License.
+  * Copyright (c) 2020-present, Hsuna
+  * Released code under the China License.
   */`
 
 module.exports = {

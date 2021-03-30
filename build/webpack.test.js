@@ -43,7 +43,7 @@ const configFactory = function (options = {}) {
 			new FriendlyErrorsPlugin(),
 			// copy custom static assets
 			new CopyWebpackPlugin([{
-				from: path.resolve(__dirname, '../public'),
+				from: path.resolve(__dirname, '../test/public'),
 				to: './',
 				ignore: ['.*'],
 			}, ]),

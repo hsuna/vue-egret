@@ -7,7 +7,6 @@
   "module": "dist/vue-egret.esm.js",
   "unpkg": "dist/vue-egret.js",
   "typings": "types/index.d.ts",
-  "license": "ISC",
   "scripts": {
     "start": "npm run dev",
     "test": "webpack-dev-server --config ./build/webpack.test.js --mode=development --progress",
@@ -21,6 +20,15 @@
     "genlog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "commit": "git-cz"
   },
+  "keywords": [
+    "vue",
+    "Egret"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hsuna/vue-egret/issues"
+  },
+  "homepage": "https://github.com/hsuna/vue-egret#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/hsuna/vue-egret.git"

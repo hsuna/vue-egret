@@ -1,40 +1,37 @@
-# VueEgret
+<p align="center">
+  <a href="https://hsuna.github.io/vue-egret/" target="_blank" rel="noopener noreferrer">
+    <img width="180" src="https://hsuna.github.io/vue-egret/logo.png" alt="VueEgret logo">
+  </a>
+</p>
+<br/>
+<p align="center">
+  <a href="https://npmjs.com/package/vue-egret"><img src="https://img.shields.io/npm/v/vue-egret.svg" alt="npm package"></a>
+  <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/node/v/vue-egret.svg" alt="node compatility"></a>
+</p>
+<br/>
 
-## 简介
+## Introduction
 
-`VueEgret`框架是基于 MVVM 的思想，将`Vue`的开发模式，复制到`egret`上，通过虚拟节点与`egret`显示对象的一一对应，来实现数据驱动。由于`VueEgret`是基于`egret`上的，所以需要额外引入`egret`相关的库
+VueEgret主要是应用在 egret 引擎库上的，它诞生的初衷是为了 egret 支持 Vue 的开发方式，在 egret 上所实现的一套 MVVM 框架。
 
-你可以这样使用它:
+## Ecosystem
 
-```js
-var Main = VueEgret.classMain({
-  data() {
-    return {
-      text: 'Hello Word!!!',
-    };
-  },
-  methods: {
-    onTextClick() {
-      this.text = 'Text is Click';
-    },
-  },
-  template: `<Sprite touchEnabled="true" @touchTap="onTextClick">
-    <TextField textColor="#00FFFF" x="11" y="12">{{text}}</TextField>
-  </Sprite>`,
-});
-```
+| 项目                                                       | 描述                                            |
+| ------------------------------------------------------------- | :----------------------------------------------------- |
+| [vue-egret-loader](https://github.com/hsuna/vue-egret-loader) | 基于webpack的单文件组件(\*. .vue文件)加载器 |
 
-## Build Setup
+## Documentation
 
-```bash
-# install dependencies
-npm install
+查看[在线例子](https://hsuna.github.io/vue-egret/examples)和文档，请访问[hsuna.github.io/vue-egret](https://hsuna.github.io/vue-egret/)。
 
-# serve with hot reload at localhost:2335
-npm run dev
+## Issues
+在打开问题之前，请务必阅读问题报告检查表。不符合准则的问题可以立即关闭。
 
-# build for production with minification
-npm run build
-```
+## Changelog
+每个版本的详细变更都记录在[版本说明](./CHANGELOG.md)中。
 
-关于 webpack 的使用，请参阅文档 [vue-egret-loader](https://github.com/hsuna/vue-egret-loader.git).
+## License
+
+[MIT](https://opensource.org/licenses/MIT)
+
+Copyright (c) 2020-present, Hsuna
