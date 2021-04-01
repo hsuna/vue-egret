@@ -4,7 +4,6 @@ import { ASTNode } from './ast-node';
 import { VNodeDirective } from './v-node';
 import baseDirectives, { DirectiveFunction } from '../directives/index';
 
-const textRE = /\{\{([^}]+)\}\}/g; // {{text}}
 const fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
 const fnInvokeRE = /\([^)]*?\);*$/;
 const simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/;
@@ -62,15 +61,11 @@ export function genSync(expression: string): string {
   }
 }
 
-export function genText(text: string): string {
-  return `_s("${text.replace(textRE, '"+($1)+"')}")`;
-}
-
 export function genProps(dirs: Array<VNodeDirective>): string {
   let res = '';
   dirs.forEach((dir: VNodeDirective) => {
     if ('text' === dir.name) {
-      res += `${dir.rawArg || dir.arg}:${genText(dir.expression)},`;
+      res += `${dir.rawArg || dir.arg}:_s(${dir.expression}),`;
     } else {
       res += `${dir.rawArg || dir.arg}:${dir.expression},`;
     }
