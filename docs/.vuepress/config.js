@@ -78,7 +78,17 @@ module.exports = {
         {
           title: '指南',
           collapsable: false,
-          children: ['', 'getting-started'],
+          children: [
+            '',
+            'getting-started',
+            'instance',
+            'syntax',
+            'computed',
+            'conditional',
+            'list',
+            'events',
+            'components',
+          ],
         },
         {
           title: '深入',
@@ -95,6 +105,6 @@ module.exports = {
   plugins: [
     // '@vuepress/plugin-back-to-top',
     // '@vuepress/plugin-medium-zoom',
-    require('./plugins/demo-block/index.js')
+    require('./plugins/demo-block/index.js'),
   ],
-}
+};

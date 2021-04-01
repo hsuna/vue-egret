@@ -14,10 +14,8 @@ sidebar: auto
 
 ```javascript
 var vm = new VueEgret({
-  data() {
-    return {
-      text: 'Hello Word!!!',
-    };
+  data: {
+    text: 'Hello Word!!!',
   },
   methods: {
     onTextClick() {
@@ -44,10 +42,8 @@ var vm = new VueEgret({
 
 ```javascript
 var Main = VueEgret.classMain({
-  data() {
-    return {
-      text: 'Hello Word!!!',
-    };
+  data: {
+    text: 'Hello Word!!!',
   },
   methods: {
     onTextClick() {
@@ -75,10 +71,8 @@ var Main = VueEgret.classMain({
 ```javascript
 // 创建构造器
 var Profile = VueEgret.extend({
-  data() {
-    return {
-      text: 'Hello Word!!!',
-    };
+  data: {
+    text: 'Hello Word!!!',
   },
   methods: {
     onTextClick() {

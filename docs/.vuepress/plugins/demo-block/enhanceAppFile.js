@@ -71,6 +71,7 @@ export default ({ Vue }) => {
     props: {
       width: [String, Number],
       height: [String, Number],
+      hideCode: String,
       code: String,
     },
     mounted() {
@@ -85,7 +86,7 @@ export default ({ Vue }) => {
     },
     render(h) {
       return h('div', {}, [
-        h('div', {}, this.$slots.source),
+        !this.hideCode && h('div', {}, this.$slots.source),
         h('div', {
         }, [
           h('iframe', {
@@ -99,7 +100,7 @@ export default ({ Vue }) => {
             ref: 'iframe',
           }),
         ]),
-      ]);
+      ].filter(Boolean));
     },
   });
 };

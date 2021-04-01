@@ -14,10 +14,8 @@ VueEgret主要是应用在 egret 引擎库上的，它诞生的初衷是为了 e
 
 ```javascript
 VueEgret.classMain({
-  data() {
-    return {
-      text: 'Hello Word!!!',
-    };
+  data: {
+    text: 'Hello Word!!!',
   },
   methods: {
     onTextClick() {
