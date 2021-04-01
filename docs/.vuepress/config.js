@@ -14,6 +14,7 @@ module.exports = {
    * ref：https://v1.vuepress.vuejs.org/config/#head
    */
   head: [
+    ['link', { rel: 'icon', href: '/img/logo.png' }],
     ['meta', { name: 'theme-color', content: '#3eaf7c' }],
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
@@ -40,8 +41,32 @@ module.exports = {
         link: '/api/',
       },
       {
-        text: '工具',
-        link: '/tools/',
+        text: '示例',
+        link: '/example/',
+      },
+      {
+        text: '了解更多',
+        ariaLabel: '了解更多',
+        items: [
+          {
+            text: '工具',
+            items: [
+              {
+                text: 'vue-egret-loader',
+                link: 'https://github.com/hsuna/vue-egret-loader',
+              },
+            ],
+          },
+          {
+            text: '其他',
+            items: [
+              {
+                text: 'Changelog',
+                link: 'https://github.com/vuejs/vuepress/blob/master/CHANGELOG.md',
+              },
+            ],
+          },
+        ],
       },
       {
         text: 'Github',
@@ -53,12 +78,12 @@ module.exports = {
         {
           title: '指南',
           collapsable: false,
-          children: ['main'],
+          children: ['', 'getting-started'],
         },
         {
           title: '深入',
           collapsable: false,
-          children: ['deep'],
+          children: [],
         },
       ],
     },
@@ -67,5 +92,9 @@ module.exports = {
   /**
    * Apply plugins，ref：https://v1.vuepress.vuejs.org/zh/plugin/
    */
-  plugins: ['@vuepress/plugin-back-to-top', '@vuepress/plugin-medium-zoom'],
-};
+  plugins: [
+    // '@vuepress/plugin-back-to-top',
+    // '@vuepress/plugin-medium-zoom',
+    require('./plugins/demo-block/index.js')
+  ],
+}

@@ -11,5 +11,5 @@ features:
   details: 使用MVVM设计模式替代传统的MVC，让交互更加方便。
 - title: 高效
   details: 20kB min的文件大小，实现虚拟Node，通过diff算法更新DisplayObject。
-footer: MIT Licensed | Copyright © 2020-present
+footer: MIT Licensed | Copyright © 2020-present, Hsuna
 ---
