@@ -1,4 +1,4 @@
-import { isObject, isPlainObject, toObject, makeMap } from '../util';
+import { isObject, isPlainObject, toObject, makeMap, hasSymbol } from '../util';
 import { createFnInvoker, VNodeInvoker, VNode } from './v-node';
 
 /**
@@ -74,7 +74,18 @@ export function renderList<T>(val: any, render: Function): Array<T> {
   } else if ('number' === typeof val) {
     return Array.from({ length: val }).map((v, i) => render(i + 1, i));
   } else if (isObject(val)) {
-    return ([] as any).map.call(val, (k: string | number, i: any) => render(val[k], k, i));
+    if (hasSymbol && val[Symbol.iterator]) {
+      const ret = [];
+      const iterator: Iterator<any> = val[Symbol.iterator]();
+      let result = iterator.next();
+      while (!result.done) {
+        ret.push(render(result.value, ret.length));
+        result = iterator.next();
+      }
+      return ret;
+    } else {
+      return Object.keys(val).map((k: string | number, i: number) => render(val[k], k, i));
+    }
   }
   return [];
 }
