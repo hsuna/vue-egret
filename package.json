@@ -9,10 +9,10 @@
   "typings": "types/index.d.ts",
   "scripts": {
     "start": "npm run dev",
-    "test": "webpack-dev-server --config ./build/webpack.test.js --mode=development --progress",
+    "dev": "webpack-dev-server --config ./build/webpack.test.js --mode=development --progress",
     "libs": "webpack --config ./build/webpack.libs.js",
     "build": "cross-env NODE_ENV=production rollup --config build/rollup.config.js",
-    "docs:dev": "vuepress dev docs --temp .temp",
+    "docs:dev": "vuepress dev docs --temp .temp --no-cache --debug",
     "docs:build": "vuepress build docs",
     "lint": "eslint src --fix --ext .js,.ts",
     "lint:packages": "eslint packages --fix --ext .js,.ts",
