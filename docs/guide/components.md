@@ -200,7 +200,7 @@ VueEgret.component('MyLabel', {
 
 ```javascript
 {
-    data: {
+  data: {
     posts: [
       { id: 1, title: 'My journey with VueEgret' },
       { id: 2, title: 'Blogging with VueEgret' },
@@ -212,26 +212,121 @@ VueEgret.component('MyLabel', {
 
 ## 监听子组件事件
 
-在我们开发 \<MyLabel> 组件时，可能需要我们和父级组件进行沟通。例如我们可能通过点击来修改文本的内容。
+在我们开发 \<MyLabel> 组件时，可能需要我们和父级组件进行沟通。例如我们可能通过点击来修改文本的字体大小。
 
 ```javascript
-VueEgret.component('MyLabel', {
-  props: ['title'],
-  template: '<TextField touchEnabled="true" @touchTap="$emit(\'click\')">{{ title }}</TextField>'
-})
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 var Main = VueEgret.classMain({
-
+  data: {
+    posts: [/* ... */],
+    postFontSize: 14
+  }
 })
 ```
 
-```javascript
+```html
 <MyLabel 
-    v-for="post in posts"
-    v-bind:key="post.id"
-    v-bind:title="post.title"
-    @tapsdf=
+  v-for="post in posts"
+  v-bind:key="post.id"
+  v-bind:title="post.title"
+  v-bind:fontSize="postFontSize + 'px'"
 ></MyLabel>
 ```
 
+现在我们在自定义组件中添加事件，通过子组件调用内建的 `$emit` 方法并传入事件名称来触发一个事件：：
+
+```javascript
+VueEgret.component('MyLabel', {
+  props: ['title', 'fontSize'],
+  template: `<TextField 
+    touchEnabled="true" 
+    v-bind:fontSize="fontSize" 
+    v-on:touchTap="$emit('enlarge-text')">{{ title }}
+  </TextField>`
+})
+```
+
+父级组件通过 VueEgret 实例内部的事件机制，使得父级组件可以像处理 native 事件一样通过 `v-on` 监听子组件实例的任意事件：
+
+```html
+<MyLabel
+  ...
+  v-on:enlarge-text="postFontSize += 1"
+></MyLabel>
+```
+
+有了这个 `v-on:enlarge-text="postFontSize += 1"` 监听器，父级组件就会接收该事件并更新 postFontSize 的值。
+
+::: demo:hideCode=true
+
+```javascript
+VueEgret.component('MyLabel', {
+  props: ['title', 'fontSize'],
+  template: `<TextField 
+    touchEnabled="true" 
+    v-bind:y="$attrs.y"
+    v-bind:size="fontSize" 
+    v-on:touchTap="$emit('enlarge-text')"
+  >{{ title }}</TextField>`
+})
+var Main = VueEgret.classMain({
+  data: {
+    posts: [
+      { id: 1, title: 'My journey with VueEgret' },
+      { id: 2, title: 'Blogging with VueEgret' },
+      { id: 3, title: 'Why VueEgret is so fun' }
+    ],
+    postFontSize: 28
+  },
+  template: `<Sprite>
+    <MyLabel 
+      v-for="post in posts"
+      v-bind:y="(post.id-1)*30"
+      v-bind:key="post.id"
+      v-bind:title="post.title"
+      v-bind:fontSize="postFontSize"
+      v-on:enlarge-text="postFontSize += 1"
+    ></MyLabel>
+  </Sprite>`
+})
+
+```
+
+:::
+
 ### 使用事件抛出一个值
+
+有的时候用一个事件来抛出一个特定的值是非常有用的。例如我们可能想让 \<MyLabel> 组件决定它的文本要放大多少。这时可以使用 `$emit` 的第二个参数来提供这个值：
+
+```html
+<TextField 
+  ...
+  v-on:touchTap="$emit('enlarge-text', 2)"
+></TextField>
+```
+
+然后当在父级组件监听这个事件的时候，我们可以通过 `$event` 访问到被抛出的这个值：
+
+```html
+<MyLabel
+  ...
+  v-on:enlarge-text="postFontSize += $event"
+></MyLabel>
+
+或者，如果这个事件处理函数是一个方法：
+
+```html
+<MyLabel
+  ...
+  v-on:enlarge-text="onEnlargeText"
+></MyLabel>
+```
+
+那么这个值将会作为第一个参数传入这个方法：
+
+```javascript
+methods: {
+  onEnlargeText: function (enlargeAmount) {
+    this.postFontSize += enlargeAmount
+  }
+}
+```

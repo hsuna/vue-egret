@@ -76,7 +76,7 @@ module.exports = {
     sidebar: {
       '/guide/': [
         {
-          title: '指南',
+          title: '基础',
           collapsable: false,
           children: [
             '',
