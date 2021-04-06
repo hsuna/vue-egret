@@ -267,6 +267,8 @@ export default class Render {
       for (const type in vnode.nativeOn) {
         vnode.nativeOn[type] = this._addInvoker(type, vnode, true);
       }
+
+      this._addAttrs(vnode, parentOptions.attrs);
     } else {
       VClass = (egret as any)[vnode.tag] || ev(window, vnode.tag);
       if (VClass) {
@@ -277,10 +279,7 @@ export default class Render {
           vnode.on[type] = this._addInvoker(type, vnode);
         }
 
-        for (const name in vnode.attrs) {
-          (vnode.sp as any)[DEFAULT_ATTR][name] = (vnode.sp as any)[name];
-          (vnode.sp as any)[name] = vnode.attrs[name];
-        }
+        this._addAttrs(vnode, vnode.attrs);
       }
     }
     if (!VClass) throw new Error(`Then [${vnode.tag}] Node is undefined!!!`);
@@ -322,6 +321,8 @@ export default class Render {
         if (hasOwn(newVNode.attrs, key)) oldVNode.vm.$props[key] = newVNode.attrs[key];
       }
       const parentOptions: ComponentParentOptions = oldVNode.vm._parentOptions;
+      const oldParentAttrs: Record<string, any> = parentOptions.attrs;
+      parentOptions.attrs = [];
       for (const key in newVNode.attrs) {
         if (!hasOwn(oldVNode.vm.$props, key)) parentOptions.attrs[key] = newVNode.attrs[key];
       }
@@ -352,6 +353,8 @@ export default class Render {
           this._removeInvoker(type, oldVNode, true);
         }
       }
+      // 更新属性
+      this._updateAttrs(oldVNode, oldParentAttrs, parentOptions.attrs);
     } else {
       // 如果是原生类，则直接更新原生事件
       for (const type in newVNode.on) {
@@ -363,19 +366,7 @@ export default class Render {
         }
       }
       // 更新属性
-      for (const name in newVNode.attrs) {
-        if (oldVNode.attrs[name] !== newVNode.attrs[name]) {
-          if (!hasOwn((oldVNode.sp as any)[DEFAULT_ATTR], name)) {
-            (oldVNode.sp as any)[DEFAULT_ATTR][name] = (oldVNode.sp as any)[name];
-          }
-          (oldVNode.sp as any)[name] = newVNode.attrs[name];
-        }
-      }
-      for (const name in oldVNode.attrs) {
-        if (isUndef(newVNode.attrs[name])) {
-          (oldVNode.sp as any)[name] = (oldVNode.sp as any)[DEFAULT_ATTR][name];
-        }
-      }
+      this._updateAttrs(oldVNode, oldVNode.attrs, newVNode.attrs);
     }
 
     // 触发指令：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前
@@ -430,6 +421,44 @@ export default class Render {
     // 递归子对象，进行销毁
     vnode.children.forEach((vnode: VNode) => this._destroyDisObj(vnode));
     return vnode;
+  }
+
+  /**
+   * 新增属性
+   * @param { VNode } 虚拟节点
+   * @param { Record<string, any> } attrs 属性组
+   */
+  private _addAttrs(vnode: VNode, attrs: Record<string, any>): void {
+    for (const name in attrs) {
+      (vnode.sp as any)[DEFAULT_ATTR][name] = (vnode.sp as any)[name];
+      (vnode.sp as any)[name] = attrs[name];
+    }
+  }
+
+  /**
+   * 更新属性
+   * @param { VNode } 虚拟节点
+   * @param { Record<string, any> } oldAttrs 旧属性组
+   * @param { Record<string, any> } newAttrs 新属性组
+   */
+  private _updateAttrs(
+    vnode: VNode,
+    oldAttrs: Record<string, any>,
+    newAttrs: Record<string, any>,
+  ): void {
+    for (const name in newAttrs) {
+      if (oldAttrs[name] !== newAttrs[name]) {
+        if (!hasOwn((vnode.sp as any)[DEFAULT_ATTR], name)) {
+          (vnode.sp as any)[DEFAULT_ATTR][name] = (vnode.sp as any)[name];
+        }
+        (vnode.sp as any)[name] = newAttrs[name];
+      }
+    }
+    for (const name in oldAttrs) {
+      if (isUndef(newAttrs[name])) {
+        (vnode.sp as any)[name] = (vnode.sp as any)[DEFAULT_ATTR][name];
+      }
+    }
   }
 
   /**
