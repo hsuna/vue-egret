@@ -64,6 +64,9 @@ export interface ComponentOptions {
   // assets
   directives?: Record<string, DirectiveOptions>;
   components?: Record<string, ComponentOptions>;
+
+  // ext
+  inheritAttrs: boolean;
 }
 
 /** 类型-注册信息 */

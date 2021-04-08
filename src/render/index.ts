@@ -267,8 +267,10 @@ export default class Render {
       for (const type in vnode.nativeOn) {
         vnode.nativeOn[type] = this._addInvoker(type, vnode, true);
       }
-
-      this._addAttrs(vnode, parentOptions.attrs);
+      // 如果inheritAttrs不为false，则禁用 Attribute 继承
+      if (false !== vnode.vm.$options.inheritAttrs) {
+        this._addAttrs(vnode, parentOptions.attrs);
+      }
     } else {
       VClass = (egret as any)[vnode.tag] || ev(window, vnode.tag);
       if (VClass) {
@@ -353,8 +355,10 @@ export default class Render {
           this._removeInvoker(type, oldVNode, true);
         }
       }
-      // 更新属性
-      this._updateAttrs(oldVNode, oldParentAttrs, parentOptions.attrs);
+      // 如果inheritAttrs不为false，则禁用 Attribute 继承
+      if (false !== vnode.vm.$options.inheritAttrs) {
+        this._updateAttrs(oldVNode, oldParentAttrs, parentOptions.attrs);
+      }
     } else {
       // 如果是原生类，则直接更新原生事件
       for (const type in newVNode.on) {
