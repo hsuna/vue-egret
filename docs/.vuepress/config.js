@@ -91,9 +91,47 @@ module.exports = {
           ],
         },
         {
-          title: '深入',
+          title: '深入了解组件',
           collapsable: false,
-          children: [],
+          children: [
+            'components-registration',
+            'components-props',
+            'components-custom-events',
+            'components-edge-cases',
+          ],
+        },
+        {
+          title: '过渡 & 动画',
+          collapsable: false,
+          children: [
+          ],
+        },
+        {
+          title: '可复用性 & 组合',
+          collapsable: false,
+          children: [
+            'mixins',
+            'custom-directive',
+            'render-function',
+            'plugins',
+          ],
+        },
+        {
+          title: '工具',
+          collapsable: false,
+          children: [
+            'single-file-components',
+            'testing',
+            'typescript',
+            'deployment',
+          ],
+        },
+        {
+          title: '内在',
+          collapsable: false,
+          children: [
+            'reactivity',
+          ],
         },
       ],
     },

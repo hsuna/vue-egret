@@ -263,7 +263,6 @@ VueEgret.component('MyLabel', {
   props: ['title', 'fontSize'],
   template: `<TextField 
     touchEnabled="true" 
-    v-bind:y="$attrs.y"
     v-bind:size="fontSize" 
     v-on:touchTap="$emit('enlarge-text')"
   >{{ title }}</TextField>`
