@@ -101,19 +101,20 @@ module.exports = {
           ],
         },
         {
-          title: '过渡 & 动画',
+          title: '显示对象',
           collapsable: false,
           children: [
+            'tween'
           ],
         },
         {
           title: '可复用性 & 组合',
           collapsable: false,
           children: [
-            'mixins',
+            // 'mixins',
             'custom-directive',
-            'render-function',
-            'plugins',
+            // 'render-function',
+            // 'plugins',
           ],
         },
         {
@@ -121,9 +122,9 @@ module.exports = {
           collapsable: false,
           children: [
             'single-file-components',
-            'testing',
-            'typescript',
-            'deployment',
+            // 'testing',
+            // 'typescript',
+            // 'deployment',
           ],
         },
         {

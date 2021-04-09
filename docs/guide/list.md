@@ -163,7 +163,7 @@ this.items = this.items.filter(function (item) {
 
 ### 注意事项
 
-由于 JavaScript 的限制，VueEgert 不能检测数组和对象的变化。
+由于 JavaScript 的限制，VueEgret 不能检测数组和对象的变化。
 
 ## 显示过滤/排序后的结果
 

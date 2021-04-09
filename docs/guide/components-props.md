@@ -258,7 +258,7 @@ VueEgret.component('MyLabel', {
 如果你**不**希望组件的根元素继承 attribute，你可以在组件的选项中设置 `inheritAttrs: false`。例如：
 
 ```javascript
-VueEgert.component('MyComponent', {
+VueEgret.component('MyComponent', {
   inheritAttrs: false,
   // ...
 })
