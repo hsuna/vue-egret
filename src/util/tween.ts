@@ -20,11 +20,11 @@ export interface TweenData extends Array<any> {
 export function tween(params: Array<TweenData> = [], target?: RefData): Promise<egret.Tween> {
   if ('Tween' in egret) {
     return new Promise((resolve: (value: egret.Tween) => void) => {
-      let tween: egret.Tween = egret.Tween.get(target || this);
+      let t: egret.Tween = egret.Tween.get(target || this);
       params.forEach(([name, ...args]: TweenData) => {
-        if ('function' === typeof tween[name]) tween = tween[name](...(args as [string])); // 至少要一个参数，所以这里拆成arg0和args
+        if ('function' === typeof t[name]) t = t[name](...(args as [string])); // 至少要一个参数，所以这里拆成arg0和args
       });
-      tween.call(resolve);
+      t.call(resolve, this, [t]);
     });
     //return tween instanceof egret.Tween ? tween : ;
   } else throw 'The egret.Tween.js not import!!!';

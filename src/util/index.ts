@@ -64,8 +64,8 @@ export function toString(val: any): string {
  * Convert an input value to a number for persistence.
  * If the conversion fails, return original string.
  */
-export function toNumber(val: string): number | string {
-  const n = Number(val);
+export function toNumber(val: string | boolean): number | string | boolean {
+  const n = Number(String(val));
   return Array.isArray(val) || isNaN(n) || '' === val ? val : n;
 }
 

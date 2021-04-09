@@ -275,7 +275,6 @@ export default class Render {
       VClass = (egret as any)[vnode.tag] || ev(window, vnode.tag);
       if (VClass) {
         vnode.sp = new (<any>VClass)();
-        (vnode.sp as any)[DEFAULT_ATTR] = {};
 
         for (const type in vnode.on) {
           vnode.on[type] = this._addInvoker(type, vnode);
@@ -356,7 +355,7 @@ export default class Render {
         }
       }
       // 如果inheritAttrs不为false，则禁用 Attribute 继承
-      if (false !== vnode.vm.$options.inheritAttrs) {
+      if (false !== oldVNode.vm.$options.inheritAttrs) {
         this._updateAttrs(oldVNode, oldParentAttrs, parentOptions.attrs);
       }
     } else {
@@ -433,6 +432,7 @@ export default class Render {
    * @param { Record<string, any> } attrs 属性组
    */
   private _addAttrs(vnode: VNode, attrs: Record<string, any>): void {
+    if (!hasOwn(vnode.sp, DEFAULT_ATTR)) (vnode.sp as any)[DEFAULT_ATTR] = {};
     for (const name in attrs) {
       (vnode.sp as any)[DEFAULT_ATTR][name] = (vnode.sp as any)[name];
       (vnode.sp as any)[name] = attrs[name];

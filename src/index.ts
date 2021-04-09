@@ -610,7 +610,7 @@ export default class VueEgret extends Component {
       public vm: Component;
       constructor() {
         super();
-        this.vm = new (VueEgret.extend(options))();
+        this.vm = new VueEgret(options);
         this.vm.$mount(this);
       }
     };
