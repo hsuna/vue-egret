@@ -159,7 +159,158 @@ module.exports = {
             'disp-coll',
             'disp-mask',
           ],
-        }
+        },
+        {
+          title: '显示对象与容器',
+          collapsable: false,
+          children: [
+            'cont-add-remove',
+            'cont-depth',
+            'cont-diff',
+          ],
+        },
+        {
+          title: '图形绘制',
+          collapsable: false,
+          children: [
+            'graph-bezier',
+            'graph-arc',
+            'graph-dive-arc',
+            'graph-circle',
+            'graph-line',
+            'graph-rect',
+          ],
+        },
+        {
+          title: '高级图像',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '自定义Shader',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '图像应用',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '显示交互',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '缓动动画',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '时间与运行',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '调试功能',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '帧动画显示',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '文本显示',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '媒体播放',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: 'RES资源管理',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '粒子',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
+        {
+          title: '骨骼动画',
+          collapsable: false,
+          children: [
+            '',
+            'disp-anchor-rota-scale',
+            'disp-coll',
+            'disp-mask',
+          ],
+        },
       ]
     },
   },
