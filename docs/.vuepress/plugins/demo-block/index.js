@@ -7,6 +7,7 @@ const demoBlockContainers = require('./containers');
 
 module.exports = (options = {}, ctx) => {
   return {
+    name: 'my-demo-plugin',
     enhanceAppFiles: path.resolve(__dirname, './enhanceAppFile.js'),
     chainMarkdown(config) {
       config.plugin('containers').use(demoBlockContainers(options)).end();

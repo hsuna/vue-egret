@@ -7,6 +7,33 @@
 .home .hero img
   max-width 450px!important
 
-.theme-default-content code {
-  color: #d63200;
-}
+.theme-default-content code
+  color: #d63200
+
+.example-page .theme-default-content 
+  max-width: none
+
+.demo-block--example
+  position relative
+  height 720px
+
+.demo-block--example .demo-block__code
+  overflow: auto;
+  margin-right: 433px
+  height 100%
+
+.demo-block--example .demo-block__canvas
+  position absolute
+  top 0
+  right 0
+  width 393px
+  height 100%
+  background: url(/resource/phone16.png) no-repeat center
+  background-size: contain
+
+.demo-block--example .demo-block__canvas iframe
+  position absolute
+  left 44px
+  top 109px
+  width 305px
+  height 519px

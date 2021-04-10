@@ -56,7 +56,7 @@ vm.b = 'hi'
 
 那么对 `b` 的改动将不会触发任何视图的更新。如果你知道你会在晚些时候需要一个 property，但是一开始它为空或不存在，那么你仅需要设置一些初始值。比如：
 
-```javascrip
+```javascript
 data: {
   newTodoText: '',
   visitCount: 0,

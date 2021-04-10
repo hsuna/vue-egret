@@ -1,8 +1,4 @@
-const HTML_TEMPLATE = ({
-  code,
-  width,
-  height,
-}) => `<!DOCTYPE HTML>
+const HTML_TEMPLATE = ({ code, type, width, height }) => `<!DOCTYPE HTML>
 <html>
 
 <head>
@@ -16,7 +12,7 @@ const HTML_TEMPLATE = ({
     <style>
         html, body {
             -ms-touch-action: none;
-            background: #888888;
+            background: #ffffff;
             padding: 0;
             border: 0;
             margin: 0;
@@ -69,6 +65,7 @@ const HTML_TEMPLATE = ({
 export default ({ Vue }) => {
   Vue.component('DemoBlock', {
     props: {
+      type: String,
       width: [String, Number],
       height: [String, Number],
       hideCode: String,
@@ -80,27 +77,45 @@ export default ({ Vue }) => {
         const win = iframe.contentWindow;
         const doc = iframe.contentDocument || win.document;
         doc.open();
-        doc.write(HTML_TEMPLATE(this.$props));
+        doc.write(
+          HTML_TEMPLATE({
+            ...this.$props,
+            ...('example' === this.type
+              ? {
+                  width: 640,
+                  height: 960,
+                }
+              : {}),
+          }),
+        );
         doc.close();
       });
     },
     render(h) {
-      return h('div', {}, [
-        !this.hideCode && h('div', {}, this.$slots.source),
-        h('div', {
-        }, [
-          h('iframe', {
-            attrs: {
-              width: '100%',
-              height: this.height || '100%',
-            },
-            style: {
-              border: 0,
-            },
-            ref: 'iframe',
-          }),
-        ]),
-      ].filter(Boolean));
+      return h(
+        'div',
+        {
+          class: {
+            'demo-block': true,
+            [`demo-block--${this.type}`]: this.type,
+          },
+        },
+        [
+          !this.hideCode && h('div', { class: "demo-block__code" }, this.$slots.source),
+          h('div', { class: "demo-block__canvas" }, [
+            h('iframe', {
+              attrs: {
+                width: '100%',
+                height: this.height || '100%',
+              },
+              style: {
+                border: 0,
+              },
+              ref: 'iframe',
+            }),
+          ]),
+        ].filter(Boolean),
+      );
     },
   });
 };
