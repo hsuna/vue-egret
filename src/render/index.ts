@@ -41,7 +41,9 @@ export default class Render {
   /** 虚拟节点 */
   private _vnode: VNode;
   /** 渲染方法 */
-  private _render: (createVNode: (tag: string, data: any, children: VNode[]) => VNode) => VNode;
+  private _render: (
+    createVNode: (tag: string, data: any, children: VNode[], normalizationType: number) => VNode,
+  ) => VNode;
   /** 组件库 */
   private _components: Record<string, ComponentClass>;
   /** 指令库 */

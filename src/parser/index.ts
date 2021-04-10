@@ -82,8 +82,9 @@ export default class ParserFactory implements ParseHtmlOptions {
       if (content.length) {
         templateArr.push(JSON.stringify(content));
       }
-
-      this._target.text = `''.concat(${templateArr.join(',')})`;
+      if (templateArr.length) {
+        this._target.text = `''.concat(${templateArr.join(',')})`;
+      }
     }
   }
 

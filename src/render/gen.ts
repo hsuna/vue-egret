@@ -1,8 +1,9 @@
 import { AstData, parseModel, parseAttrList } from './util';
 import { ForParseResult } from 'src/helpers';
 import { ASTNode } from './ast-node';
-import { VNodeDirective } from './v-node';
+import { SIMPLE_NORMALIZE, ALWAYS_NORMALIZE, VNodeDirective } from './v-node';
 import baseDirectives, { DirectiveFunction } from '../directives/index';
+import { isUndef } from 'src/util';
 
 const fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
 const fnInvokeRE = /\([^)]*?\);*$/;
@@ -171,10 +172,44 @@ export function genVNode(ast: ASTNode, isCheck = true): string {
       '"")'
     );
   } else {
-    return `_c(${ast.component || `"${ast.tag}"`},${genData(ast)}${
-      ast.children.length > 0
-        ? `,[].concat(${ast.children.map((ast: ASTNode) => genVNode(ast))})`
-        : ''
-    })`;
+    if (isUndef(ast.component) && 'template' === ast.tag) {
+      return ast.children.length > 0
+        ? `[].concat(${ast.children.map((ast: ASTNode) => genVNode(ast))})`
+        : '';
+    } else {
+      const dataStr: string = genData(ast);
+      const normalizationType: number = getNormalizationType(ast.children);
+      return `_c(${ast.component || `"${ast.tag}"`}${'{}' !== dataStr ? `,${dataStr}` : ''}${
+        ast.children.length > 0
+          ? `,[].concat(${ast.children.map((ast: ASTNode) => genVNode(ast))})`
+          : ''
+      }${normalizationType ? `,${normalizationType}` : ''})`;
+    }
   }
+}
+
+function needsNormalization(ast: ASTNode): boolean {
+  return ast.for !== undefined || ast.tag === 'template' || ast.tag === 'slot';
+}
+
+function maybeComponent(ast: ASTNode): boolean {
+  return !!ast.component;
+}
+
+function getNormalizationType(children: Array<ASTNode>): number {
+  let res = 0;
+  for (let i = 0; i < children.length; i++) {
+    const ast: ASTNode = children[i];
+    if (
+      needsNormalization(ast) ||
+      (ast.ifConditions && ast.ifConditions.some((c) => needsNormalization(c.target)))
+    ) {
+      res = ALWAYS_NORMALIZE;
+      break;
+    }
+    if (maybeComponent(ast) || (ast && ast.ifConditions.some((c) => maybeComponent(c.target)))) {
+      res = SIMPLE_NORMALIZE;
+    }
+  }
+  return res;
 }

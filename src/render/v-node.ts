@@ -34,8 +34,43 @@ export interface VNode {
   directives: Array<VNodeDirective>;
 }
 
-export function createVNode(tag: string, data: any = {}, children: Array<VNode> = []): VNode {
-  if (Array.isArray(data)) children = data;
+export const SIMPLE_NORMALIZE = 1;
+export const ALWAYS_NORMALIZE = 2;
+
+export function normalizeChildren(children: Array<VNode> = []): Array<VNode> {
+  return Array.isArray(children) ? normalizeArrayChildren(children) : undefined;
+}
+
+export function normalizeArrayChildren(children: Array<VNode> = []): Array<VNode> {
+  return children.reduce((pre: Array<VNode>, vnode: VNode) => {
+    return pre.concat(Array.isArray(vnode) ? normalizeArrayChildren(vnode) : vnode);
+  }, []);
+}
+
+export function simpleNormalizeChildren(children: Array<VNode> = []): Array<VNode> {
+  for (let i = 0; i < children.length; i++) {
+    if (Array.isArray(children[i])) {
+      return Array.prototype.concat.apply([], children);
+    }
+  }
+  return children;
+}
+
+export function createVNode(
+  tag: string,
+  data: any = {},
+  children: Array<VNode> = [],
+  normalizationType: number,
+): VNode {
+  if (Array.isArray(data)) {
+    normalizationType = <any>children;
+    children = data;
+  }
+  if (normalizationType === ALWAYS_NORMALIZE) {
+    children = normalizeChildren(children);
+  } else if (normalizationType === SIMPLE_NORMALIZE) {
+    children = simpleNormalizeChildren(children);
+  }
   const vnode: VNode = {
     ...data,
     tag,
