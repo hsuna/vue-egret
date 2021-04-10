@@ -7,7 +7,8 @@ import createASTNode, { ASTNode } from '../render/ast-node';
  * @description 将模板解析成AST
  * @author Hsuna
  */
-const REG_TRIM = /^\s+|\s+$|\r|\n/g; //去掉头尾空白，以及换行符
+const REG_TRIM = /^\s+|\s+$/g; //去掉头尾空白
+const REG_BREAK = /^\n+|\n+$/g; //去掉前后的空白行
 const REG_INTERPOLATE = /{{([^}]+?)}}/; //{{text}}
 
 export default class ParserFactory implements ParseHtmlOptions {
@@ -65,7 +66,11 @@ export default class ParserFactory implements ParseHtmlOptions {
    */
   characters(text: string) {
     if (this._target) {
-      let content: string = text.replace(REG_TRIM, ''); // 去掉头尾空白，以及换行符
+      let content: string = text
+        .replace(REG_BREAK, '') // 去掉前后的空白行
+        .split('\n')
+        .map((s: string) => s.replace(REG_TRIM, ''))
+        .join('\n'); // 去掉每行头尾空白
       let m: RegExpMatchArray = content.match(REG_INTERPOLATE);
       const templateArr: Array<string> = [];
       while (m) {
