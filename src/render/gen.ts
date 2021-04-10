@@ -207,7 +207,10 @@ function getNormalizationType(children: Array<ASTNode>): number {
       res = ALWAYS_NORMALIZE;
       break;
     }
-    if (maybeComponent(ast) || (ast && ast.ifConditions.some((c) => maybeComponent(c.target)))) {
+    if (
+      maybeComponent(ast) ||
+      (ast.ifConditions && ast.ifConditions.some((c) => maybeComponent(c.target)))
+    ) {
       res = SIMPLE_NORMALIZE;
     }
   }
