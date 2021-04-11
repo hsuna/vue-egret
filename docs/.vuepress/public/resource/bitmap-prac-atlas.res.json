@@ -1,0 +1,12 @@
+{
+	"groups":[{
+			"keys":"atlas",
+			"name":"preload"
+		}],
+	"resources":[{
+			"name":"atlas",
+			"subkeys":"cartoon-egret_00_small,cartoon-egret_01_small,cartoon-egret_02_small,cartoon-egret_03_small",
+			"type":"sheet",
+			"url":"cartoon-egrets.json"
+		}]
+}

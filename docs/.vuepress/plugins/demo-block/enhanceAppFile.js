@@ -1,4 +1,17 @@
-const HTML_TEMPLATE = ({ code, background, width, height }) => `<!DOCTYPE HTML>
+const HTML_TEMPLATE = ({
+  code,
+  background,
+  entryClass = 'Main',
+  orientation = 'auto',
+  scaleMode = 'fixedHeight',
+  frameRate = 30,
+  width = 740,
+  height = 150,
+  showPaintRect = 'false',
+  multiFingered = 2,
+  showFps = 'false',
+  showLog = 'false',
+}) => `<!DOCTYPE HTML>
 <html>
 
 <head>
@@ -23,20 +36,22 @@ const HTML_TEMPLATE = ({ code, background, width, height }) => `<!DOCTYPE HTML>
 
 <body>
   <div style="margin: auto;width: 100%;height: 100%;" class="egret-player"
-        data-entry-class="Main"
-        data-orientation="auto"
-        data-scale-mode="fixedHeight"
-        data-frame-rate="30"
-        data-content-width="${width || 740}"
-        data-content-height="${height || 150}"
-        data-show-paint-rect="false"
-        data-multi-fingered="2"
-        data-show-fps="false" data-show-log="false"
+        data-entry-class="${entryClass}"
+        data-orientation="${orientation}"
+        data-scale-mode="${scaleMode}"
+        data-frame-rate="${frameRate}"
+        data-content-width="${width}"
+        data-content-height="${height}"
+        data-show-paint-rect="${showPaintRect}"
+        data-multi-fingered="${multiFingered}"
+        data-show-fps="${showFps}"
+        data-show-log="${showLog}"
         data-show-fps-style="x:0,y:0,size:12,textColor:0xffffff,bgAlpha:0.9">
   </div>
   <script src="/vue-egret/lib/egret.min.js"></script>
   <script src="/vue-egret/lib/egret.web.min.js"></script>
   <script src="/vue-egret/lib/tween.min.js"></script>
+  <script src="/vue-egret/lib/res.min.js"></script>
   <script src="/vue-egret/lib/vue-egret.min.js"></script>
   <script>
     ${code}
@@ -65,12 +80,9 @@ const HTML_TEMPLATE = ({ code, background, width, height }) => `<!DOCTYPE HTML>
 export default ({ Vue }) => {
   Vue.component('DemoBlock', {
     props: {
-      type: String,
-      background: String,
-      width: [String, Number],
-      height: [String, Number],
-      hideCode: String,
       code: String,
+      type: String,
+      hideCode: String,
     },
     mounted() {
       this.$nextTick(() => {
@@ -80,13 +92,14 @@ export default ({ Vue }) => {
         doc.open();
         doc.write(
           HTML_TEMPLATE({
-            ...this.$props,
+            ...this.$attrs,
             ...('example' === this.type
               ? {
                   width: 640,
                   height: 960,
                 }
               : {}),
+            code: this.code,
           }),
         );
         doc.close();
@@ -107,7 +120,7 @@ export default ({ Vue }) => {
             h('iframe', {
               attrs: {
                 width: '100%',
-                height: this.height || '100%',
+                height: this.$attrs.height || '100%',
               },
               style: {
                 border: 0,

@@ -42,7 +42,6 @@ var Main = VueEgret.classMain({
       var texture = new egret.Texture();
       texture.bitmapData = evt.currentTarget.data;
       self.texture = texture;
-      console.log(texture);
     });
     imgLoader.load('../resource/cartoon-egret_01.png');
 
