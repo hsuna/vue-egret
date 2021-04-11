@@ -1,4 +1,4 @@
-const HTML_TEMPLATE = ({ code, type, width, height }) => `<!DOCTYPE HTML>
+const HTML_TEMPLATE = ({ code, background, width, height }) => `<!DOCTYPE HTML>
 <html>
 
 <head>
@@ -12,7 +12,7 @@ const HTML_TEMPLATE = ({ code, type, width, height }) => `<!DOCTYPE HTML>
     <style>
         html, body {
             -ms-touch-action: none;
-            background: #ffffff;
+            background: ${background || '#ffffff'};
             padding: 0;
             border: 0;
             margin: 0;
@@ -66,6 +66,7 @@ export default ({ Vue }) => {
   Vue.component('DemoBlock', {
     props: {
       type: String,
+      background: String,
       width: [String, Number],
       height: [String, Number],
       hideCode: String,
@@ -101,8 +102,8 @@ export default ({ Vue }) => {
           },
         },
         [
-          !this.hideCode && h('div', { class: "demo-block__code" }, this.$slots.source),
-          h('div', { class: "demo-block__canvas" }, [
+          !this.hideCode && h('div', { class: 'demo-block__code' }, this.$slots.source),
+          h('div', { class: 'demo-block__canvas' }, [
             h('iframe', {
               attrs: {
                 width: '100%',
