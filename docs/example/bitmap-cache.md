@@ -144,7 +144,7 @@ var Main = VueEgret.classMain({
   },
   template: `<DisplayObjectContainer @enterFrame="onEnterFrame">
     <Sprite ref="motion" v-for="motion in motions" :x="motion.x" :y="motion.y" :scaleX="motion.scale" :scaleY="motion.scale" :rotation="motion.rotation" :anchorOffsetX="motion.anchorOffsetX" :anchorOffsetY="motion.anchorOffsetY" :cacheAsBitmap="isCache"></Sprite>
-    <TextField :width="$stageWidth-260" x="250" y="10" size="28" textAlign="left" textColor="0x000000" background backgroundColor="0xFFFFFF" type="dynamic" lineSpacing="6" multiline touchEnabled cacheAsBitmap @touchTap.stop="isCache = !isCache">
+    <TextField :width="$stageWidth-260" x="260" y="10" size="28" textAlign="left" textColor="0x000000" background backgroundColor="0xFFFFFF" type="dynamic" lineSpacing="6" multiline touchEnabled cacheAsBitmap @touchTap.stop="isCache = !isCache">
       轻触文字切换是否用位图缓存
       当前位图缓存：{{isCache?'启用\\n还卡？换手机吧！':'关闭\\n不卡只能说明机器太牛！'}}
       轻触舞台切换旋转缩放/平移

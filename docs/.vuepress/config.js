@@ -252,10 +252,16 @@ module.exports = {
           title: '文本显示',
           collapsable: false,
           children: [
-            '',
-            'disp-anchor-rota-scale',
-            'disp-coll',
-            'disp-mask',
+            'text-bold',
+            'text-color',
+            'text-href',
+            'text-itatic',
+            'text-layout',
+            'text-size',
+            'text-stroke',
+            'text-text-flow-1',
+            'text-text-flow-2',
+            'text-input',
           ],
         },
         {
@@ -278,7 +284,7 @@ module.exports = {
             'disp-mask',
           ],
         },
-        {
+        /* {
           title: '粒子',
           collapsable: false,
           children: [
@@ -287,8 +293,8 @@ module.exports = {
             'disp-coll',
             'disp-mask',
           ],
-        },
-        {
+        }, */
+        /* {
           title: '骨骼动画',
           collapsable: false,
           children: [
@@ -297,7 +303,7 @@ module.exports = {
             'disp-coll',
             'disp-mask',
           ],
-        },
+        }, */
       ]
     },
   },

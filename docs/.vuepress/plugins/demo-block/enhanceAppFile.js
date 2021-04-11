@@ -3,7 +3,7 @@ const HTML_TEMPLATE = ({
   background,
   entryClass = 'Main',
   orientation = 'auto',
-  scaleMode = 'fixedHeight',
+  scaleMode = 'fixedWidth',
   frameRate = 30,
   width = 740,
   height = 150,
