@@ -989,6 +989,7 @@ Tween 缓动动画，详细见[`egret.Tween`](http://developer.egret.com/cn/apid
 
   - `{ Array<TweenData> } params` 运动参数
   - `{ Component | egret.DisplayObject } target` 运动对象，默认是实例本身
+  - `{ Object } props` 参数，支持loop(循环播放) onChange(变化函数) onChangeObj(变化函数作用域)
 
 - 返回: `{ Promise<egret.Tween> }`
 

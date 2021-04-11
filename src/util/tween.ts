@@ -17,10 +17,14 @@ export interface TweenData extends Array<any> {
  * @param { RefData } target 可选，运动对象
  * @return { Promise<egret.Tween> }
  */
-export function tween(params: Array<TweenData> = [], target?: RefData): Promise<egret.Tween> {
+export function tween(
+  params: Array<TweenData> = [],
+  target?: RefData,
+  ...args: Array<any>
+): Promise<egret.Tween> {
   if ('Tween' in egret) {
     return new Promise((resolve: (value: egret.Tween) => void) => {
-      let t: egret.Tween = egret.Tween.get(target || this);
+      let t: egret.Tween = egret.Tween.get(target || this, ...args);
       params.forEach(([name, ...args]: TweenData) => {
         if ('function' === typeof t[name]) t = t[name](...(args as [string])); // 至少要一个参数，所以这里拆成arg0和args
       });

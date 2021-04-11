@@ -8,7 +8,7 @@ import createASTNode, { ASTNode } from '../render/ast-node';
  * @author Hsuna
  */
 const REG_TRIM = /^\s+|\s+$/g; //去掉头尾空白
-const REG_BREAK = /^\n+|\n+$/g; //去掉前后的空白行
+const REG_BREAK = /^\s*\n+|\n+\s*$/g; //去掉前后的空白行
 const REG_INTERPOLATE = /{{([^}]+?)}}/; //{{text}}
 
 export default class ParserFactory implements ParseHtmlOptions {

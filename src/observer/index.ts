@@ -97,8 +97,8 @@ export function defineReactive(obj: Object, key: string, val?: any) {
         if (
           (Array.isArray(newVal) || isPlainObject(newVal)) &&
           Object.isExtensible(newVal) &&
-          !(newVal instanceof egret.DisplayObject) &&
-          JSON.stringify(newVal) === JSON.stringify(value)
+          !(newVal instanceof egret.HashObject) &&
+          !newVal._isVue
         ) {
           // 复杂类型的比较，如果复杂类型数据没有不同，只是引用不一的话，则不更新
           return;
@@ -134,7 +134,7 @@ export function observe(value: any, asRootData?: boolean): Observer {
   } else if (
     (Array.isArray(value) || isPlainObject(value)) &&
     Object.isExtensible(value) &&
-    !(value instanceof egret.DisplayObject) &&
+    !(value instanceof egret.HashObject) &&
     !value._isVue
   ) {
     ob = new Observer(value);
