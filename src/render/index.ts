@@ -294,8 +294,9 @@ export default class Render {
       if (vnode.refInFor) {
         if (!Array.isArray(refs[vnode.ref])) {
           refs[vnode.ref] = [ref];
-        } else if ((refs[vnode.ref] as Array<RefData>).indexOf(ref) < 0) {
-          (refs[vnode.ref] as Array<RefData>).push(ref);
+        } else {
+          const refList = refs[vnode.ref] as Array<RefData>;
+          if (refList.indexOf(ref) < 0) refList.push(ref);
         }
       } else {
         refs[vnode.ref] = ref;
@@ -421,7 +422,21 @@ export default class Render {
 
     // 移除各项示例挂载
     if (vnode.ref) {
-      delete this._vm.$refs[vnode.ref];
+      const refs = this._vm.$refs;
+      const ref: RefData = vnode.vm || vnode.sp;
+      if (vnode.refInFor && Array.isArray(refs[vnode.ref])) {
+        const refList = refs[vnode.ref] as Array<RefData>;
+        if (refList.length <= 1) {
+          delete this._vm.$refs[vnode.ref];
+        } else {
+          const index = refList.indexOf(ref);
+          if (index > 0) {
+            refList.splice(index, 1);
+          }
+        }
+      } else {
+        delete this._vm.$refs[vnode.ref];
+      }
     }
     // 递归子对象，进行销毁
     vnode.children.forEach((vnode: VNode) => this._destroyDisObj(vnode));

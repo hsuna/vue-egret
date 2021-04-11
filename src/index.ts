@@ -107,7 +107,9 @@ export class Component {
   /** 删除对象的 property */
   $delete = del;
   /** 回调延迟到下次更新 */
-  $nextTick = nextTick;
+  $nextTick = function (fn: Function) {
+    return nextTick(fn, this);
+  };
   /** Tween方法 */
   $tween = tween;
 
