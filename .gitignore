@@ -24,5 +24,4 @@ yarn-error.log*
 *.temp
 
 #other
-package-lock.json
 yarn.lock
