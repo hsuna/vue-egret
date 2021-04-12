@@ -93,7 +93,7 @@ export function defineReactive(obj: Object, key: string, val?: any) {
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return;
       }
-      try {
+      /* try {
         if (
           (Array.isArray(newVal) || isPlainObject(newVal)) &&
           Object.isExtensible(newVal) &&
@@ -106,7 +106,7 @@ export function defineReactive(obj: Object, key: string, val?: any) {
       } catch (e) {
         // TODO
         console.log(e);
-      }
+      } */
 
       // #7981: for accessor properties without setter
       if (getter && !setter) return;
