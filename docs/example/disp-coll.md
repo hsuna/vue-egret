@@ -43,19 +43,18 @@ var Main = VueEgret.classMain({
     };
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       var bmd = evt.currentTarget.data;
       /// 为定位设置基准点(即锚点)
-      self.anchorOffsetX = bmd.width / 2;
-      self.anchorOffsetY = bmd.height / 2;
+      this.anchorOffsetX = bmd.width / 2;
+      this.anchorOffsetY = bmd.height / 2;
 
       /// 将图像显示出来
       var texture = new egret.Texture();
       texture.bitmapData = bmd;
-      self.texture = texture;
-    });
+      this.texture = texture;
+    }, this);
     imgLoader.load('../resource/cartoon-egret_00.png');
 
     this.$stage.addEventListener(egret.TouchEvent.TOUCH_BEGIN, this.onStateTouch, this);

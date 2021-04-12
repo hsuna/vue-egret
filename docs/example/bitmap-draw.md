@@ -37,19 +37,18 @@ var Main = VueEgret.classMain({
     },
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       /// 将图像显示出来
       var bmd = evt.currentTarget.data;
       var texture = new egret.Texture();
       texture.bitmapData = bmd;
-      self.texture = texture;
+      this.texture = texture;
 
       for (var i = 0; i < 24; ++i) {
-        self.birds.push({
-          x: self.rectClip.width * Math.random(),
-          y: self.rectClip.height * Math.random(),
+        this.birds.push({
+          x: this.rectClip.width * Math.random(),
+          y: this.rectClip.height * Math.random(),
           anchorOffsetX: bmd.width / 2,
           anchorOffsetY: bmd.height / 2,
           scale: 0.5,
@@ -60,7 +59,7 @@ var Main = VueEgret.classMain({
           va: (1 + Math.random() * 3) * (Math.random() > 0.5 ? 1 : -1),
         });
       }
-    });
+    }, this);
     imgLoader.load('../resource/cartoon-egret_01_small.png');
 
     var shpBg = this.$refs['shpBg'];

@@ -43,37 +43,36 @@ var Main = VueEgret.classMain({
     };
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       /// 将图像显示出来
       var bmd = evt.currentTarget.data;
       var texture = new egret.Texture();
       texture.bitmapData = bmd;
-      self.texture = texture;
+      this.texture = texture;
 
-      self.anchorOffsetX = bmd.width / 2;
-      self.anchorOffsetY = bmd.height / 2;
-      self.rectScope = {
-        x: self.anchorOffsetX * SCALE_BASE,
-        y: self.anchorOffsetY * SCALE_BASE,
-        width: self.$stageWidth - self.anchorOffsetX * SCALE_BASE * 2,
-        height: self.$stageHeight - self.anchorOffsetY * SCALE_BASE * 2,
+      this.anchorOffsetX = bmd.width / 2;
+      this.anchorOffsetY = bmd.height / 2;
+      this.rectScope = {
+        x: this.anchorOffsetX * SCALE_BASE,
+        y: this.anchorOffsetY * SCALE_BASE,
+        width: this.$stageWidth - this.anchorOffsetX * SCALE_BASE * 2,
+        height: this.$stageHeight - this.anchorOffsetY * SCALE_BASE * 2,
       };
 
       for (var i = 0; i < NUM; i++) {
-        self.birds.push({
+        this.birds.push({
           /// 给一个随机的初始位置
-          x: self.rectScope.x + self.rectScope.width * Math.random(),
-          y: self.rectScope.y + self.rectScope.height * Math.random(),
+          x: this.rectScope.x + this.rectScope.width * Math.random(),
+          y: this.rectScope.y + this.rectScope.height * Math.random(),
           rotation: 0,
           scale: SCALE_BASE,
         });
       }
 
-      self.$stage.addEventListener(egret.TouchEvent.TOUCH_TAP, self.planRdmMotion, self);
-      self.planRdmMotion();
-    });
+      this.$stage.addEventListener(egret.TouchEvent.TOUCH_TAP, this.planRdmMotion, this);
+      this.planRdmMotion();
+    }, this);
     imgLoader.load('../resource/cartoon-egret_01_small.png');
 
     var shape = this.$refs['shape'];

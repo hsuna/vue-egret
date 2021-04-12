@@ -36,17 +36,16 @@ var Main = VueEgret.classMain({
     },
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       /// 将图像显示出来
       var texture = new egret.Texture();
       texture.bitmapData = evt.currentTarget.data;
-      self.texture = texture;
+      this.texture = texture;
 
-      self.offsetX = self.$stageWidth / 4 - texture.bitmapData.width / 2;
-      self.offsetY = self.$stageHeight / 4 - texture.bitmapData.height / 2;
-    });
+      this.offsetX = this.$stageWidth / 4 - texture.bitmapData.width / 2;
+      this.offsetY = this.$stageHeight / 4 - texture.bitmapData.height / 2;
+    }, this);
     imgLoader.load('../resource/cartoon-egret_00.png');
 
     this.textX = this.$stageWidth / 2 - this.$refs['label'].width / 2;

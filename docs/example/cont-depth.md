@@ -24,21 +24,20 @@ var Main = VueEgret.classMain({
     };
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       /// 将图像显示出来
       var bmd = evt.currentTarget.data;
       var texture = new egret.Texture();
       texture.bitmapData = bmd;
-      self.texture = texture;
+      this.texture = texture;
 
-      self.items.push(
-        { x: self.$stageWidth / 2 - bmd.width / 2, y: self.$stageHeight / 2 - bmd.height / 2 },
-        { x: self.$stageWidth / 2 - bmd.width - 40, y: self.$stageHeight / 2 - bmd.height / 2 },
-        { x: self.$stageWidth / 2 + 40, y: self.$stageHeight / 2 - bmd.height / 2 },
+      this.items.push(
+        { x: this.$stageWidth / 2 - bmd.width / 2, y: this.$stageHeight / 2 - bmd.height / 2 },
+        { x: this.$stageWidth / 2 - bmd.width - 40, y: this.$stageHeight / 2 - bmd.height / 2 },
+        { x: this.$stageWidth / 2 + 40, y: this.$stageHeight / 2 - bmd.height / 2 },
       );
-    });
+    }, this);
     imgLoader.load('../resource/cartoon-egret_00.png');
 
     this.textX = this.$stageWidth / 2 - this.$refs['label'].width / 2;

@@ -37,27 +37,26 @@ var Main = VueEgret.classMain({
     },
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       /// 将图像显示出来
       var bmd = evt.currentTarget.data;
       var texture = new egret.Texture();
       texture.bitmapData = bmd;
-      self.texture = texture;
+      this.texture = texture;
 
-      self.width = self.L.W_UI_MAX;
-      self.height = self.L.H_UI_MIN;
+      this.width = this.L.W_UI_MAX;
+      this.height = this.L.H_UI_MIN;
 
-      self.$tween(
+      this.$tween(
         [
-          ['to', { width: self.L.W_UI_MIN, height: self.L.H_UI_MAX }, 1000],
-          ['to', { width: self.L.W_UI_MAX, height: self.L.H_UI_MIN }, 1000],
+          ['to', { width: this.L.W_UI_MIN, height: this.L.H_UI_MAX }, 1000],
+          ['to', { width: this.L.W_UI_MAX, height: this.L.H_UI_MIN }, 1000],
         ],
-        self,
+        this,
         { loop: true },
       );
-    });
+    }, this);
     imgLoader.load('../resource/dialog-bg.png');
   },
   template: `<DisplayObjectContainer> 

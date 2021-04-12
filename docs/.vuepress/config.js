@@ -185,7 +185,7 @@ module.exports = {
           title: '高级图像',
           collapsable: false,
           children: [
-            'bitmap-dirty',
+            // 'bitmap-dirty',
             'bitmap-cache',
             'bitmap-pixel-hit',
             'bitmap-draw',
@@ -222,30 +222,26 @@ module.exports = {
           title: '时间与运行',
           collapsable: false,
           children: [
-            '',
-            'disp-anchor-rota-scale',
-            'disp-coll',
-            'disp-mask',
+            'run-frame-rate',
+            'run-timeout',
+            'run-timer-tick-enterframe',
+            'run-update-after-event',
           ],
         },
         {
           title: '调试功能',
           collapsable: false,
           children: [
-            '',
-            'disp-anchor-rota-scale',
-            'disp-coll',
-            'disp-mask',
+            // 'debug-dirty-rectangle',
+            'debug-fps',
+            'debug-log',
           ],
         },
         {
           title: '帧动画显示',
           collapsable: false,
           children: [
-            '',
-            'disp-anchor-rota-scale',
-            'disp-coll',
-            'disp-mask',
+            'anim-flash',
           ],
         },
         {
@@ -268,30 +264,24 @@ module.exports = {
           title: '媒体播放',
           collapsable: false,
           children: [
-            '',
-            'disp-anchor-rota-scale',
-            'disp-coll',
-            'disp-mask',
+            'media-audio',
+            'media-video',
           ],
         },
-        {
+        /* {
           title: 'RES资源管理',
           collapsable: false,
           children: [
-            '',
-            'disp-anchor-rota-scale',
-            'disp-coll',
-            'disp-mask',
+            'res-create-group-preload',
+            'res-get-res-by-url',
+            'res-group-preload',
           ],
-        },
+        }, */
         /* {
           title: '粒子',
           collapsable: false,
           children: [
             '',
-            'disp-anchor-rota-scale',
-            'disp-coll',
-            'disp-mask',
           ],
         }, */
         /* {
@@ -299,9 +289,6 @@ module.exports = {
           collapsable: false,
           children: [
             '',
-            'disp-anchor-rota-scale',
-            'disp-coll',
-            'disp-mask',
           ],
         }, */
       ]

@@ -62,17 +62,16 @@ var Main = VueEgret.classMain({
       /*** 本示例关键代码段结束 ***/
     },
     onTouchBegin: function (item) {
-      var self = this;
       var moveHandler = function (evt) {
         item.x = evt.stageX;
         item.y = evt.stageY;
-        self.resetCure();
+        this.resetCure();
       };
-      this.$stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, moveHandler);
+      this.$stage.addEventListener(egret.TouchEvent.TOUCH_MOVE, moveHandler, this);
       this.$stage.once(egret.TouchEvent.TOUCH_END, function () {
-        self.$stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, moveHandler);
-      });
-    },
+        this.$stage.removeEventListener(egret.TouchEvent.TOUCH_MOVE, moveHandler, this);
+      }, this);
+    }
   },
   template: `<DisplayObjectContainer>
       <Shape ref="shape"></Shape>

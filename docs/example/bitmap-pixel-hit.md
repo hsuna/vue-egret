@@ -29,15 +29,14 @@ var Main = VueEgret.classMain({
     };
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       /// 将图像显示出来
       var bmd = evt.currentTarget.data;
       var texture = new egret.Texture();
       texture.bitmapData = bmd;
-      self.texture = texture;
-    });
+      this.texture = texture;
+    }, this);
     imgLoader.load('../resource/cartoon-egret_01.png');
   },
   methods: {

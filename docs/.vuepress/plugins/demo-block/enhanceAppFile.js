@@ -51,6 +51,7 @@ const HTML_TEMPLATE = ({
   <script src="/vue-egret/lib/egret.min.js"></script>
   <script src="/vue-egret/lib/egret.web.min.js"></script>
   <script src="/vue-egret/lib/tween.min.js"></script>
+  <script src="/vue-egret/lib/game.min.js"></script>
   <script src="/vue-egret/lib/res.min.js"></script>
   <script src="/vue-egret/lib/vue-egret.min.js"></script>
   <script>

@@ -26,24 +26,23 @@ var Main = VueEgret.classMain({
     };
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       var bmd = evt.currentTarget.data;
       /// 为定位设置基准点(即锚点)
       var wHalfBird = bmd.width / 2;
       var hHalfBird = bmd.height / 2;
-      self.anchorOffsetX = wHalfBird;
-      self.anchorOffsetY = hHalfBird;
+      this.anchorOffsetX = wHalfBird;
+      this.anchorOffsetY = hHalfBird;
       /// 给一个随机的初始位置
-      self.birdX = wHalfBird + (self.$stageWidth - wHalfBird * 2) * Math.random();
-      self.birdY = hHalfBird + (self.$stageHeight - hHalfBird * 2) * Math.random();
+      this.birdX = wHalfBird + (this.$stageWidth - wHalfBird * 2) * Math.random();
+      this.birdY = hHalfBird + (this.$stageHeight - hHalfBird * 2) * Math.random();
 
       /// 将图像显示出来
       var texture = new egret.Texture();
       texture.bitmapData = bmd;
-      self.texture = texture;
-    });
+      this.texture = texture;
+    }, this);
     imgLoader.load('../resource/cartoon-egret_03.png');
 
     var mask = this.$refs['mask'];

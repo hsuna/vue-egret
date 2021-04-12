@@ -22,14 +22,13 @@ var Main = VueEgret.classMain({
     };
   },
   mounted: function () {
-    var self = this;
     var imgLoader = new egret.ImageLoader();
     imgLoader.once(egret.Event.COMPLETE, function (evt) {
       /// 将图像显示出来
       var texture = new egret.Texture();
       texture.bitmapData = evt.currentTarget.data;
-      self.texture = texture;
-    });
+      this.texture = texture;
+    }, this);
     imgLoader.load('../resource/cartoon-egret_00.png');
 
     this.mask = this.$refs.shape;
