@@ -77,6 +77,11 @@
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.4.1"
   },
+  "babel":{
+    "presets": [
+      "@babel/preset-env"
+    ]
+  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged",
