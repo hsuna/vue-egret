@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://hsuna.github.io/vue-egret/" target="_blank" rel="noopener noreferrer">
-    <img width="180" src="https://hsuna.github.io/vue-egret/logo.png" alt="VueEgret logo">
+    <img width="180" src="https://hsuna.github.io/vue-egret/img/logo.png" alt="VueEgret logo">
   </a>
 </p>
 <br/>
