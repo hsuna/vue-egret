@@ -1,5 +1,5 @@
-import { astStrRender } from "src/helpers/render";
+import { astStrRender } from 'src/helpers/render';
 
-export default function(template) {
-    return `function(){${astStrRender(template)}}`
+export default function (template: string) {
+  return `function(){${astStrRender(template)}}`;
 }

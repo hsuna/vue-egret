@@ -1,4 +1,6 @@
 build
-public
+docs
+scripts
 src
+test
 tsconfig.json

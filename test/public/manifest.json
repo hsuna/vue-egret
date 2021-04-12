@@ -1,0 +1,11 @@
+{
+	"initial": [
+		"lib/egret.min.js",
+		"lib/egret.web.min.js",
+		"lib/tween.min.js"
+	],
+	"game": [
+		"js/vue-egret.js",
+		"js/main.js"
+	]
+}
