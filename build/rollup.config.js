@@ -7,6 +7,7 @@ const babel = require('rollup-plugin-babel');
 const replace = require('@rollup/plugin-replace');
 const strip = require('rollup-plugin-strip');
 const resolve = require('rollup-plugin-node-resolve');
+const copy = require('rollup-plugin-copy');
 const { terser } = require('rollup-plugin-terser');
 
 const config = require('./config');
@@ -27,6 +28,9 @@ const options = [
     format: 'umd',
     minimize: true,
     exports: 'default',
+    copyList: [
+      { src: 'dist/vue-egret.min.js', dest: 'docs/.vuepress/public/lib' }
+    ]
   },
   /** commonjs版本 */
   {
@@ -105,10 +109,12 @@ module.exports = options.map((option) => {
         // defaults to `true`
         // sourceMap: true
       }),
-      option.analyze &&
-        analyze({
-          summaryOnly: true,
-        }),
+      option.analyze && analyze({
+        summaryOnly: true,
+      }),
+      option.copyList && copy({
+        targets: option.copyList
+      })
     ].filter(Boolean),
   };
 });
