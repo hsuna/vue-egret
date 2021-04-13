@@ -1,6 +1,6 @@
 {
   "name": "vue-egret",
-  "version": "1.4.0",
+  "version": "1.4.1-beta.1",
   "author": "Hsuna",
   "description": "Egret MVVM",
   "main": "dist/vue-egret.common.js",
