@@ -30,7 +30,7 @@ VueEgret 主要是应用在 egret 引擎库上的，它诞生的初衷是为了 
 
 ## Changelog
 
-每个版本的详细变更都记录在[版本说明](./CHANGELOG.md)中。
+每个版本的详细变更都记录在[版本说明](https://github.com/hsuna/vue-egret/releases/)中。
 
 ## License
 
