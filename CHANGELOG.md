@@ -1,3 +1,17 @@
+## [1.4.1](https://github.com/hsuna/vue-egret/compare/1.4.0...1.4.1) (2021-04-13)
+
+
+### Bug Fixes
+
+* fixed vnode.parent is null ([9bd9dac](https://github.com/hsuna/vue-egret/commit/9bd9dace98094972b13d9f21966d35cd438bb873))
+
+
+### Features
+
+* createVNode first params can be ComponentOptions ([2a14662](https://github.com/hsuna/vue-egret/commit/2a14662e5f2dd25c1554223db5be37d3f87179a3))
+
+
+
 # [1.4.0](https://github.com/hsuna/vue-egret/compare/1.3.0...1.4.0) (2021-04-13)
 
 
