@@ -236,7 +236,7 @@ export default class Render {
    * @return { egret.DisplayObject } 返回新的显示对象
    */
   private _createDisObj(vnode: VNode): egret.DisplayObject {
-    let VClass: ComponentClass = this._components[vnode.tag];
+    let VClass: ComponentClass = vnode.Ctrl || this._components[vnode.tag];
     pushTarget(); //阻断所有更新监听
     // Component
     if (VClass) {

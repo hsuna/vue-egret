@@ -27,6 +27,7 @@ export interface PropData {
 }
 
 export interface ComponentClass {
+  cid: number;
   options: ComponentOptions;
   new (parentOptions?: ComponentParentOptions): Component;
 }
@@ -561,6 +562,8 @@ export class Component {
  * @author Hsuna
  */
 export default class VueEgret extends Component {
+  /** 组件id */
+  static cid = 0;
   /** 版本号 */
   static version: string = process.env.VERSION;
   /** 组件库缓存 */
@@ -596,6 +599,7 @@ export default class VueEgret extends Component {
   static extend(options: ComponentOptions | ComponentClass): ComponentClass {
     if ('function' === typeof options) return <ComponentClass>options;
     return class extends Component {
+      static cid: number = VueEgret.cid++;
       static options: ComponentOptions = <ComponentOptions>options;
       constructor(parentOptions: ComponentParentOptions = {}) {
         super(<ComponentOptions>options, parentOptions);

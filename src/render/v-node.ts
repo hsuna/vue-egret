@@ -1,5 +1,6 @@
 /** 虚拟树 */
-import { Component, TArray } from '../index';
+import { isObject } from 'src/util';
+import VueEgret, { Component, ComponentClass, ComponentOptions, TArray } from '../index';
 
 export interface VNodeInvoker extends Function {
   fns: TArray<Function>;
@@ -19,6 +20,7 @@ export interface VNodeDirective {
 }
 
 export interface VNode {
+  Ctrl?: ComponentClass;
   vm?: Component;
   sp?: egret.DisplayObject;
   key: any;
@@ -57,7 +59,7 @@ export function simpleNormalizeChildren(children: Array<VNode> = []): Array<VNod
 }
 
 export function createVNode(
-  tag: string,
+  tag: string | ComponentOptions | Function,
   data: any = {},
   children: Array<VNode> = [],
   normalizationType: number,
@@ -71,9 +73,23 @@ export function createVNode(
   } else if (normalizationType === SIMPLE_NORMALIZE) {
     children = simpleNormalizeChildren(children);
   }
+
+  let Ctrl: ComponentClass;
+  if ('function' === typeof tag) {
+    // async function: (resolve) => resolve(options);
+  } else if (isObject(tag)) {
+    Ctrl = VueEgret.extend(tag as ComponentOptions);
+  }
   const vnode: VNode = {
     ...data,
-    tag,
+    ...(Ctrl
+      ? {
+          Ctrl,
+          tag: `vue-component-${Ctrl.cid}${data.name ? `-${data.name}` : ''}`,
+        }
+      : {
+          tag,
+        }),
     children: children.filter(Boolean),
   };
   vnode.children.forEach((child: VNode) => (child.parent = vnode));
