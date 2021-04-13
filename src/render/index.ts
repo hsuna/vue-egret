@@ -363,7 +363,7 @@ export default class Render {
     } else {
       // 如果是原生类，则直接更新原生事件
       for (const type in newVNode.on) {
-        oldVNode.on[type] = this._updateInvoker(type, oldVNode, newVNode);
+        oldVNode.on[type] = newVNode.on[type] = this._updateInvoker(type, oldVNode, newVNode);
       }
       for (const type in oldVNode.on) {
         if (isUndef(newVNode.on[type])) {
