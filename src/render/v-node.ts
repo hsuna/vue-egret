@@ -27,7 +27,6 @@ export interface VNode {
   tag: string;
   ref?: string;
   refInFor?: boolean;
-  parent?: VNode;
   children: Array<VNode>;
   props?: Record<string, any>;
   attrs: Record<string, any>;
@@ -67,6 +66,7 @@ export function createVNode(
   if (Array.isArray(data)) {
     normalizationType = <any>children;
     children = data;
+    data = {};
   }
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children);
@@ -92,7 +92,6 @@ export function createVNode(
         }),
     children: children.filter(Boolean),
   };
-  vnode.children.forEach((child: VNode) => (child.parent = vnode));
   return vnode;
 }
 

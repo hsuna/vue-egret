@@ -107,8 +107,7 @@ export default class Render {
     } else {
       //非相似节点直接替换
       // 获取父节点
-      const parent: egret.DisplayObjectContainer = oldVNode.parent
-        .sp as egret.DisplayObjectContainer;
+      const parent: egret.DisplayObjectContainer = oldVNode.sp.$parent;
       if (parent) {
         // 创建新节点
         const sp: egret.DisplayObject = this._createDisObj(newVNode);
@@ -401,9 +400,7 @@ export default class Render {
       this._triggerDirective('unbind', vnode);
 
       // 通过获取父节点，移除显示对象
-      vnode.parent &&
-        vnode.parent.sp &&
-        (vnode.parent.sp as egret.DisplayObjectContainer).removeChild(vnode.sp);
+      vnode.sp && vnode.sp.$parent && vnode.sp.$parent.removeChild(vnode.sp);
       // 移除组件事件
 
       if (!vnode.vm) {
