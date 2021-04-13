@@ -34,7 +34,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/.vuepress/dist
-          full_commit_message: "deploy: Release ${{ github.event.release.tag_name }}"
+          full_commit_message: "deploy: release ${{ github.event.release.tag_name }}"
 
   publish-npm:
 #    needs: build

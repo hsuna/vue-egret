@@ -1,3 +1,12 @@
+## [1.4.2](https://github.com/hsuna/vue-egret/compare/1.4.1...1.4.2) (2021-04-13)
+
+
+### Bug Fixes
+
+* fixed event remove failed ([974b6e9](https://github.com/hsuna/vue-egret/commit/974b6e975d2666a63cfa99e25fb41d18f44e6bb5))
+
+
+
 ## [1.4.1](https://github.com/hsuna/vue-egret/compare/1.4.0...1.4.1) (2021-04-13)
 
 
