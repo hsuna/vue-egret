@@ -1,6 +1,6 @@
 const HTML_TEMPLATE = ({
   code,
-  background,
+  background = '#35414d',
   entryClass = 'Main',
   orientation = 'auto',
   scaleMode = 'fixedWidth',
@@ -25,7 +25,7 @@ const HTML_TEMPLATE = ({
     <style>
         html, body {
             -ms-touch-action: none;
-            background: ${background || '#ffffff'};
+            background: ${background};
             padding: 0;
             border: 0;
             margin: 0;
@@ -93,13 +93,14 @@ export default ({ Vue }) => {
         doc.open();
         doc.write(
           HTML_TEMPLATE({
-            ...this.$attrs,
             ...('example' === this.type
               ? {
                   width: 640,
                   height: 960,
+                  background: '#ffffff',
                 }
               : {}),
+            ...this.$attrs,
             code: this.code,
           }),
         );
