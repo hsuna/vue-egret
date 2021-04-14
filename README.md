@@ -22,7 +22,7 @@ VueEgret 主要是应用在 egret 引擎库上的，它诞生的初衷是为了 
 
 ## Documentation
 
-查看[在线例子](https://hsuna.github.io/vue-egret/examples)和文档，请访问[hsuna.github.io/vue-egret](https://hsuna.github.io/vue-egret/)。
+查看[在线例子](https://hsuna.github.io/vue-egret/example)和[文档](https://hsuna.github.io/vue-egret/guide)，请访问[hsuna.github.io/vue-egret](https://hsuna.github.io/vue-egret/)。
 
 ## Issues
 
